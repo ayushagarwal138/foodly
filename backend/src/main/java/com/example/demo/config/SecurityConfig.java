@@ -20,6 +20,7 @@ public class SecurityConfig {
             .csrf().disable()
             .authorizeHttpRequests()
                 .requestMatchers("/auth/login", "/auth/signup").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants/*/analytics").hasRole("RESTAURANT")
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants/**").permitAll()
                 .requestMatchers("/api/support/**").hasAnyRole("CUSTOMER", "RESTAURANT")
                 .requestMatchers("/api/cart/**").hasRole("CUSTOMER")

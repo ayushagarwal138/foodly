@@ -142,6 +142,109 @@ public class RestaurantController {
         return reviewRepository.findByRestaurantId(id);
     }
 
+    @GetMapping("/{id}/analytics")
+    public Map<String, Object> getAnalytics(@PathVariable Long id) {
+        Map<String, Object> analytics = new java.util.HashMap<>();
+        // Orders for this restaurant
+        List<Order> orders = orderRepository.findAll().stream()
+            .filter(o -> o.getRestaurantId().equals(id)).toList();
+        analytics.put("totalOrders", orders.size());
+        // Orders by status
+        Map<String, Long> ordersByStatus = orders.stream().collect(
+            java.util.stream.Collectors.groupingBy(Order::getStatus, java.util.stream.Collectors.counting()));
+        analytics.put("ordersByStatus", ordersByStatus);
+        // Order trends (last 30 days)
+        java.time.LocalDate today = java.time.LocalDate.now();
+        Map<String, Long> orderTrends = new java.util.LinkedHashMap<>();
+        for (int i = 29; i >= 0; i--) {
+            java.time.LocalDate day = today.minusDays(i);
+            long count = orders.stream().filter(o -> {
+                java.util.Date createdAt = null;
+                if (o instanceof Map m && m.containsKey("createdAt")) {
+                    createdAt = (java.util.Date) m.get("createdAt");
+                } else if (o.getClass().getDeclaredFields() != null) {
+                    try {
+                        var f = o.getClass().getDeclaredField("createdAt");
+                        f.setAccessible(true);
+                        createdAt = (java.util.Date) f.get(o);
+                    } catch (Exception ignored) {}
+                }
+                if (createdAt == null) return false;
+                java.time.LocalDate orderDate = createdAt.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+                return orderDate.equals(day);
+            }).count();
+            orderTrends.put(day.toString(), count);
+        }
+        analytics.put("orderTrends", orderTrends);
+        // Revenue
+        double totalRevenue = orders.stream().mapToDouble(Order::getTotal).sum();
+        analytics.put("totalRevenue", totalRevenue);
+        // Revenue trends (last 30 days)
+        Map<String, Double> revenueTrends = new java.util.LinkedHashMap<>();
+        for (int i = 29; i >= 0; i--) {
+            java.time.LocalDate day = today.minusDays(i);
+            double sum = orders.stream().filter(o -> {
+                java.util.Date createdAt = null;
+                if (o instanceof Map m && m.containsKey("createdAt")) {
+                    createdAt = (java.util.Date) m.get("createdAt");
+                } else if (o.getClass().getDeclaredFields() != null) {
+                    try {
+                        var f = o.getClass().getDeclaredField("createdAt");
+                        f.setAccessible(true);
+                        createdAt = (java.util.Date) f.get(o);
+                    } catch (Exception ignored) {}
+                }
+                if (createdAt == null) return false;
+                java.time.LocalDate orderDate = createdAt.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+                return orderDate.equals(day);
+            }).mapToDouble(Order::getTotal).sum();
+            revenueTrends.put(day.toString(), sum);
+        }
+        analytics.put("revenueTrends", revenueTrends);
+        // Menu performance
+        List<MenuItem> menuItems = menuItemRepository.findByRestaurantId(id);
+        Map<String, Integer> dishSales = new java.util.HashMap<>();
+        for (MenuItem item : menuItems) {
+            int count = 0;
+            for (Order o : orders) {
+                if (o.getItems() != null) {
+                    for (var oi : o.getItems()) {
+                        if (oi.getMenuItemId() != null && oi.getMenuItemId().equals(item.getId())) {
+                            count += oi.getQuantity();
+                        }
+                    }
+                }
+            }
+            dishSales.put(item.getName(), count);
+        }
+        analytics.put("dishSales", dishSales);
+        // Top/least selling dishes
+        analytics.put("topDishes", dishSales.entrySet().stream().sorted((a,b)->b.getValue()-a.getValue()).limit(5).toList());
+        analytics.put("leastDishes", dishSales.entrySet().stream().sorted(java.util.Map.Entry.comparingByValue()).limit(5).toList());
+        // Average rating per dish
+        List<Review> reviews = reviewRepository.findByRestaurantId(id);
+        Map<String, Double> avgRatingPerDish = new java.util.HashMap<>();
+        for (MenuItem item : menuItems) {
+            var relevant = reviews.stream().filter(r -> r.getMenuItemId()!=null && r.getMenuItemId().equals(item.getId())).toList();
+            double avg = relevant.isEmpty() ? 0 : relevant.stream().mapToInt(Review::getRating).average().orElse(0);
+            avgRatingPerDish.put(item.getName(), avg);
+        }
+        analytics.put("avgRatingPerDish", avgRatingPerDish);
+        // Customer stats
+        java.util.Set<Long> uniqueCustomers = new java.util.HashSet<>();
+        java.util.Map<Long, Integer> customerOrderCounts = new java.util.HashMap<>();
+        for (Order o : orders) {
+            uniqueCustomers.add(o.getUserId());
+            customerOrderCounts.put(o.getUserId(), customerOrderCounts.getOrDefault(o.getUserId(), 0) + 1);
+        }
+        analytics.put("uniqueCustomers", uniqueCustomers.size());
+        analytics.put("repeatCustomers", customerOrderCounts.values().stream().filter(c -> c > 1).count());
+        // Recent reviews
+        analytics.put("recentReviews", reviews.stream().sorted((a,b)->b.getCreatedAt().compareTo(a.getCreatedAt())).limit(5).toList());
+        analytics.put("averageRating", reviews.isEmpty() ? 0 : reviews.stream().mapToInt(Review::getRating).average().orElse(0));
+        return analytics;
+    }
+
     @PostMapping
     public Restaurant createRestaurant(@RequestBody Restaurant restaurant, @AuthenticationPrincipal UserDetails userDetails) {
         // Set owner from authenticated user
@@ -196,6 +299,7 @@ public class RestaurantController {
             return ResponseEntity.status(403).body("Forbidden");
         }
         menuItem.setRestaurant(restaurant);
+        // No need to manually set category/veg, already bound from request body
         MenuItem saved = menuItemRepository.save(menuItem);
         return ResponseEntity.ok(saved);
     }

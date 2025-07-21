@@ -9,6 +9,8 @@ public class MenuItem {
     private Long id;
     private String name;
     private Double price;
+    private String category;
+    private Boolean veg;
 
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
@@ -21,6 +23,10 @@ public class MenuItem {
     public void setName(String name) { this.name = name; }
     public Double getPrice() { return price; }
     public void setPrice(Double price) { this.price = price; }
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+    public Boolean getVeg() { return veg; }
+    public void setVeg(Boolean veg) { this.veg = veg; }
     public Restaurant getRestaurant() { return restaurant; }
     public void setRestaurant(Restaurant restaurant) { this.restaurant = restaurant; }
 } 
