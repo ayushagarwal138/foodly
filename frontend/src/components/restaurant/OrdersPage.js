@@ -123,13 +123,13 @@ export default function OrdersPage() {
                       <ul className="list-disc pl-4">
                         {o.items.map((i, idx) => (
                           <li key={i.menuItemId || i.name || idx}>
-                            {i.qty || i.quantity} x {i.name} @ ₹{i.price}
+                            {i.qty || i.quantity} x {i.name} @ ₹{i.price.toFixed(2)}
                           </li>
                         ))}
                       </ul>
                     ) : o.items}
                   </td>
-                  <td className="py-3 px-4">₹{o.total}</td>
+                  <td className="py-3 px-4">₹{o.total.toFixed(2)}</td>
                   <td className="py-3 px-4">{o.time || o.createdAt || "-"}</td>
                   <td className="py-3 px-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold mr-2 ${STATUS_COLORS[o.status] || "bg-gray-100 text-gray-700"}`}>{o.status}</span>

@@ -5,7 +5,7 @@ export default function MenuPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showAdd, setShowAdd] = useState(false);
-  const [addForm, setAddForm] = useState({ name: "", price: "" });
+  const [addForm, setAddForm] = useState({ name: "", price: "", category: "Main Course", veg: true });
   const [saving, setSaving] = useState(false);
   const restaurantId = localStorage.getItem("restaurantId");
   const token = localStorage.getItem("token");
@@ -33,7 +33,7 @@ export default function MenuPage() {
     }
 
   function handleAdd() {
-    setAddForm({ name: "", price: "" });
+    setAddForm({ name: "", price: "", category: "Main Course", veg: true });
     setShowAdd(true);
   }
 
@@ -48,11 +48,16 @@ export default function MenuPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ name: addForm.name, price: parseFloat(addForm.price) })
+        body: JSON.stringify({
+          name: addForm.name,
+          price: parseFloat(addForm.price),
+          category: addForm.category,
+          veg: addForm.veg
+        })
       });
       if (!res.ok) throw new Error("Failed to add menu item");
       setShowAdd(false);
-      setAddForm({ name: "", price: "" });
+      setAddForm({ name: "", price: "", category: "Main Course", veg: true });
       fetchMenu();
     } catch (err) {
       setError(err.message);
@@ -122,6 +127,14 @@ export default function MenuPage() {
             <div>
               <label className="block text-gray-600 font-medium mb-1">Price (₹)</label>
               <input className="w-full px-4 py-2 border rounded-xl" name="price" type="number" min="1" step="0.01" value={addForm.price} onChange={e => setAddForm(f => ({ ...f, price: e.target.value }))} required />
+            </div>
+            <div>
+              <label className="block text-gray-600 font-medium mb-1">Category</label>
+              <input className="w-full px-4 py-2 border rounded-xl" name="category" value={addForm.category} onChange={e => setAddForm(f => ({ ...f, category: e.target.value }))} />
+            </div>
+            <div className="flex items-center">
+              <input type="checkbox" className="mr-2" name="veg" checked={addForm.veg} onChange={e => setAddForm(f => ({ ...f, veg: e.target.checked }))} />
+              <label className="text-gray-600 font-medium">Vegetarian</label>
             </div>
             <div className="flex gap-4 mt-4">
               <button className="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold shadow hover:bg-blue-700 transition-all duration-200" type="submit" disabled={saving}>{saving ? "Saving..." : "Add Item"}</button>

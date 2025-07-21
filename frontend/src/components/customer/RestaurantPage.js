@@ -243,7 +243,7 @@ export default function RestaurantPage() {
                 <li key={item.id ? `menu-${item.id}` : `menu-${cat}-${item.name}-${idx}`} className="flex items-center justify-between py-3">
                   <div>
                     <span className="font-medium text-gray-800">{item.name}</span>
-                    <span className="ml-2 text-gray-500">${item.price.toFixed(2)}</span>
+                    <span className="ml-2 text-gray-500">₹{item.price.toFixed(2)}</span>
                     <span className={`ml-2 text-xs px-2 py-1 rounded ${item.veg ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{item.veg ? 'Veg' : 'Non-Veg'}</span>
                   </div>
                   <div className="flex gap-2 items-center">
@@ -273,7 +273,7 @@ export default function RestaurantPage() {
               <li key={item.menu_item_id ? `cart-${item.menu_item_id}` : `cart-${item.name}-${idx}`} className="flex items-center justify-between mb-2">
                 <div>
                   <span className="font-medium text-gray-800">{item.name}</span>
-                  <span className="ml-2 text-gray-500">${item.price.toFixed(2)}</span>
+                  <span className="ml-2 text-gray-500">₹{item.price.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button className="px-2 py-1 bg-gray-200 rounded" onClick={() => updateQty(item, Math.max(1, item.qty - 1))}>-</button>
@@ -289,7 +289,7 @@ export default function RestaurantPage() {
         )}
         <div className="flex justify-between items-center mt-2">
           <span className="font-bold text-[#16213e]">Total:</span>
-          <span className="font-bold text-lg text-[#16213e]">${total.toFixed(2)}</span>
+          <span className="font-bold text-lg text-[#16213e]">₹{total.toFixed(2)}</span>
         </div>
         <button className="mt-4 w-full bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow hover:bg-blue-700 transition disabled:opacity-50" disabled={(cart.items || []).length === 0} onClick={() => window.location.href = '/customer/cart'}>Go to Cart</button>
       </div>

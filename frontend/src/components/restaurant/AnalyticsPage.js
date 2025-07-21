@@ -56,7 +56,7 @@ export default function AnalyticsPage() {
         </div>
         <div className="bg-green-50 rounded-2xl shadow p-6 flex flex-col items-center border border-green-100">
           <div className="text-3xl mb-2">💰</div>
-          <div className="text-2xl font-bold text-[#16213e]">₹{data.totalRevenue.toFixed(2)}</div>
+          <div className="text-2xl font-bold text-[#16213e]">₹{data.totalRevenue ? data.totalRevenue.toFixed(2) : '0.00'}</div>
           <div className="text-gray-500">Total Revenue</div>
         </div>
         <div className="bg-yellow-50 rounded-2xl shadow p-6 flex flex-col items-center border border-yellow-100">
@@ -91,8 +91,8 @@ export default function AnalyticsPage() {
             <LineChart data={revenueTrends}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-              <YAxis />
-              <Tooltip />
+              <YAxis tickFormatter={(value) => `₹${value}`} />
+              <Tooltip formatter={(value) => `₹${value.toFixed(2)}`} />
               <Line type="monotone" dataKey="value" stroke="#00C49F" strokeWidth={3} dot={false} />
             </LineChart>
           </ResponsiveContainer>

@@ -164,7 +164,7 @@ export default function CartPage() {
               <li key={item.menu_item_id ? item.menu_item_id : item.name + '-' + idx} className="flex items-center justify-between mb-3">
                 <div>
                   <span className="font-medium text-gray-800">{item.name}</span>
-                  <span className="ml-2 text-gray-500">${item.price.toFixed(2)}</span>
+                  <span className="ml-2 text-gray-500">₹{item.price.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button className="px-2 py-1 bg-gray-200 rounded" onClick={() => updateQty(item, Math.max(1, item.qty - 1))}>-</button>
@@ -205,17 +205,17 @@ export default function CartPage() {
           </div>
           <div className="flex justify-between items-center mb-2">
             <span className="font-bold text-[#16213e]">Subtotal:</span>
-            <span className="font-bold text-[#16213e]">${subtotal.toFixed(2)}</span>
+            <span className="font-bold text-[#16213e]">₹{subtotal.toFixed(2)}</span>
           </div>
           {discount > 0 && (
             <div className="flex justify-between items-center mb-2 text-green-600">
               <span>Discount:</span>
-              <span>-${discount.toFixed(2)}</span>
+              <span>-₹{discount.toFixed(2)}</span>
             </div>
           )}
           <div className="flex justify-between items-center mb-4 text-lg">
             <span className="font-bold text-[#16213e]">Total:</span>
-            <span className="font-bold text-[#16213e]">${total.toFixed(2)}</span>
+            <span className="font-bold text-[#16213e]">₹{total.toFixed(2)}</span>
           </div>
           <button className="w-full bg-orange-500 text-white px-6 py-3 rounded-xl font-bold shadow hover:bg-orange-600 transition disabled:opacity-50" disabled={!address || (cart.items || []).length === 0} onClick={placeOrder}>
             Place Order
