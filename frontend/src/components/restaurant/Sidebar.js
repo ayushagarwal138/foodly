@@ -19,6 +19,9 @@ const sidebarLinks = [
   ) },
   { label: "Support", icon: (
     <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636A9 9 0 105.636 18.364 9 9 0 0018.364 5.636z" /><path strokeLinecap="round" strokeLinejoin="round" d="M9 9h.01M15 9h.01M9 15h6" /></svg>
+  ) },
+  { label: "Analytics", icon: (
+    <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 17a1 1 0 001 1h1a1 1 0 001-1v-6a1 1 0 00-1-1h-1a1 1 0 00-1 1v6zm-4 0a1 1 0 001 1h1a1 1 0 001-1v-2a1 1 0 00-1-1h-1a1 1 0 00-1 1v2zm8 0a1 1 0 001 1h1a1 1 0 001-1v-10a1 1 0 00-1-1h-1a1 1 0 00-1 1v10z" /></svg>
   ) }
 ];
 
@@ -28,7 +31,8 @@ const labelToPath = {
   "Menu": "/restaurant/menu",
   "Reviews": "/restaurant/reviews",
   "Profile": "/restaurant/profile",
-  "Support": "/restaurant/support"
+  "Support": "/restaurant/support",
+  "Analytics": "/restaurant/analytics"
 };
 
 export default function Sidebar({ current }) {

@@ -7,6 +7,7 @@ import MenuPage from "./MenuPage";
 import ReviewsPage from "./ReviewsPage";
 import ProfilePage from "./ProfilePage";
 import SupportPage from "./SupportPage";
+import AnalyticsPage from './AnalyticsPage';
 
 const pathToLabel = [
   { path: "/restaurant/orders", label: "Orders" },
@@ -154,6 +155,7 @@ export default function RestaurantDashboard() {
             <Route path="/reviews" element={<ReviewsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/support" element={<SupportPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="*" element={<Navigate to="/restaurant" replace />} />
           </Routes>
         </main>
