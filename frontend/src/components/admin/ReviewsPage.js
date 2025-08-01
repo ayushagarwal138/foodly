@@ -49,6 +49,13 @@ export default function ReviewsPage() {
     (r.text || "").toLowerCase().includes(search.toLowerCase())
   );
 
+  // Sort reviews by creation date (latest first)
+  const sortedReviews = [...filtered].sort((a, b) => {
+    const dateA = new Date(a.createdAt || a.created_at || 0);
+    const dateB = new Date(b.createdAt || b.created_at || 0);
+    return dateB - dateA;
+  });
+
   async function handleRemove(r) {
     if (!window.confirm(`Remove review #${r.id}? This cannot be undone.`)) return;
     try {
@@ -126,7 +133,7 @@ export default function ReviewsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(r => (
+              {sortedReviews.map(r => (
                 <tr
                   key={r.id}
                   className="border-b hover:bg-purple-50 cursor-pointer transition"

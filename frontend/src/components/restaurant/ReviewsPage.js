@@ -65,6 +65,13 @@ export default function ReviewsPage() {
   if (loading) return <div className="p-10 text-center">Loading...</div>;
   if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
 
+  // Sort reviews by timestamp (latest first)
+  const sortedReviews = [...reviews].sort((a, b) => {
+    const dateA = new Date(a.timestamp || a.createdAt || 0);
+    const dateB = new Date(b.timestamp || b.createdAt || 0);
+    return dateB - dateA;
+  });
+
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
       <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Customer Reviews</h2>
@@ -72,7 +79,7 @@ export default function ReviewsPage() {
         <div className="text-gray-500 text-center">No reviews available.</div>
       ) : (
         <div className="space-y-6">
-          {reviews.map((review, index) => (
+          {sortedReviews.map((review, index) => (
             <div key={index} className="bg-gray-50 rounded-xl p-6 border border-gray-200">
               <div className="flex items-center justify-between mb-4">
                 <div>

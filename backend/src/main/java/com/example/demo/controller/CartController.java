@@ -1,9 +1,11 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.Cart;
+import com.example.demo.model.MenuItem;
 import com.example.demo.model.User;
 import com.example.demo.repository.CartRepository;
 import com.example.demo.repository.CustomerRepository;
+import com.example.demo.repository.MenuItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,6 +23,8 @@ public class CartController {
     private CartRepository cartRepository;
     @Autowired
     private CustomerRepository customerRepository;
+    @Autowired
+    private MenuItemRepository menuItemRepository;
 
     @GetMapping
     public Map<String, Object> getCart(@AuthenticationPrincipal UserDetails userDetails) {
@@ -57,16 +61,36 @@ public class CartController {
         String address = (String) request.get("address");
         if (items != null) {
             for (Map<String, Object> item : items) {
+                Object menuItemIdObj = item.get("menu_item_id");
+                if (menuItemIdObj == null) {
+                    throw new IllegalArgumentException("menu_item_id is required in cart item");
+                }
+                Long menuItemId = Long.valueOf(menuItemIdObj.toString());
+                
+                // Check availability and quantity
+                MenuItem menuItem = menuItemRepository.findById(menuItemId).orElseThrow(() -> 
+                    new IllegalArgumentException("Menu item not found"));
+                
+                if (!menuItem.getIsAvailable()) {
+                    throw new IllegalArgumentException("Menu item '" + menuItem.getName() + "' is not available");
+                }
+                
+                if (menuItem.getShowQuantity() && menuItem.getQuantityAvailable() != null) {
+                    int requestedQty = Integer.valueOf(item.get("qty").toString());
+                    if (requestedQty > menuItem.getQuantityAvailable()) {
+                        throw new IllegalArgumentException("Insufficient quantity for '" + menuItem.getName() + "'. Available: " + menuItem.getQuantityAvailable());
+                    }
+                    // Decrement the available quantity
+                    menuItem.setQuantityAvailable(menuItem.getQuantityAvailable() - requestedQty);
+                    menuItemRepository.save(menuItem);
+                }
+                
                 Cart cartItem = new Cart();
                 cartItem.setCustomer(customer);
                 cartItem.setName((String) item.get("name"));
                 cartItem.setPrice(Double.valueOf(item.get("price").toString()));
                 cartItem.setQuantity(Integer.valueOf(item.get("qty").toString()));
-                Object menuItemIdObj = item.get("menu_item_id");
-                if (menuItemIdObj == null) {
-                    throw new IllegalArgumentException("menu_item_id is required in cart item");
-                }
-                cartItem.setMenuItemId(Long.valueOf(menuItemIdObj.toString()));
+                cartItem.setMenuItemId(menuItemId);
                 Object restaurantIdObj = item.get("restaurantId");
                 if (restaurantIdObj == null) {
                     throw new IllegalArgumentException("restaurantId is required in cart item");

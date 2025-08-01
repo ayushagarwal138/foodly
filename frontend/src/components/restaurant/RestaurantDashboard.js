@@ -53,7 +53,14 @@ export default function RestaurantDashboard() {
 
   // Calculate stats
   const today = new Date().toISOString().slice(0, 10);
-  const ordersToday = orders.filter(o => (o.time || o.createdAt || "").slice(0, 10) === today);
+  const ordersToday = orders.filter(o => {
+    // Handle different date formats - createdAt might be order ID, time might be string
+    const orderDate = o.time || "";
+    if (typeof orderDate === 'string' && orderDate.length >= 10) {
+      return orderDate.slice(0, 10) === today;
+    }
+    return false; // If no valid date string, don't count as today's order
+  });
   const revenueToday = ordersToday.reduce((sum, o) => sum + (o.total || 0), 0);
   const pendingOrders = orders.filter(o => ["New", "Accepted", "Preparing"].includes(o.status)).length;
   // Find top dish (most ordered today)

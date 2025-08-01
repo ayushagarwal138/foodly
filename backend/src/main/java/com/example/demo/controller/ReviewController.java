@@ -34,7 +34,7 @@ public class ReviewController {
     @GetMapping("/my")
     public List<Map<String, Object>> getMyReviews(@AuthenticationPrincipal UserDetails userDetails) {
         User customer = customerRepository.findByUsername(userDetails.getUsername()).orElseThrow();
-        List<Review> reviews = reviewRepository.findByCustomerId(customer.getId());
+        List<Review> reviews = reviewRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId());
         return reviews.stream()
             .map(review -> {
                 Map<String, Object> map = new HashMap<>();
@@ -54,7 +54,7 @@ public class ReviewController {
 
     @GetMapping("/restaurant/{restaurantId}")
     public List<Map<String, Object>> getRestaurantReviews(@PathVariable Long restaurantId) {
-        List<Review> reviews = reviewRepository.findByRestaurantId(restaurantId);
+        List<Review> reviews = reviewRepository.findByRestaurantIdOrderByCreatedAtDesc(restaurantId);
         return reviews.stream()
             .map(review -> {
                 Map<String, Object> map = new HashMap<>();

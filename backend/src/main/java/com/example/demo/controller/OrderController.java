@@ -86,7 +86,10 @@ public class OrderController {
     @GetMapping("/my")
     public List<Map<String, Object>> getMyOrders(@AuthenticationPrincipal UserDetails userDetails) {
         User customer = customerRepository.findByUsername(userDetails.getUsername()).orElseThrow();
-        List<Order> orders = orderRepository.findAll().stream().filter(o -> o.getUserId().equals(customer.getId())).toList();
+        List<Order> orders = orderRepository.findAll().stream()
+            .filter(o -> o.getUserId().equals(customer.getId()))
+            .sorted((a, b) -> b.getId().compareTo(a.getId())) // Sort by ID descending (latest first)
+            .toList();
         List<Map<String, Object>> result = new java.util.ArrayList<>();
         for (Order o : orders) {
             Map<String, Object> map = new java.util.HashMap<>();
@@ -97,6 +100,7 @@ public class OrderController {
             map.put("total", o.getTotal());
             map.put("items", o.getItems());
             map.put("date", o.getId()); // You may want to add a date field if available
+            map.put("createdAt", o.getId()); // Add createdAt for consistency
             // Add restaurant name
             String restaurantName = "";
             if (o.getRestaurantId() != null) {
@@ -113,6 +117,7 @@ public class OrderController {
     public List<Order> getOrdersForRestaurant(@PathVariable Long restaurantId) {
         return orderRepository.findAll().stream()
             .filter(o -> o.getRestaurantId().equals(restaurantId))
+            .sorted((a, b) -> b.getId().compareTo(a.getId())) // Sort by ID descending (latest first)
             .toList();
     }
 

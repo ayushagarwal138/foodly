@@ -28,7 +28,7 @@ export default function RestaurantPage() {
         if (!res.ok) throw new Error("Restaurant not found");
         const data = await res.json();
         setInfo(data);
-        // Fetch menu for this restaurant
+        // Fetch menu for this restaurant (customer view - shows all items with availability status)
         const menuRes = await fetch(`/api/restaurants/${data.id}/menu`);
         if (!menuRes.ok) throw new Error("Menu not found");
         const menuData = await menuRes.json();
@@ -172,9 +172,15 @@ export default function RestaurantPage() {
           restaurantId: info.id
         })
       });
-      if (!res.ok) throw new Error("Failed to add favorite");
-      setFavSuccess(true);
-      setTimeout(() => setFavSuccess(false), 2000);
+      if (res.status === 409) {
+        setFavError("Restaurant is already in your favorites");
+        setTimeout(() => setFavError(""), 3000);
+      } else if (!res.ok) {
+        throw new Error("Failed to add favorite");
+      } else {
+        setFavSuccess(true);
+        setTimeout(() => setFavSuccess(false), 2000);
+      }
     } catch (err) {
       setFavError("Could not add to favorites");
     } finally {
@@ -202,9 +208,15 @@ export default function RestaurantPage() {
           menuItemId: item.id
         })
       });
-      if (!res.ok) throw new Error("Failed to add favorite");
-      setFavDishSuccess(item.id);
-      setTimeout(() => setFavDishSuccess("") , 2000);
+      if (res.status === 409) {
+        setFavDishError("Dish is already in your favorites");
+        setTimeout(() => setFavDishError(""), 3000);
+      } else if (!res.ok) {
+        throw new Error("Failed to add favorite");
+      } else {
+        setFavDishSuccess(item.id);
+        setTimeout(() => setFavDishSuccess("") , 2000);
+      }
     } catch (err) {
       setFavDishError("Could not add to favorites");
     } finally {
@@ -245,10 +257,26 @@ export default function RestaurantPage() {
                     <span className="font-medium text-gray-800">{item.name}</span>
                     <span className="ml-2 text-gray-500">₹{item.price.toFixed(2)}</span>
                     <span className={`ml-2 text-xs px-2 py-1 rounded ${item.veg ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{item.veg ? 'Veg' : 'Non-Veg'}</span>
+                    {!item.isAvailable && (
+                      <span className="ml-2 text-xs px-2 py-1 rounded bg-red-100 text-red-700">Out of Stock</span>
+                    )}
+                    {item.isAvailable && item.showQuantity && item.quantityAvailable !== null && (
+                      <span className="ml-2 text-xs px-2 py-1 rounded bg-blue-100 text-blue-700">
+                        {item.quantityAvailable > 0 ? `${item.quantityAvailable} left` : 'Out of Stock'}
+                      </span>
+                    )}
                   </div>
                   <div className="flex gap-2 items-center">
-                    <button className="bg-orange-500 text-white px-4 py-2 rounded-xl font-bold shadow hover:bg-orange-600 transition text-xs" onClick={() => addToCart(item)}>
-                      Add to Cart
+                    <button 
+                      className={`px-4 py-2 rounded-xl font-bold shadow transition text-xs ${
+                        item.isAvailable && (!item.showQuantity || item.quantityAvailable > 0) 
+                          ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                          : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                      }`} 
+                      onClick={() => addToCart(item)}
+                      disabled={!item.isAvailable || (item.showQuantity && item.quantityAvailable <= 0)}
+                    >
+                      {!item.isAvailable || (item.showQuantity && item.quantityAvailable <= 0) ? 'Unavailable' : 'Add to Cart'}
                     </button>
                     <button className="bg-pink-500 text-white px-3 py-2 rounded-xl font-bold shadow hover:bg-pink-600 transition text-xs" onClick={() => handleFavoriteDish(item)} disabled={favDishLoading === item.id}>
                       {favDishLoading === item.id ? "Adding..." : favDishSuccess === item.id ? "Added!" : "❤"}

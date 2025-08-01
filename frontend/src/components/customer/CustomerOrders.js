@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import ReviewModal from "./ReviewModal";
 
@@ -9,7 +9,7 @@ export default function CustomerOrders() {
   const [reviewOrder, setReviewOrder] = useState(null);
   const token = localStorage.getItem("token");
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setError("");
     try {
       const res = await fetch("/api/orders/my", {
@@ -23,7 +23,7 @@ export default function CustomerOrders() {
       console.error("Error fetching orders:", err);
       setError(err.message);
     }
-  };
+  }, [token]);
 
   // Initial fetch
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function CustomerOrders() {
     if (token) {
       initialFetch();
     }
-  }, [token]);
+  }, [token, fetchOrders]);
 
   // Polling for new orders
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function CustomerOrders() {
     }, 5000); // Poll every 5 seconds
 
     return () => clearInterval(pollInterval);
-  }, [token]);
+  }, [token, fetchOrders]);
 
   // Check for newly delivered orders that need reviews
   useEffect(() => {

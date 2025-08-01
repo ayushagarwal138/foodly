@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 
 const STATUS_OPTIONS = ["New", "Accepted", "Preparing", "Out for Delivery", "Delivered", "Cancelled"];
@@ -18,7 +18,7 @@ export default function OrdersPage() {
   const restaurantId = localStorage.getItem("restaurantId");
   const token = localStorage.getItem("token");
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setError("");
     try {
       const res = await fetch(`/api/restaurants/${restaurantId}/orders`, {
@@ -32,7 +32,7 @@ export default function OrdersPage() {
       console.error("Error fetching orders:", err);
       setError(err.message);
     }
-  };
+  }, [restaurantId, token]);
 
   // Initial fetch
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function OrdersPage() {
     if (restaurantId && token) {
       initialFetch();
     }
-  }, [restaurantId, token]);
+  }, [restaurantId, token, fetchOrders]);
 
   // Polling for new orders
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function OrdersPage() {
     }, 5000); // Poll every 5 seconds
 
     return () => clearInterval(pollInterval);
-  }, [restaurantId, token]);
+  }, [restaurantId, token, fetchOrders]);
 
   async function updateStatus(orderId, newStatus) {
     try {
@@ -78,8 +78,9 @@ export default function OrdersPage() {
   if (loading) return <div className="p-10 text-center"><span className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></span><div>Loading orders...</div></div>;
   if (error) return <div className="p-10 text-center text-red-600 bg-red-50 border border-red-200 rounded-xl max-w-xl mx-auto">{error}</div>;
 
-  // Sort orders by status priority and time
+  // Sort orders by status priority and time (latest first)
   const sortedOrders = [...orders].sort((a, b) => {
+    // First sort by status priority
     const statusPriority = {
       "New": 0,
       "Accepted": 1,
@@ -88,7 +89,13 @@ export default function OrdersPage() {
       "Delivered": 4,
       "Cancelled": 5
     };
-    return statusPriority[a.status] - statusPriority[b.status];
+    const statusDiff = statusPriority[a.status] - statusPriority[b.status];
+    if (statusDiff !== 0) return statusDiff;
+    
+    // Then sort by date/time (latest first)
+    const dateA = new Date(a.time || a.createdAt || a.date || 0);
+    const dateB = new Date(b.time || b.createdAt || b.date || 0);
+    return dateB - dateA;
   });
 
   return (

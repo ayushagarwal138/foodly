@@ -3,6 +3,7 @@ package com.example.demo.model;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "menu_items")
 public class MenuItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -11,6 +12,9 @@ public class MenuItem {
     private Double price;
     private String category;
     private Boolean veg;
+    private Boolean isAvailable = true;
+    private Integer quantityAvailable;
+    private Boolean showQuantity = false;
 
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
@@ -29,4 +33,13 @@ public class MenuItem {
     public void setVeg(Boolean veg) { this.veg = veg; }
     public Restaurant getRestaurant() { return restaurant; }
     public void setRestaurant(Restaurant restaurant) { this.restaurant = restaurant; }
+    
+    public Boolean getIsAvailable() { return isAvailable; }
+    public void setIsAvailable(Boolean isAvailable) { this.isAvailable = isAvailable; }
+    
+    public Integer getQuantityAvailable() { return quantityAvailable; }
+    public void setQuantityAvailable(Integer quantityAvailable) { this.quantityAvailable = quantityAvailable; }
+    
+    public Boolean getShowQuantity() { return showQuantity; }
+    public void setShowQuantity(Boolean showQuantity) { this.showQuantity = showQuantity; }
 } 

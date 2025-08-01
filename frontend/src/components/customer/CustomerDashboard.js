@@ -16,11 +16,13 @@ import WishlistPage from './WishlistPage';
 import SupportChatPage from './SupportChatPage';
 import Footer from './Footer';
 import AllRestaurants from './AllRestaurants';
+import OffersPage from './OffersPage';
 
 const pathToLabel = [
   { path: "/customer/restaurants", label: "Restaurants" },
   { path: "/customer/orders", label: "Orders" },
   { path: "/customer/favorites", label: "Favorites" },
+  { path: "/customer/offers", label: "Offers" },
   { path: "/customer/account", label: "Account" },
   { path: "/customer/settings", label: "Settings" },
   { path: "/customer/reviews", label: "Ratings & Reviews" },
@@ -45,6 +47,7 @@ export default function CustomerDashboard() {
               <Route path="/" element={<DashboardMain />} />
               <Route path="/orders" element={<CustomerOrders />} />
               <Route path="/favorites" element={<CustomerFavorites />} />
+              <Route path="/offers" element={<OffersPage />} />
               <Route path="/account" element={<CustomerProfile />} />
               <Route path="/settings" element={<CustomerSettings />} />
               <Route path="/restaurant/:slug" element={<RestaurantPage />} />

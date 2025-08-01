@@ -29,6 +29,9 @@ CREATE TABLE menu_items (
     price DECIMAL(10,2) NOT NULL,
     category VARCHAR(100),
     veg BOOLEAN DEFAULT TRUE,
+    is_available BOOLEAN DEFAULT TRUE,
+    quantity_available INTEGER,
+    show_quantity BOOLEAN DEFAULT FALSE,
     restaurant_id BIGINT NOT NULL,
     FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
 );
@@ -95,4 +98,26 @@ CREATE TABLE cart (
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE
+);
+
+-- OFFERS: promotional offers and coupons
+CREATE TABLE offers (
+    id BIGSERIAL PRIMARY KEY,
+    type VARCHAR(50) NOT NULL, -- 'discount', 'free-delivery', 'cashback', 'combo', 'free-item'
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    discount VARCHAR(100), -- e.g., '50% OFF', 'FREE DELIVERY'
+    max_discount VARCHAR(50), -- e.g., '₹200'
+    code VARCHAR(100) UNIQUE NOT NULL, -- coupon code
+    valid_until TIMESTAMP NOT NULL,
+    min_order VARCHAR(50), -- e.g., '₹100'
+    category VARCHAR(100), -- e.g., 'new-user', 'weekday'
+    restaurant VARCHAR(255), -- restaurant name or 'All Restaurants'
+    restaurant_id BIGINT, -- null for all restaurants
+    image_url TEXT,
+    color VARCHAR(100), -- CSS color class
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE SET NULL
 ); 

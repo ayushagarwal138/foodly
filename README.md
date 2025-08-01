@@ -8,6 +8,8 @@ Foodly is a full-stack food ordering and restaurant management platform. It allo
 
 ### Customer
 - Browse restaurants and menus
+- See real-time availability status of menu items
+- View quantity available for items (when enabled by restaurant)
 - Add items to cart and place orders
 - Track order status in real time
 - Chat with restaurant support
@@ -17,6 +19,8 @@ Foodly is a full-stack food ordering and restaurant management platform. It allo
 
 ### Restaurant
 - Manage restaurant profile and menu
+- Control menu item availability (in stock/out of stock)
+- Set and display quantity available for menu items
 - Receive and manage orders in real time
 - Update order status (New, Preparing, Out for Delivery, Delivered, Cancelled)
 - Chat with customers for support
@@ -89,9 +93,14 @@ Foodly/
 
 - `/auth/login`, `/auth/signup` — Authentication
 - `/api/restaurants` — Restaurant info, menus
+- `/api/restaurants/{id}/menu` — Menu management (GET, POST)
+- `/api/restaurants/{restaurantId}/menu/{menuItemId}` — Menu item operations (DELETE)
+- `/api/restaurants/{restaurantId}/menu/{menuItemId}/availability` — Update menu item availability
+- `/api/restaurants/{restaurantId}/menu/{menuItemId}/can-delete` — Check if menu item can be deleted
 - `/api/orders` — Order management
 - `/api/support/messages` — Real-time chat
 - `/api/reviews` — Ratings and reviews
+- `/api/cart` — Cart management with availability validation
 
 ---
 
@@ -108,6 +117,41 @@ Foodly/
 - Add new endpoints for analytics, admin, etc.
 
 ---
+
+## Troubleshooting
+
+### Menu Item Deletion Issues
+If you encounter "Failed to delete menu items" errors:
+
+1. **Check for References**: Menu items cannot be deleted if they are referenced by:
+   - Existing orders (order_items table)
+   - Customer reviews (reviews table)
+   - Wishlist items (wishlist table)
+   - Cart items (cart table)
+
+2. **Visual Indicators**: In the restaurant dashboard, menu items that cannot be deleted will show as "Locked" instead of a delete button.
+
+3. **Error Messages**: The system now provides detailed error messages explaining why deletion failed.
+
+4. **Data Integrity**: This behavior ensures data integrity and prevents issues with customer orders and reviews.
+
+### Common Solutions
+- Wait for orders to be completed and archived
+- Remove items from customer carts
+- Consider archiving instead of deleting for historical data
+
+### Menu Item Availability Issues
+If customers cannot add items to cart:
+
+1. **Check Availability**: Ensure the menu item is marked as available in the restaurant dashboard
+2. **Quantity Management**: If quantity tracking is enabled, verify sufficient quantity is available
+3. **Real-time Updates**: Quantity is automatically decremented when items are added to cart
+4. **Customer View**: Customers see availability status and quantity information in real-time
+
+### Best Practices
+- Regularly update availability status for menu items
+- Use quantity tracking for limited items or daily specials
+- Monitor inventory levels through the restaurant dashboard
 
 ## Contributing
 

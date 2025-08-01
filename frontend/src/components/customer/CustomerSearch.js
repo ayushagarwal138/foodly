@@ -47,9 +47,15 @@ export default function CustomerSearch({ restaurants, query: parentQuery, setQue
           restaurantId: r.id
         })
       });
-      if (!res.ok) throw new Error("Failed to add favorite");
-      setFavSuccess(r.name);
-      setTimeout(() => setFavSuccess("") , 2000);
+      if (res.status === 409) {
+        setFavError("Restaurant is already in your favorites");
+        setTimeout(() => setFavError(""), 3000);
+      } else if (!res.ok) {
+        throw new Error("Failed to add favorite");
+      } else {
+        setFavSuccess(r.name);
+        setTimeout(() => setFavSuccess("") , 2000);
+      }
     } catch (err) {
       setFavError("Could not add to favorites");
     } finally {
@@ -77,9 +83,15 @@ export default function CustomerSearch({ restaurants, query: parentQuery, setQue
           menuItemId: d.id
         })
       });
-      if (!res.ok) throw new Error("Failed to add favorite");
-      setFavSuccess(d.name + r.name);
-      setTimeout(() => setFavSuccess("") , 2000);
+      if (res.status === 409) {
+        setFavError("Dish is already in your favorites");
+        setTimeout(() => setFavError(""), 3000);
+      } else if (!res.ok) {
+        throw new Error("Failed to add favorite");
+      } else {
+        setFavSuccess(d.name + r.name);
+        setTimeout(() => setFavSuccess("") , 2000);
+      }
     } catch (err) {
       setFavError("Could not add to favorites");
     } finally {

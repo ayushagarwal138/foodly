@@ -9,11 +9,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/customers")
@@ -47,29 +49,36 @@ public class CustomerController {
         
         List<Wishlist> wishlistItems = wishlistRepository.findByCustomerId(id);
         
-        List<Map<String, Object>> restaurants = wishlistItems.stream()
-            .filter(item -> "RESTAURANT".equals(item.getType()))
-            .map(item -> {
-                Map<String, Object> map = new HashMap<>();
-                map.put("name", item.getName());
-                map.put("restaurant", item.getName());
-                return map;
-            })
-            .toList();
-            
-        List<Map<String, Object>> dishes = wishlistItems.stream()
-            .filter(item -> "DISH".equals(item.getType()))
-            .map(item -> {
-                Map<String, Object> map = new HashMap<>();
-                map.put("name", item.getName());
-                map.put("restaurant", item.getRestaurant());
-                return map;
-            })
-            .toList();
+        // Remove duplicates by using a Map to keep only unique items
+        Map<String, Map<String, Object>> uniqueRestaurants = new HashMap<>();
+        Map<String, Map<String, Object>> uniqueDishes = new HashMap<>();
+        
+        for (Wishlist item : wishlistItems) {
+            if ("RESTAURANT".equals(item.getType())) {
+                String key = item.getName() + "_" + item.getRestaurantId();
+                if (!uniqueRestaurants.containsKey(key)) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("name", item.getName());
+                    map.put("restaurant", item.getName());
+                    map.put("restaurantId", item.getRestaurantId());
+                    uniqueRestaurants.put(key, map);
+                }
+            } else if ("DISH".equals(item.getType())) {
+                String key = item.getName() + "_" + item.getRestaurantId() + "_" + item.getMenuItemId();
+                if (!uniqueDishes.containsKey(key)) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("name", item.getName());
+                    map.put("restaurant", item.getRestaurant());
+                    map.put("restaurantId", item.getRestaurantId());
+                    map.put("menuItemId", item.getMenuItemId());
+                    uniqueDishes.put(key, map);
+                }
+            }
+        }
         
         Map<String, Object> result = new HashMap<>();
-        result.put("restaurants", restaurants);
-        result.put("dishes", dishes);
+        result.put("restaurants", new ArrayList<>(uniqueRestaurants.values()));
+        result.put("dishes", new ArrayList<>(uniqueDishes.values()));
         return result;
     }
 
@@ -83,23 +92,7 @@ public class CustomerController {
     }
 
     @PostMapping("/{id}/wishlist")
-    public Wishlist addToWishlist(@PathVariable Long id, @RequestBody Map<String, Object> request, @AuthenticationPrincipal org.springframework.security.core.userdetails.User principal) {
-        User user = customerRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-        if (!user.getUsername().equals(principal.getUsername())) {
-            throw new AccessDeniedException("Forbidden");
-        }
-        Wishlist wishlist = new Wishlist();
-        wishlist.setCustomer(user);
-        wishlist.setType((String) request.get("type"));
-        wishlist.setName((String) request.get("name"));
-        wishlist.setRestaurant((String) request.get("restaurant"));
-        if (request.get("restaurantId") != null) wishlist.setRestaurantId(Long.valueOf(request.get("restaurantId").toString()));
-        if (request.get("menuItemId") != null) wishlist.setMenuItemId(Long.valueOf(request.get("menuItemId").toString()));
-        return wishlistRepository.save(wishlist);
-    }
-
-    @DeleteMapping("/{id}/wishlist")
-    public void removeFromWishlist(@PathVariable Long id, @RequestBody Map<String, Object> request, @AuthenticationPrincipal org.springframework.security.core.userdetails.User principal) {
+    public ResponseEntity<?> addToWishlist(@PathVariable Long id, @RequestBody Map<String, Object> request, @AuthenticationPrincipal org.springframework.security.core.userdetails.User principal) {
         User user = customerRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
         if (!user.getUsername().equals(principal.getUsername())) {
             throw new AccessDeniedException("Forbidden");
@@ -108,8 +101,59 @@ public class CustomerController {
         String type = (String) request.get("type");
         String name = (String) request.get("name");
         String restaurant = (String) request.get("restaurant");
+        Long restaurantId = request.get("restaurantId") != null ? Long.valueOf(request.get("restaurantId").toString()) : null;
+        Long menuItemId = request.get("menuItemId") != null ? Long.valueOf(request.get("menuItemId").toString()) : null;
         
-        wishlistRepository.deleteByCustomerIdAndTypeAndNameAndRestaurant(id, type, name, restaurant);
+        // Check for duplicates
+        boolean isDuplicate = false;
+        if ("RESTAURANT".equals(type)) {
+            isDuplicate = wishlistRepository.existsByCustomerIdAndTypeAndNameAndRestaurantId(id, type, name, restaurantId);
+        } else if ("DISH".equals(type)) {
+            isDuplicate = wishlistRepository.existsByCustomerIdAndTypeAndNameAndRestaurantIdAndMenuItemId(id, type, name, restaurantId, menuItemId);
+        }
+        
+        if (isDuplicate) {
+            return ResponseEntity.status(409).body("Item is already in your favorites");
+        }
+        
+        Wishlist wishlist = new Wishlist();
+        wishlist.setCustomer(user);
+        wishlist.setType(type);
+        wishlist.setName(name);
+        wishlist.setRestaurant(restaurant);
+        wishlist.setRestaurantId(restaurantId);
+        wishlist.setMenuItemId(menuItemId);
+        
+        Wishlist saved = wishlistRepository.save(wishlist);
+        return ResponseEntity.ok(saved);
+    }
+
+    @DeleteMapping("/{id}/wishlist")
+    public ResponseEntity<?> removeFromWishlist(@PathVariable Long id, @RequestBody Map<String, Object> request, @AuthenticationPrincipal org.springframework.security.core.userdetails.User principal) {
+        User user = customerRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        if (!user.getUsername().equals(principal.getUsername())) {
+            throw new AccessDeniedException("Forbidden");
+        }
+        
+        String type = (String) request.get("type");
+        String name = (String) request.get("name");
+        String restaurant = (String) request.get("restaurant");
+        Long restaurantId = request.get("restaurantId") != null ? Long.valueOf(request.get("restaurantId").toString()) : null;
+        Long menuItemId = request.get("menuItemId") != null ? Long.valueOf(request.get("menuItemId").toString()) : null;
+        
+        Wishlist wishlistItem = null;
+        if ("RESTAURANT".equals(type)) {
+            wishlistItem = wishlistRepository.findByCustomerIdAndTypeAndNameAndRestaurantId(id, type, name, restaurantId);
+        } else if ("DISH".equals(type)) {
+            wishlistItem = wishlistRepository.findByCustomerIdAndTypeAndNameAndRestaurantIdAndMenuItemId(id, type, name, restaurantId, menuItemId);
+        }
+        
+        if (wishlistItem != null) {
+            wishlistRepository.delete(wishlistItem);
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(404).body("Favorite item not found");
+        }
     }
 
     @PostMapping

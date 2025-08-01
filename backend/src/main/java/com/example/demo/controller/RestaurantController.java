@@ -113,10 +113,19 @@ public class RestaurantController {
         return menuItemRepository.findByRestaurantId(id);
     }
 
+    @GetMapping("/{id}/menu/customer")
+    public List<MenuItem> getMenuForCustomer(@PathVariable Long id) {
+        // For customers, only show available items
+        return menuItemRepository.findByRestaurantId(id).stream()
+            .filter(item -> item.getIsAvailable() != null && item.getIsAvailable())
+            .collect(java.util.stream.Collectors.toList());
+    }
+
     @GetMapping("/{id}/orders")
     public List<Map<String, Object>> getOrdersForRestaurant(@PathVariable Long id) {
         return orderRepository.findAll().stream()
             .filter(o -> o.getRestaurantId().equals(id))
+            .sorted((a, b) -> b.getId().compareTo(a.getId())) // Sort by ID descending (latest first)
             .map(o -> {
                 Map<String, Object> map = new java.util.HashMap<>();
                 map.put("id", o.getId());
@@ -125,6 +134,7 @@ public class RestaurantController {
                 map.put("status", o.getStatus());
                 map.put("total", o.getTotal());
                 map.put("items", o.getItems());
+                map.put("createdAt", o.getId()); // Add createdAt for consistency
                 // Add customer name
                 String customerName = "";
                 if (o.getUserId() != null) {
@@ -139,15 +149,17 @@ public class RestaurantController {
 
     @GetMapping("/{id}/reviews")
     public List<Review> getReviewsForRestaurant(@PathVariable Long id) {
-        return reviewRepository.findByRestaurantId(id);
+        return reviewRepository.findByRestaurantIdOrderByCreatedAtDesc(id);
     }
 
     @GetMapping("/{id}/analytics")
     public Map<String, Object> getAnalytics(@PathVariable Long id) {
         Map<String, Object> analytics = new java.util.HashMap<>();
-        // Orders for this restaurant
+        // Orders for this restaurant (sorted by latest first)
         List<Order> orders = orderRepository.findAll().stream()
-            .filter(o -> o.getRestaurantId().equals(id)).toList();
+            .filter(o -> o.getRestaurantId().equals(id))
+            .sorted((a, b) -> b.getId().compareTo(a.getId())) // Sort by ID descending (latest first)
+            .toList();
         analytics.put("totalOrders", orders.size());
         // Orders by status
         Map<String, Long> ordersByStatus = orders.stream().collect(
@@ -222,7 +234,7 @@ public class RestaurantController {
         analytics.put("topDishes", dishSales.entrySet().stream().sorted((a,b)->b.getValue()-a.getValue()).limit(5).toList());
         analytics.put("leastDishes", dishSales.entrySet().stream().sorted(java.util.Map.Entry.comparingByValue()).limit(5).toList());
         // Average rating per dish
-        List<Review> reviews = reviewRepository.findByRestaurantId(id);
+        List<Review> reviews = reviewRepository.findByRestaurantIdOrderByCreatedAtDesc(id);
         Map<String, Double> avgRatingPerDish = new java.util.HashMap<>();
         for (MenuItem item : menuItems) {
             var relevant = reviews.stream().filter(r -> r.getMenuItemId()!=null && r.getMenuItemId().equals(item.getId())).toList();
@@ -239,8 +251,8 @@ public class RestaurantController {
         }
         analytics.put("uniqueCustomers", uniqueCustomers.size());
         analytics.put("repeatCustomers", customerOrderCounts.values().stream().filter(c -> c > 1).count());
-        // Recent reviews
-        analytics.put("recentReviews", reviews.stream().sorted((a,b)->b.getCreatedAt().compareTo(a.getCreatedAt())).limit(5).toList());
+        // Recent reviews (already sorted by createdAt desc from repository)
+        analytics.put("recentReviews", reviews.stream().limit(5).toList());
         analytics.put("averageRating", reviews.isEmpty() ? 0 : reviews.stream().mapToInt(Review::getRating).average().orElse(0));
         return analytics;
     }
@@ -304,19 +316,106 @@ public class RestaurantController {
         return ResponseEntity.ok(saved);
     }
 
+    @GetMapping("/{restaurantId}/menu/{menuItemId}/can-delete")
+    public ResponseEntity<?> canDeleteMenuItem(@PathVariable Long restaurantId, @PathVariable Long menuItemId, @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Restaurant restaurant = restaurantRepository.findById(restaurantId).orElseThrow(() -> new RuntimeException("Restaurant not found"));
+            MenuItem menuItem = menuItemRepository.findById(menuItemId).orElseThrow(() -> new RuntimeException("Menu item not found"));
+            
+            // Only owner can check
+            if (restaurant.getOwner() == null || !restaurant.getOwner().getUsername().equals(userDetails.getUsername())) {
+                return ResponseEntity.status(403).body("Forbidden");
+            }
+            if (!menuItem.getRestaurant().getId().equals(restaurantId)) {
+                return ResponseEntity.status(400).body("Menu item does not belong to this restaurant");
+            }
+            
+            // Check for references in other tables
+            boolean hasOrderItems = orderRepository.findAll().stream()
+                .anyMatch(order -> order.getItems().stream()
+                    .anyMatch(item -> item.getMenuItemId().equals(menuItemId)));
+            boolean hasReviews = reviewRepository.findByMenuItemId(menuItemId).size() > 0;
+            boolean hasWishlist = false; // You might need to add this repository method
+            boolean hasCart = false; // You might need to add this repository method
+            
+            Map<String, Object> result = new java.util.HashMap<>();
+            result.put("canDelete", !hasOrderItems && !hasReviews && !hasWishlist && !hasCart);
+            result.put("hasOrderItems", hasOrderItems);
+            result.put("hasReviews", hasReviews);
+            result.put("hasWishlist", hasWishlist);
+            result.put("hasCart", hasCart);
+            
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Failed to check menu item: " + e.getMessage());
+        }
+    }
+
+    @PatchMapping("/{restaurantId}/menu/{menuItemId}/availability")
+    public ResponseEntity<?> updateMenuItemAvailability(@PathVariable Long restaurantId, @PathVariable Long menuItemId, 
+                                                       @RequestBody Map<String, Object> request, @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Restaurant restaurant = restaurantRepository.findById(restaurantId).orElseThrow(() -> new RuntimeException("Restaurant not found"));
+            MenuItem menuItem = menuItemRepository.findById(menuItemId).orElseThrow(() -> new RuntimeException("Menu item not found"));
+            
+            // Only owner can update
+            if (restaurant.getOwner() == null || !restaurant.getOwner().getUsername().equals(userDetails.getUsername())) {
+                return ResponseEntity.status(403).body("Forbidden");
+            }
+            if (!menuItem.getRestaurant().getId().equals(restaurantId)) {
+                return ResponseEntity.status(400).body("Menu item does not belong to this restaurant");
+            }
+            
+            // Update availability fields
+            if (request.containsKey("isAvailable")) {
+                menuItem.setIsAvailable((Boolean) request.get("isAvailable"));
+            }
+            if (request.containsKey("quantityAvailable")) {
+                menuItem.setQuantityAvailable((Integer) request.get("quantityAvailable"));
+            }
+            if (request.containsKey("showQuantity")) {
+                menuItem.setShowQuantity((Boolean) request.get("showQuantity"));
+            }
+            
+            MenuItem updated = menuItemRepository.save(menuItem);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Failed to update menu item availability: " + e.getMessage());
+        }
+    }
+
     @DeleteMapping("/{restaurantId}/menu/{menuItemId}")
     public ResponseEntity<?> deleteMenuItem(@PathVariable Long restaurantId, @PathVariable Long menuItemId, @AuthenticationPrincipal UserDetails userDetails) {
-        Restaurant restaurant = restaurantRepository.findById(restaurantId).orElseThrow(() -> new RuntimeException("Restaurant not found"));
-        MenuItem menuItem = menuItemRepository.findById(menuItemId).orElseThrow(() -> new RuntimeException("Menu item not found"));
-        // Only owner can delete
-        if (restaurant.getOwner() == null || !restaurant.getOwner().getUsername().equals(userDetails.getUsername())) {
-            return ResponseEntity.status(403).body("Forbidden");
+        try {
+            Restaurant restaurant = restaurantRepository.findById(restaurantId).orElseThrow(() -> new RuntimeException("Restaurant not found"));
+            MenuItem menuItem = menuItemRepository.findById(menuItemId).orElseThrow(() -> new RuntimeException("Menu item not found"));
+            // Only owner can delete
+            if (restaurant.getOwner() == null || !restaurant.getOwner().getUsername().equals(userDetails.getUsername())) {
+                return ResponseEntity.status(403).body("Forbidden");
+            }
+            if (!menuItem.getRestaurant().getId().equals(restaurantId)) {
+                return ResponseEntity.status(400).body("Menu item does not belong to this restaurant");
+            }
+            
+            // Double-check if it can be deleted before attempting
+            boolean hasOrderItems = orderRepository.findAll().stream()
+                .anyMatch(order -> order.getItems().stream()
+                    .anyMatch(item -> item.getMenuItemId().equals(menuItemId)));
+            boolean hasReviews = reviewRepository.findByMenuItemId(menuItemId).size() > 0;
+            
+            if (hasOrderItems || hasReviews) {
+                return ResponseEntity.status(409).body("Cannot delete menu item: It is referenced by existing orders or reviews. Please remove these references first.");
+            }
+            
+            menuItemRepository.delete(menuItem);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            // Check if it's a constraint violation
+            if (e.getMessage() != null && e.getMessage().contains("constraint")) {
+                return ResponseEntity.status(409).body("Cannot delete menu item: It is referenced by existing orders, reviews, or cart items. Please remove these references first.");
+            }
+            return ResponseEntity.status(500).body("Failed to delete menu item: " + e.getMessage());
         }
-        if (!menuItem.getRestaurant().getId().equals(restaurantId)) {
-            return ResponseEntity.status(400).body("Menu item does not belong to this restaurant");
-        }
-        menuItemRepository.delete(menuItem);
-        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")

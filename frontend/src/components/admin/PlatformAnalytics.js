@@ -43,8 +43,22 @@ export default function PlatformAnalytics() {
   });
   const ordersByDay = last30.map(date => ({
     date,
-    orders: orders.filter(o => (o.createdAt || o.created_at || "").slice(0, 10) === date).length,
-    revenue: orders.filter(o => (o.createdAt || o.created_at || "").slice(0, 10) === date).reduce((sum, o) => sum + (o.total || 0), 0)
+    orders: orders.filter(o => {
+      // Handle different date formats - createdAt might be order ID
+      const orderDate = o.createdAt || o.created_at || "";
+      if (typeof orderDate === 'string' && orderDate.length >= 10) {
+        return orderDate.slice(0, 10) === date;
+      }
+      return false;
+    }).length,
+    revenue: orders.filter(o => {
+      // Handle different date formats - createdAt might be order ID
+      const orderDate = o.createdAt || o.created_at || "";
+      if (typeof orderDate === 'string' && orderDate.length >= 10) {
+        return orderDate.slice(0, 10) === date;
+      }
+      return false;
+    }).reduce((sum, o) => sum + (o.total || 0), 0)
   }));
 
   // Top users by order count
