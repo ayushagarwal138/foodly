@@ -137,9 +137,25 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}/status")
-    public Order updateOrderStatus(@PathVariable Long orderId, @RequestBody Map<String, Object> request) {
+    public Order updateOrderStatus(@PathVariable Long orderId, @RequestBody Map<String, Object> request, @AuthenticationPrincipal UserDetails userDetails) {
         Order order = orderRepository.findById(orderId).orElseThrow();
+        
+        // Check if user is restaurant owner
+        User user = customerRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+        if (!"RESTAURANT".equals(user.getRole())) {
+            throw new RuntimeException("Only restaurant owners can update order status");
+        }
+        
+        // Verify restaurant owns this order
+        if (!order.getRestaurantId().equals(user.getId())) {
+            throw new RuntimeException("You can only update orders for your restaurant");
+        }
+        
         String newStatus = (String) request.get("status");
+        if (newStatus == null || newStatus.trim().isEmpty()) {
+            throw new RuntimeException("Status is required");
+        }
+        
         order.setStatus(newStatus);
         return orderRepository.save(order);
     }

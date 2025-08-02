@@ -29,6 +29,12 @@ public class SupportController {
         if ("Delivered".equalsIgnoreCase(order.getStatus()) || "Cancelled".equalsIgnoreCase(order.getStatus())) {
             throw new RuntimeException("Chat is disabled for delivered or cancelled orders.");
         }
+        
+        // If restaurantId is not provided, get it from the order
+        if (restaurantId == null) {
+            restaurantId = order.getRestaurantId();
+        }
+        
         if (customerId != null && restaurantId != null) {
             return chatRepo.findByOrderIdAndCustomerIdAndRestaurantIdOrderByTimestamp(orderId, customerId, restaurantId);
         } else if (restaurantId != null) {
@@ -50,6 +56,12 @@ public class SupportController {
         if ("Delivered".equalsIgnoreCase(order.getStatus()) || "Cancelled".equalsIgnoreCase(order.getStatus())) {
             throw new RuntimeException("Chat is disabled for delivered or cancelled orders.");
         }
+        
+        // If restaurantId is not provided, get it from the order
+        if (msg.getRestaurantId() == null) {
+            msg.setRestaurantId(order.getRestaurantId());
+        }
+        
         msg.setTimestamp(new java.util.Date());
         return chatRepo.save(msg);
     }
