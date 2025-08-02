@@ -119,24 +119,11 @@ export default function SignupForm() {
         openingHours: formData.openingHours
       });
       if (data.id) localStorage.setItem("userId", data.id);
-      // Fetch user profile and store username/email
-      if (data.id && data.token) {
-        try {
-          let profile;
-          if (formData.role.toUpperCase() === "CUSTOMER") {
-            profile = await api.get(API_ENDPOINTS.CUSTOMER_PROFILE(data.id));
-          } else if (formData.role.toUpperCase() === "RESTAURANT") {
-            profile = await api.get(API_ENDPOINTS.RESTAURANT_BY_OWNER(data.id));
-          }
-          
-          if (profile) {
-            if (profile.username || profile.name) localStorage.setItem("username", profile.username || profile.name);
-            if (profile.email) localStorage.setItem("email", profile.email);
-          }
-        } catch (profileError) {
-          console.warn("Failed to fetch profile:", profileError);
-        }
-      }
+      
+      // Set basic info from signup response
+      localStorage.setItem("username", formData.username);
+      if (formData.email) localStorage.setItem("email", formData.email);
+      
       setToast({ message: "Registration successful!", type: "success" });
       setTimeout(() => navigate(`/${formData.role.toLowerCase()}/login`), 1000);
     } catch (err) {
