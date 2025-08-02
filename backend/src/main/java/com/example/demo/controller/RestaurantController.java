@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.Restaurant;
+import com.example.demo.model.User;
 import com.example.demo.repository.RestaurantRepository;
 import com.example.demo.model.MenuItem;
 import com.example.demo.repository.MenuItemRepository;
@@ -59,7 +60,21 @@ public class RestaurantController {
     }
 
     @GetMapping("/{id}")
-    public Map<String, Object> getRestaurantById(@PathVariable Long id) {
+    public Map<String, Object> getRestaurantById(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        // For restaurant owners, verify they own this restaurant
+        if (userDetails != null) {
+            User authenticatedUser = customerRepository.findByUsername(userDetails.getUsername())
+                .orElse(null);
+            
+            if (authenticatedUser != null && "RESTAURANT".equals(authenticatedUser.getRole())) {
+                Restaurant restaurant = restaurantRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Restaurant not found"));
+                
+                if (!restaurant.getOwner().getId().equals(authenticatedUser.getId())) {
+                    throw new RuntimeException("Access denied. You can only view your own restaurant.");
+                }
+            }
+        }
         Restaurant restaurant = restaurantRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Restaurant not found"));
         Map<String, Object> result = new java.util.HashMap<>();
@@ -125,7 +140,14 @@ public class RestaurantController {
     }
 
     @GetMapping("/by-owner/{ownerId}")
-    public Map<String, Object> getRestaurantByOwnerId(@PathVariable Long ownerId) {
+    public Map<String, Object> getRestaurantByOwnerId(@PathVariable Long ownerId, @AuthenticationPrincipal UserDetails userDetails) {
+        // Verify that the authenticated user is requesting their own restaurant
+        User authenticatedUser = customerRepository.findByUsername(userDetails.getUsername())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        if (!authenticatedUser.getId().equals(ownerId)) {
+            throw new RuntimeException("Access denied. You can only view your own restaurant.");
+        }
         System.out.println("=== Restaurant Profile Debug ===");
         System.out.println("Requested owner ID: " + ownerId);
         
@@ -163,7 +185,17 @@ public class RestaurantController {
     }
 
     @GetMapping("/{id}/menu")
-    public List<MenuItem> getMenuForRestaurant(@PathVariable Long id) {
+    public List<MenuItem> getMenuForRestaurant(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        // Verify that the authenticated user owns this restaurant
+        User authenticatedUser = customerRepository.findByUsername(userDetails.getUsername())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        Restaurant restaurant = restaurantRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Restaurant not found"));
+        
+        if (!restaurant.getOwner().getId().equals(authenticatedUser.getId())) {
+            throw new RuntimeException("Access denied. You can only view menu for your own restaurant.");
+        }
         return menuItemRepository.findByRestaurantId(id);
     }
 
@@ -176,7 +208,17 @@ public class RestaurantController {
     }
 
     @GetMapping("/{id}/orders")
-    public List<Map<String, Object>> getOrdersForRestaurant(@PathVariable Long id) {
+    public List<Map<String, Object>> getOrdersForRestaurant(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        // Verify that the authenticated user owns this restaurant
+        User authenticatedUser = customerRepository.findByUsername(userDetails.getUsername())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        Restaurant restaurant = restaurantRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Restaurant not found"));
+        
+        if (!restaurant.getOwner().getId().equals(authenticatedUser.getId())) {
+            throw new RuntimeException("Access denied. You can only view orders for your own restaurant.");
+        }
         return orderRepository.findAll().stream()
             .filter(o -> o.getRestaurantId().equals(id))
             .sorted((a, b) -> b.getId().compareTo(a.getId())) // Sort by ID descending (latest first)
@@ -207,7 +249,17 @@ public class RestaurantController {
     }
 
     @GetMapping("/{id}/analytics")
-    public Map<String, Object> getAnalytics(@PathVariable Long id) {
+    public Map<String, Object> getAnalytics(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        // Verify that the authenticated user owns this restaurant
+        User authenticatedUser = customerRepository.findByUsername(userDetails.getUsername())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        Restaurant restaurant = restaurantRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Restaurant not found"));
+        
+        if (!restaurant.getOwner().getId().equals(authenticatedUser.getId())) {
+            throw new RuntimeException("Access denied. You can only view analytics for your own restaurant.");
+        }
         Map<String, Object> analytics = new java.util.HashMap<>();
         // Orders for this restaurant (sorted by latest first)
         List<Order> orders = orderRepository.findAll().stream()
