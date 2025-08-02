@@ -10,7 +10,7 @@ import LoginForm from "./components/LoginForm";
 import SignupForm from "./components/SignupForm";
 import CustomerDashboard from "./components/customer/CustomerDashboard";
 import RestaurantLayout from "./components/restaurant/RestaurantLayout";
-import AdminDashboard from "./components/admin/AdminDashboard";
+import AdminLayout from "./components/admin/AdminLayout";
 import { CartProvider } from "./components/customer/CartContext";
 
 function UserPage() {
@@ -41,7 +41,7 @@ function App() {
         <Route path="/admin/login" element={<LoginForm role="Admin" />} />
         <Route path="/customer/*" element={<CartProvider><CustomerDashboard /></CartProvider>} />
         <Route path="/restaurant/*" element={<RestaurantLayout />} />
-        <Route path="/admin/*" element={<AdminDashboard />} />
+        <Route path="/admin/*" element={<AdminLayout />} />
       </Routes>
     </Router>
   );
