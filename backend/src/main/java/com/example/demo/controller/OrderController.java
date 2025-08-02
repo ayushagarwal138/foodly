@@ -70,7 +70,7 @@ public class OrderController {
         Order order = new Order();
         order.setUserId(customer.getId());
         order.setRestaurantId(restaurantId);
-        order.setStatus("NEW");
+        order.setStatus("New");
         double total = 0.0;
         List<OrderItem> orderItems = new java.util.ArrayList<>();
         if (items != null) {

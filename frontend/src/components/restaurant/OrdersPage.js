@@ -196,35 +196,44 @@ export default function OrdersPage() {
   });
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case "New": return "bg-blue-100 text-blue-800";
-      case "Accepted": return "bg-yellow-100 text-yellow-800";
-      case "Preparing": return "bg-orange-100 text-orange-800";
-      case "Out for Delivery": return "bg-purple-100 text-purple-800";
-      case "Delivered": return "bg-green-100 text-green-800";
-      case "Cancelled": return "bg-red-100 text-red-800";
+    // Normalize status to handle both "NEW" and "New" cases
+    const normalizedStatus = status?.toLowerCase();
+    
+    switch (normalizedStatus) {
+      case "new": return "bg-blue-100 text-blue-800";
+      case "accepted": return "bg-yellow-100 text-yellow-800";
+      case "preparing": return "bg-orange-100 text-orange-800";
+      case "out for delivery": return "bg-purple-100 text-purple-800";
+      case "delivered": return "bg-green-100 text-green-800";
+      case "cancelled": return "bg-red-100 text-red-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
 
   const getNextStatus = (currentStatus) => {
-    switch (currentStatus) {
-      case "New": return "Accepted";
-      case "Accepted": return "Preparing";
-      case "Preparing": return "Out for Delivery";
-      case "Out for Delivery": return "Delivered";
+    // Normalize status to handle both "NEW" and "New" cases
+    const normalizedStatus = currentStatus?.toLowerCase();
+    
+    switch (normalizedStatus) {
+      case "new": return "Accepted";
+      case "accepted": return "Preparing";
+      case "preparing": return "Out for Delivery";
+      case "out for delivery": return "Delivered";
       default: return null;
     }
   };
 
   const getStatusIcon = (status) => {
-    switch (status) {
-      case "New": return "🆕";
-      case "Accepted": return "✅";
-      case "Preparing": return "👨‍🍳";
-      case "Out for Delivery": return "🚚";
-      case "Delivered": return "🎉";
-      case "Cancelled": return "❌";
+    // Normalize status to handle both "NEW" and "New" cases
+    const normalizedStatus = status?.toLowerCase();
+    
+    switch (normalizedStatus) {
+      case "new": return "🆕";
+      case "accepted": return "✅";
+      case "preparing": return "👨‍🍳";
+      case "out for delivery": return "🚚";
+      case "delivered": return "🎉";
+      case "cancelled": return "❌";
       default: return "📋";
     }
   };
@@ -245,6 +254,9 @@ export default function OrdersPage() {
             <div>Error: {error || 'None'}</div>
             <div>Chat Modal Open: {showChatModal ? 'Yes' : 'No'}</div>
             <div>Selected Order: {selectedOrder?.id || 'None'}</div>
+            <div>Sample Order Status: {orders[0]?.status || 'No orders'}</div>
+            <div>Next Status for New: {getNextStatus('New')}</div>
+            <div>Next Status for NEW: {getNextStatus('NEW')}</div>
           </div>
         </div>
       )}
@@ -318,7 +330,7 @@ export default function OrdersPage() {
                       Mark as {getNextStatus(order.status)}
                     </button>
                   )}
-                  {order.status === "New" && (
+                  {order.status?.toLowerCase() === "new" && (
                     <button
                       onClick={() => updateOrderStatus(order.id, "Cancelled")}
                       className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm"

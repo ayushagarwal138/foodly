@@ -3,11 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { api, API_ENDPOINTS } from "../../config/api";
 
 const STATUS_STEPS = [
-  { key: "New", label: "Order Placed", icon: "🆕", color: "blue" },
-  { key: "Accepted", label: "Confirmed by Restaurant", icon: "✅", color: "yellow" },
-  { key: "Preparing", label: "Preparing Your Order", icon: "👨‍🍳", color: "orange" },
-  { key: "Out for Delivery", label: "Out for Delivery", icon: "🚚", color: "purple" },
-  { key: "Delivered", label: "Delivered", icon: "🎉", color: "green" }
+  { key: "new", label: "Order Placed", icon: "🆕", color: "blue" },
+  { key: "accepted", label: "Confirmed by Restaurant", icon: "✅", color: "yellow" },
+  { key: "preparing", label: "Preparing Your Order", icon: "👨‍🍳", color: "orange" },
+  { key: "out for delivery", label: "Out for Delivery", icon: "🚚", color: "purple" },
+  { key: "delivered", label: "Delivered", icon: "🎉", color: "green" }
 ];
 
 function useQuery() {
@@ -144,17 +144,20 @@ export default function OrderTrackingPage() {
   }, [showChatModal, order?.restaurantId]);
 
   const getStatusIndex = (status) => {
-    return STATUS_STEPS.findIndex(step => step.key === status);
+    const normalizedStatus = status?.toLowerCase();
+    return STATUS_STEPS.findIndex(step => step.key === normalizedStatus);
   };
 
   const getStatusColor = (status) => {
-    const step = STATUS_STEPS.find(s => s.key === status);
+    const normalizedStatus = status?.toLowerCase();
+    const step = STATUS_STEPS.find(s => s.key === normalizedStatus);
     if (!step) return "gray";
     return step.color;
   };
 
   const getStatusIcon = (status) => {
-    const step = STATUS_STEPS.find(s => s.key === status);
+    const normalizedStatus = status?.toLowerCase();
+    const step = STATUS_STEPS.find(s => s.key === normalizedStatus);
     return step ? step.icon : "📋";
   };
 
