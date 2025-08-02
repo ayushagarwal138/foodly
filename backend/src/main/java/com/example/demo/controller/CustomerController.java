@@ -33,10 +33,20 @@ public class CustomerController {
 
     @GetMapping("/{id}")
     public User getCustomerById(@PathVariable Long id, @AuthenticationPrincipal org.springframework.security.core.userdetails.User principal) {
+        System.out.println("=== Customer Profile Debug ===");
+        System.out.println("Requested user ID: " + id);
+        System.out.println("Principal: " + (principal != null ? principal.getUsername() : "NULL"));
+        
         User user = customerRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        System.out.println("Found user: " + user.getUsername());
+        System.out.println("User ID match: " + user.getUsername().equals(principal.getUsername()));
+        
         if (!user.getUsername().equals(principal.getUsername())) {
+            System.out.println("ERROR: Username mismatch. User: " + user.getUsername() + ", Principal: " + principal.getUsername());
             throw new AccessDeniedException("Forbidden");
         }
+        
+        System.out.println("Profile access granted");
         return user;
     }
 

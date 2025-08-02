@@ -126,10 +126,17 @@ public class RestaurantController {
 
     @GetMapping("/by-owner/{ownerId}")
     public Map<String, Object> getRestaurantByOwnerId(@PathVariable Long ownerId) {
+        System.out.println("=== Restaurant Profile Debug ===");
+        System.out.println("Requested owner ID: " + ownerId);
+        
         Restaurant restaurant = restaurantRepository.findAll().stream()
             .filter(r -> r.getOwner() != null && r.getOwner().getId().equals(ownerId))
             .findFirst()
             .orElseThrow(() -> new RuntimeException("Restaurant not found for owner"));
+        
+        System.out.println("Found restaurant: " + restaurant.getName() + " (ID: " + restaurant.getId() + ")");
+        System.out.println("Restaurant owner: " + (restaurant.getOwner() != null ? restaurant.getOwner().getUsername() : "NULL"));
+        
         Map<String, Object> result = new java.util.HashMap<>();
         result.put("id", restaurant.getId());
         result.put("name", restaurant.getName());
@@ -150,6 +157,8 @@ public class RestaurantController {
         } else {
             result.put("owner", null);
         }
+        
+        System.out.println("Restaurant profile returned successfully");
         return result;
     }
 
