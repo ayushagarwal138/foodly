@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Toast from "./Toast";
+import { api, API_ENDPOINTS } from "../config/api";
 
 export default function SignupForm() {
   const [formData, setFormData] = useState({
@@ -105,46 +106,35 @@ export default function SignupForm() {
 
     setLoading(true);
     try {
-      const res = await fetch("/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password,
-          email: formData.email,
-          role: formData.role,
-          restaurantName: formData.restaurantName,
-          restaurantAddress: formData.restaurantAddress,
-          restaurantPhone: formData.restaurantPhone,
-          cuisineType: formData.cuisineType,
-          description: formData.description,
-          openingHours: formData.openingHours
-        })
+      const data = await api.post(API_ENDPOINTS.SIGNUP, {
+        username: formData.username,
+        password: formData.password,
+        email: formData.email,
+        role: formData.role,
+        restaurantName: formData.restaurantName,
+        restaurantAddress: formData.restaurantAddress,
+        restaurantPhone: formData.restaurantPhone,
+        cuisineType: formData.cuisineType,
+        description: formData.description,
+        openingHours: formData.openingHours
       });
-      
-      const data = await res.json();
-      
-      if (!res.ok || data.error) {
-        throw new Error(data.error || "Signup failed");
-      }
       if (data.id) localStorage.setItem("userId", data.id);
       // Fetch user profile and store username/email
       if (data.id && data.token) {
-        let url = "";
-        if (formData.role.toUpperCase() === "CUSTOMER") {
-          url = `/api/customers/${data.id}`;
-        } else if (formData.role.toUpperCase() === "RESTAURANT") {
-          url = `/api/restaurants/${data.id}`;
-        }
-        if (url) {
-          const profileRes = await fetch(url, {
-            headers: { Authorization: `Bearer ${data.token}` }
-          });
-          if (profileRes.ok) {
-            const profile = await profileRes.json();
+        try {
+          let profile;
+          if (formData.role.toUpperCase() === "CUSTOMER") {
+            profile = await api.get(API_ENDPOINTS.CUSTOMER_PROFILE(data.id));
+          } else if (formData.role.toUpperCase() === "RESTAURANT") {
+            profile = await api.get(API_ENDPOINTS.RESTAURANT_BY_OWNER(data.id));
+          }
+          
+          if (profile) {
             if (profile.username || profile.name) localStorage.setItem("username", profile.username || profile.name);
             if (profile.email) localStorage.setItem("email", profile.email);
           }
+        } catch (profileError) {
+          console.warn("Failed to fetch profile:", profileError);
         }
       }
       setToast({ message: "Registration successful!", type: "success" });
