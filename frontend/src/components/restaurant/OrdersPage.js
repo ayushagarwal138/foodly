@@ -20,11 +20,16 @@ export default function OrdersPage() {
       console.log("Fetching restaurant ID for user:", userId);
       const data = await api.get(API_ENDPOINTS.RESTAURANT_BY_OWNER(userId));
       console.log("Fetched restaurant data:", data);
-      setRestaurantId(data.id);
-      console.log("Set restaurant ID to:", data.id);
+      if (data && data.id) {
+        setRestaurantId(data.id);
+        console.log("Set restaurant ID to:", data.id);
+      } else {
+        console.error("No restaurant ID found in response:", data);
+        setError("Restaurant information not found");
+      }
     } catch (err) {
       console.error("Error fetching restaurant ID:", err);
-      setError("Failed to fetch restaurant information");
+      setError("Failed to fetch restaurant information: " + err.message);
     }
   }, [userId]);
 
@@ -47,14 +52,30 @@ export default function OrdersPage() {
   }, [restaurantId]);
 
   const updateOrderStatus = async (orderId, newStatus) => {
+    if (!restaurantId) {
+      setError("Restaurant ID not available");
+      return;
+    }
+    
     try {
       console.log("Updating order status:", { orderId, newStatus, restaurantId });
       const data = await api.patch(API_ENDPOINTS.ORDER_STATUS(orderId), { status: newStatus });
       console.log("Updated order status response:", data);
-      await fetchOrders(); // Refresh the list
+      
+      // Update the order in the local state immediately
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order.id === orderId 
+            ? { ...order, status: newStatus }
+            : order
+        )
+      );
+      
+      // Also refresh the orders list
+      await fetchOrders();
     } catch (err) {
       console.error("Error updating order status:", err);
-      setError("Failed to update order status. Please try again.");
+      setError("Failed to update order status: " + err.message);
     }
   };
 

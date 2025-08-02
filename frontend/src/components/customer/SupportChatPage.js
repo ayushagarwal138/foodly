@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function SupportChatPage() {
   const [messages, setMessages] = useState([]);
@@ -13,16 +14,12 @@ export default function SupportChatPage() {
   const restaurantId = params.get("restaurantId");
 
   const fetchMessages = async () => {
-    // No setLoading here to avoid UI flicker during polling
     setError("");
     try {
-      const res = await fetch(`/api/support/messages?orderId=${orderId}&customerId=${userId}&restaurantId=${restaurantId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to fetch messages");
-      const data = await res.json();
-      setMessages(data);
+      const data = await api.get(`${API_ENDPOINTS.SUPPORT_MESSAGES}?orderId=${orderId}&customerId=${userId}&restaurantId=${restaurantId}`);
+      setMessages(Array.isArray(data) ? data : []);
     } catch (err) {
+      console.error("Error fetching messages:", err);
       setError(err.message);
     }
   };
@@ -48,22 +45,22 @@ export default function SupportChatPage() {
   async function sendMessage(e) {
     e.preventDefault();
     if (!input.trim()) return;
+    
     try {
-      const res = await fetch(`/api/support/messages`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ customerId: userId, sender: "customer", orderId, restaurantId, message: input })
-      });
-      if (!res.ok) throw new Error("Failed to send message");
-      const newMsg = await res.json();
+      const messageData = {
+        customerId: userId,
+        sender: "customer",
+        orderId: orderId,
+        restaurantId: restaurantId,
+        message: input
+      };
+      
+      const newMsg = await api.post(API_ENDPOINTS.SUPPORT_MESSAGES, messageData);
       setMessages(prev => [...prev, newMsg]);
       setInput("");
-      await fetchMessages(); // Immediately fetch after sending
     } catch (err) {
-      setError("Failed to send message");
+      console.error("Error sending message:", err);
+      setError("Failed to send message: " + err.message);
     }
   }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function SupportPage() {
@@ -7,29 +7,54 @@ export default function SupportPage() {
   const [error, setError] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
-  const restaurantId = localStorage.getItem("restaurantId");
+  const [restaurantId, setRestaurantId] = useState(null);
+  const userId = localStorage.getItem("userId");
+  const token = localStorage.getItem("token");
 
-  const fetchMessages = async () => {
+  const fetchRestaurantId = useCallback(async () => {
+    try {
+      console.log("Fetching restaurant ID for support page, user:", userId);
+      const data = await api.get(API_ENDPOINTS.RESTAURANT_BY_OWNER(userId));
+      console.log("Fetched restaurant data for support:", data);
+      if (data && data.id) {
+        setRestaurantId(data.id);
+        console.log("Set restaurant ID for support to:", data.id);
+      } else {
+        console.error("No restaurant ID found in response:", data);
+        setError("Restaurant information not found");
+      }
+    } catch (err) {
+      console.error("Error fetching restaurant ID for support:", err);
+      setError("Failed to fetch restaurant information: " + err.message);
+    }
+  }, [userId]);
+
+  const fetchMessages = useCallback(async () => {
+    if (!restaurantId) {
+      console.log("No restaurant ID available for fetching messages");
+      return;
+    }
+    
     setError("");
     try {
-      const data = await api.get(API_ENDPOINTS.SUPPORT_MESSAGES + `?restaurantId=${restaurantId}`);
+      const data = await api.get(API_ENDPOINTS.SUPPORT_MESSAGES + `/restaurant/${restaurantId}`);
       console.log("Fetched support messages:", data);
       setMessages(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error fetching support messages:", err);
       setError(err.message);
     }
-  };
+  }, [restaurantId]);
 
   const sendMessage = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !restaurantId) return;
     
     setSending(true);
     try {
       const messageData = {
-        text: newMessage,
         restaurantId: restaurantId,
-        senderType: "restaurant"
+        sender: "restaurant",
+        message: newMessage
       };
       
       const data = await api.post(API_ENDPOINTS.SUPPORT_MESSAGES, messageData);
@@ -44,27 +69,35 @@ export default function SupportPage() {
     }
   };
 
+  // Initial fetch
   useEffect(() => {
     async function initialFetch() {
       setLoading(true);
-      await fetchMessages();
+      await fetchRestaurantId();
       setLoading(false);
     }
-    if (restaurantId) {
+    if (userId && token) {
       initialFetch();
     }
-  }, [restaurantId]);
+  }, [userId, token, fetchRestaurantId]);
+
+  // Fetch messages when restaurant ID is available
+  useEffect(() => {
+    if (restaurantId) {
+      fetchMessages();
+    }
+  }, [restaurantId, fetchMessages]);
 
   // Auto-refresh messages every 30 seconds
   useEffect(() => {
+    if (!restaurantId) return;
+    
     const interval = setInterval(() => {
-      if (restaurantId) {
-        fetchMessages();
-      }
+      fetchMessages();
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [restaurantId]);
+  }, [restaurantId, fetchMessages]);
 
   if (loading) return <div className="p-10 text-center">Loading...</div>;
   if (error) return <div className="p-10 text-center text-red-600">{error}</div>;

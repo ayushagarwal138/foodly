@@ -154,7 +154,7 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}/status")
-    public Order updateOrderStatus(@PathVariable Long orderId, @RequestBody Map<String, Object> request, @AuthenticationPrincipal UserDetails userDetails) {
+    public Map<String, Object> updateOrderStatus(@PathVariable Long orderId, @RequestBody Map<String, Object> request, @AuthenticationPrincipal UserDetails userDetails) {
         Order order = orderRepository.findById(orderId).orElseThrow();
         
         // Check if user is restaurant owner
@@ -183,6 +183,27 @@ public class OrderController {
         }
         
         order.setStatus(newStatus);
-        return orderRepository.save(order);
+        Order updatedOrder = orderRepository.save(order);
+        
+        // Return the updated order in the same format as getOrderById
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("id", updatedOrder.getId());
+        result.put("userId", updatedOrder.getUserId());
+        result.put("restaurantId", updatedOrder.getRestaurantId());
+        result.put("status", updatedOrder.getStatus());
+        result.put("total", updatedOrder.getTotal());
+        result.put("items", updatedOrder.getItems());
+        result.put("date", updatedOrder.getId());
+        result.put("createdAt", updatedOrder.getId());
+        
+        // Add restaurant name
+        String restaurantName = "";
+        if (updatedOrder.getRestaurantId() != null) {
+            var restOpt = restaurantRepository.findById(updatedOrder.getRestaurantId());
+            if (restOpt.isPresent()) restaurantName = restOpt.get().getName();
+        }
+        result.put("restaurantName", restaurantName);
+        
+        return result;
     }
 } 

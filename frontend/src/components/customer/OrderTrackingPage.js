@@ -134,14 +134,14 @@ export default function OrderTrackingPage() {
 
   // Polling for chat messages when chat modal is open
   useEffect(() => {
-    if (!showChatModal || !order) return;
+    if (!showChatModal || !order || !order.restaurantId) return;
 
     const chatPollInterval = setInterval(() => {
       fetchChatMessages();
     }, 3000); // Poll every 3 seconds
 
     return () => clearInterval(chatPollInterval);
-  }, [showChatModal, order]);
+  }, [showChatModal, order?.restaurantId]);
 
   const getStatusIndex = (status) => {
     return STATUS_STEPS.findIndex(step => step.key === status);
