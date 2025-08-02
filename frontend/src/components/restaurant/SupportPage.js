@@ -1,29 +1,46 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function SupportPage() {
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [newMessage, setNewMessage] = useState("");
+  const [sending, setSending] = useState(false);
   const restaurantId = localStorage.getItem("restaurantId");
-  const token = localStorage.getItem("token");
-  const messagesEndRef = useRef(null);
-  const params = new URLSearchParams(window.location.search);
-  const orderId = params.get('orderId');
-  const customerId = params.get('customerId');
 
   const fetchMessages = async () => {
-    // No setLoading here to avoid UI flicker during polling
     setError("");
     try {
-      const res = await fetch(`/api/support/messages?orderId=${orderId}&restaurantId=${restaurantId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to fetch messages");
-      const data = await res.json();
-      setMessages(data);
+      const data = await api.get(API_ENDPOINTS.SUPPORT_MESSAGES + `?restaurantId=${restaurantId}`);
+      console.log("Fetched support messages:", data);
+      setMessages(Array.isArray(data) ? data : []);
     } catch (err) {
+      console.error("Error fetching support messages:", err);
       setError(err.message);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!newMessage.trim()) return;
+    
+    setSending(true);
+    try {
+      const messageData = {
+        text: newMessage,
+        restaurantId: restaurantId,
+        senderType: "restaurant"
+      };
+      
+      const data = await api.post(API_ENDPOINTS.SUPPORT_MESSAGES, messageData);
+      console.log("Sent support message:", data);
+      setMessages(prev => [...prev, data]);
+      setNewMessage("");
+    } catch (err) {
+      console.error("Error sending message:", err);
+      setError(err.message);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -33,73 +50,107 @@ export default function SupportPage() {
       await fetchMessages();
       setLoading(false);
     }
-    if (restaurantId && token && orderId) {
+    if (restaurantId) {
       initialFetch();
     }
-  }, [restaurantId, token, orderId]);
-  
-  // Polling for new messages
-  useEffect(() => {
-    if (!restaurantId || !token || !orderId) return;
-    const interval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
-    return () => clearInterval(interval); // Cleanup on component unmount
-  }, [restaurantId, token, orderId]);
+  }, [restaurantId]);
 
-  async function sendMessage(e) {
-    e.preventDefault();
-    if (!input.trim() || !customerId) return;
-    try {
-      const res = await fetch(`/api/support/messages`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ restaurantId, sender: "restaurant", orderId, customerId, message: input })
-      });
-      if (!res.ok) throw new Error("Failed to send message");
-      const newMsg = await res.json();
-      setMessages(prev => [...prev, newMsg]);
-      setInput("");
-      await fetchMessages(); // Immediately fetch after sending
-    } catch (err) {
-      setError("Failed to send message");
-    }
-  }
-
+  // Auto-refresh messages every 30 seconds
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
+    const interval = setInterval(() => {
+      if (restaurantId) {
+        fetchMessages();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [restaurantId]);
 
   if (loading) return <div className="p-10 text-center">Loading...</div>;
   if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100 flex flex-col h-[70vh]">
-      <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Support Chat for Order #{orderId}</h2>
-      <div className="flex-1 overflow-y-auto mb-4">
-        {messages.length === 0 ? (
-          <div className="text-gray-500 text-center">No messages yet.</div>
-        ) : (
-          messages.map((msg, idx) => (
-            <div key={idx} className={`mb-3 flex ${msg.sender === 'restaurant' ? 'justify-end' : 'justify-start'}`} >
-              <div className={`px-4 py-2 rounded-xl shadow ${msg.sender === 'restaurant' ? 'bg-blue-100 text-blue-900' : 'bg-gray-100 text-gray-700'} hover:scale-105 transition-transform duration-200`}>{msg.message}</div>
-            </div>
-          ))
-        )}
-        <div ref={messagesEndRef} />
+    <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
+      <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Customer Support</h2>
+      
+      <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+        <h3 className="text-lg font-semibold text-blue-800 mb-2">How to use Support</h3>
+        <ul className="text-sm text-blue-700 space-y-1">
+          <li>• Customers can send you messages about their orders</li>
+          <li>• Respond promptly to maintain good customer service</li>
+          <li>• Messages are automatically refreshed every 30 seconds</li>
+          <li>• You can send messages to help resolve customer issues</li>
+        </ul>
       </div>
-      <form className="flex gap-2" onSubmit={sendMessage}>
-        <input
-          className="flex-1 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200"
-          placeholder="Type your message..."
-          value={input}
-          onChange={e => setInput(e.target.value)}
-        />
-        <button className="bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow hover:bg-blue-700 transition-all duration-200 text-lg" type="submit">Send</button>
-      </form>
+
+      {/* Messages List */}
+      <div className="mb-6 max-h-96 overflow-y-auto">
+        {messages.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="text-gray-500 mb-2">No support messages yet.</div>
+            <div className="text-sm text-gray-400">Customer messages will appear here when they contact you.</div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`p-4 rounded-xl border ${
+                  message.senderType === "restaurant"
+                    ? "bg-blue-50 border-blue-200 ml-8"
+                    : "bg-gray-50 border-gray-200 mr-8"
+                }`}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      message.senderType === "restaurant"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-gray-100 text-gray-800"
+                    }`}>
+                      {message.senderType === "restaurant" ? "You" : "Customer"}
+                    </span>
+                    {message.orderId && (
+                      <span className="text-xs text-gray-500">Order #{message.orderId}</span>
+                    )}
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    {new Date(message.createdAt || message.created_at).toLocaleString()}
+                  </span>
+                </div>
+                <p className="text-gray-800">{message.text}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Send Message Form */}
+      <div className="border-t pt-6">
+        <h3 className="text-lg font-semibold text-[#16213e] mb-4">Send Message</h3>
+        <div className="flex gap-4">
+          <textarea
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Type your message to the customer..."
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            rows={3}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={sending || !newMessage.trim()}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {sending ? "Sending..." : "Send"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 } 
