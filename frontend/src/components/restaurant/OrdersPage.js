@@ -58,8 +58,18 @@ export default function OrdersPage() {
     }
     
     try {
+      console.log("=== Frontend Order Status Update Debug ===");
+      console.log("Order ID:", orderId);
+      console.log("New Status:", newStatus);
+      console.log("Restaurant ID:", restaurantId);
+      console.log("User ID:", userId);
+      console.log("Token:", token ? "Present" : "Missing");
+      
+      const requestData = { status: newStatus };
+      console.log("Request Data:", requestData);
+      
       console.log("Updating order status:", { orderId, newStatus, restaurantId });
-      const data = await api.patch(API_ENDPOINTS.ORDER_STATUS(orderId), { status: newStatus });
+      const data = await api.patch(API_ENDPOINTS.ORDER_STATUS(orderId), requestData);
       console.log("Updated order status response:", data);
       
       // Update the order in the local state immediately
@@ -75,6 +85,11 @@ export default function OrdersPage() {
       await fetchOrders();
     } catch (err) {
       console.error("Error updating order status:", err);
+      console.error("Error details:", {
+        message: err.message,
+        status: err.status,
+        response: err.response
+      });
       setError("Failed to update order status: " + err.message);
     }
   };

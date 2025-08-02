@@ -155,55 +155,78 @@ public class OrderController {
 
     @PutMapping("/{orderId}/status")
     public Map<String, Object> updateOrderStatus(@PathVariable Long orderId, @RequestBody Map<String, Object> request, @AuthenticationPrincipal UserDetails userDetails) {
-        Order order = orderRepository.findById(orderId).orElseThrow();
-        
-        // Check if user is restaurant owner
-        User user = customerRepository.findByUsername(userDetails.getUsername()).orElseThrow();
-        if (!"RESTAURANT".equals(user.getRole())) {
-            throw new RuntimeException("Only restaurant owners can update order status");
+        try {
+            System.out.println("=== Order Status Update Debug ===");
+            System.out.println("Order ID: " + orderId);
+            System.out.println("User Details: " + (userDetails != null ? userDetails.getUsername() : "NULL"));
+            System.out.println("Request: " + request);
+            
+            Order order = orderRepository.findById(orderId).orElseThrow();
+            System.out.println("Found order: " + order.getId() + ", Restaurant ID: " + order.getRestaurantId());
+            
+            // Check if user is restaurant owner
+            User user = customerRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+            System.out.println("Found user: " + user.getId() + ", Role: " + user.getRole());
+            
+            if (!"RESTAURANT".equals(user.getRole())) {
+                System.out.println("ERROR: User role is not RESTAURANT");
+                throw new RuntimeException("Only restaurant owners can update order status");
+            }
+            
+            // Find the restaurant owned by this user
+            var restaurantOpt = restaurantRepository.findAll().stream()
+                .filter(r -> r.getOwner() != null && r.getOwner().getId().equals(user.getId()))
+                .findFirst();
+            
+            if (restaurantOpt.isEmpty()) {
+                System.out.println("ERROR: No restaurant found for user ID: " + user.getId());
+                throw new RuntimeException("Restaurant not found for this user");
+            }
+            
+            var restaurant = restaurantOpt.get();
+            System.out.println("Found restaurant: " + restaurant.getId() + ", Order restaurant: " + order.getRestaurantId());
+            
+            // Verify restaurant owns this order
+            if (!order.getRestaurantId().equals(restaurant.getId())) {
+                System.out.println("ERROR: Restaurant ID mismatch. User's restaurant: " + restaurant.getId() + ", Order's restaurant: " + order.getRestaurantId());
+                throw new RuntimeException("You can only update orders for your restaurant");
+            }
+            
+            String newStatus = (String) request.get("status");
+            if (newStatus == null || newStatus.trim().isEmpty()) {
+                System.out.println("ERROR: Status is null or empty");
+                throw new RuntimeException("Status is required");
+            }
+            
+            System.out.println("Updating order status from '" + order.getStatus() + "' to '" + newStatus + "'");
+            order.setStatus(newStatus);
+            Order updatedOrder = orderRepository.save(order);
+            System.out.println("Order updated successfully");
+            
+            // Return the updated order in the same format as getOrderById
+            Map<String, Object> result = new java.util.HashMap<>();
+            result.put("id", updatedOrder.getId());
+            result.put("userId", updatedOrder.getUserId());
+            result.put("restaurantId", updatedOrder.getRestaurantId());
+            result.put("status", updatedOrder.getStatus());
+            result.put("total", updatedOrder.getTotal());
+            result.put("items", updatedOrder.getItems());
+            result.put("date", updatedOrder.getId());
+            result.put("createdAt", updatedOrder.getId());
+            
+            // Add restaurant name
+            String restaurantName = "";
+            if (updatedOrder.getRestaurantId() != null) {
+                var restOpt = restaurantRepository.findById(updatedOrder.getRestaurantId());
+                if (restOpt.isPresent()) restaurantName = restOpt.get().getName();
+            }
+            result.put("restaurantName", restaurantName);
+            
+            return result;
+        } catch (Exception e) {
+            System.out.println("ERROR in updateOrderStatus: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
         }
-        
-        // Find the restaurant owned by this user
-        var restaurantOpt = restaurantRepository.findAll().stream()
-            .filter(r -> r.getOwner() != null && r.getOwner().getId().equals(user.getId()))
-            .findFirst();
-        
-        if (restaurantOpt.isEmpty()) {
-            throw new RuntimeException("Restaurant not found for this user");
-        }
-        
-        // Verify restaurant owns this order
-        if (!order.getRestaurantId().equals(restaurantOpt.get().getId())) {
-            throw new RuntimeException("You can only update orders for your restaurant");
-        }
-        
-        String newStatus = (String) request.get("status");
-        if (newStatus == null || newStatus.trim().isEmpty()) {
-            throw new RuntimeException("Status is required");
-        }
-        
-        order.setStatus(newStatus);
-        Order updatedOrder = orderRepository.save(order);
-        
-        // Return the updated order in the same format as getOrderById
-        Map<String, Object> result = new java.util.HashMap<>();
-        result.put("id", updatedOrder.getId());
-        result.put("userId", updatedOrder.getUserId());
-        result.put("restaurantId", updatedOrder.getRestaurantId());
-        result.put("status", updatedOrder.getStatus());
-        result.put("total", updatedOrder.getTotal());
-        result.put("items", updatedOrder.getItems());
-        result.put("date", updatedOrder.getId());
-        result.put("createdAt", updatedOrder.getId());
-        
-        // Add restaurant name
-        String restaurantName = "";
-        if (updatedOrder.getRestaurantId() != null) {
-            var restOpt = restaurantRepository.findById(updatedOrder.getRestaurantId());
-            if (restOpt.isPresent()) restaurantName = restOpt.get().getName();
-        }
-        result.put("restaurantName", restaurantName);
-        
-        return result;
     }
 } 
