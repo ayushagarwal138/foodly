@@ -1,333 +1,222 @@
-import React, { useEffect, useState } from "react";
-import Toast from "../Toast";
-import UserDetailModal from "./UserDetailModal";
+import React, { useState, useEffect } from "react";
+import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-  const [toast, setToast] = useState({ message: "", type: "info" });
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const token = localStorage.getItem("token");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const fetchUsers = async () => {
     setError("");
     try {
-      const res = await fetch("/api/admin/users", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to fetch users");
-      const data = await res.json();
-      setUsers(data);
+      const data = await api.get(API_ENDPOINTS.ADMIN_USERS);
+      console.log("Fetched users:", data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
+      console.error("Error fetching users:", err);
       setError(err.message);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const blockUser = async (user) => {
+    try {
+      const data = await api.post(API_ENDPOINTS.ADMIN_USER_BLOCK(user.id));
+      console.log("Blocked user:", data);
+      setUsers(prev => prev.map(u => 
+        u.id === user.id ? { ...u, isBlocked: true } : u
+      ));
+    } catch (err) {
+      console.error("Error blocking user:", err);
+      setError(err.message);
+    }
+  };
+
+  const unblockUser = async (user) => {
+    try {
+      const data = await api.post(API_ENDPOINTS.ADMIN_USER_UNBLOCK(user.id));
+      console.log("Unblocked user:", data);
+      setUsers(prev => prev.map(u => 
+        u.id === user.id ? { ...u, isBlocked: false } : u
+      ));
+    } catch (err) {
+      console.error("Error unblocking user:", err);
+      setError(err.message);
+    }
+  };
+
+  const deleteUser = async (user) => {
+    if (!window.confirm(`Are you sure you want to delete user '${user.username}'?`)) return;
+    
+    try {
+      await api.delete(API_ENDPOINTS.ADMIN_USER_DELETE(user.id));
+      console.log("Deleted user:", user.id);
+      setUsers(prev => prev.filter(u => u.id !== user.id));
+    } catch (err) {
+      console.error("Error deleting user:", err);
+      setError(err.message);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
-    const interval = setInterval(fetchUsers, 5000);
-    return () => clearInterval(interval);
-  }, [token]);
+    async function initialFetch() {
+      setLoading(true);
+      await fetchUsers();
+      setLoading(false);
+    }
+    initialFetch();
+  }, []);
 
-  const filtered = users.filter(u =>
-    u.username.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
+  const filteredUsers = users.filter(user =>
+    user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  async function handleBlock(user) {
-    if (!window.confirm(`Block user ${user.username}?`)) return;
-    try {
-      const res = await fetch(`/api/admin/users/${user.id}/block`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to block user");
-      setToast({ message: `User ${user.username} blocked.`, type: "success" });
-      fetchUsers();
-    } catch (err) {
-      setToast({ message: err.message, type: "error" });
-    }
-  }
-  async function handleUnblock(user) {
-    if (!window.confirm(`Unblock user ${user.username}?`)) return;
-    try {
-      const res = await fetch(`/api/admin/users/${user.id}/unblock`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to unblock user");
-      setToast({ message: `User ${user.username} unblocked.`, type: "success" });
-      fetchUsers();
-    } catch (err) {
-      setToast({ message: err.message, type: "error" });
-    }
-  }
-  async function handleDelete(user) {
-    if (!window.confirm(`Delete user ${user.username}? This cannot be undone.`)) return;
-    try {
-      const res = await fetch(`/api/admin/users/${user.id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to delete user");
-      setToast({ message: `User ${user.username} deleted.`, type: "success" });
-      fetchUsers();
-    } catch (err) {
-      setToast({ message: err.message, type: "error" });
-    }
-  }
+  const totalUsers = users.length;
+  const activeUsers = users.filter(u => !u.isBlocked).length;
+  const blockedUsers = users.filter(u => u.isBlocked).length;
+  const adminUsers = users.filter(u => u.role === 'ADMIN').length;
 
-  function openModal(user) {
-    setSelectedUser(user);
-    setModalOpen(true);
-  }
-  function closeModal() {
-    setModalOpen(false);
-    setSelectedUser(null);
-  }
+  if (loading) return <div className="p-10 text-center">Loading...</div>;
+  if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-800">User Management</h1>
-        </div>
-        <p className="text-gray-600">Manage platform users, their roles, and account status</p>
-      </div>
+    <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
+      <h2 className="text-2xl font-bold mb-6 text-[#16213e]">User Management</h2>
+      <p className="text-gray-600 mb-8">Manage platform users, their roles, and account status</p>
 
-      {/* Stats Cards */}
+      {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Users</p>
-              <p className="text-2xl font-bold text-gray-900">{users.length}</p>
-            </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-              </svg>
-            </div>
-          </div>
+        <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+          <div className="text-2xl font-bold text-blue-600">{totalUsers}</div>
+          <div className="text-sm text-gray-600">Total Users</div>
         </div>
-        
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Active Users</p>
-              <p className="text-2xl font-bold text-green-600">{users.filter(u => u.role !== "BLOCKED").length}</p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
+        <div className="bg-green-50 rounded-xl p-6 border border-green-200">
+          <div className="text-2xl font-bold text-green-600">{activeUsers}</div>
+          <div className="text-sm text-gray-600">Active Users</div>
         </div>
-        
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Blocked Users</p>
-              <p className="text-2xl font-bold text-red-600">{users.filter(u => u.role === "BLOCKED").length}</p>
-            </div>
-            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
-              </svg>
-            </div>
-          </div>
+        <div className="bg-red-50 rounded-xl p-6 border border-red-200">
+          <div className="text-2xl font-bold text-red-600">{blockedUsers}</div>
+          <div className="text-sm text-gray-600">Blocked Users</div>
         </div>
-        
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Admins</p>
-              <p className="text-2xl font-bold text-purple-600">{users.filter(u => u.role === "ADMIN").length}</p>
-            </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            </div>
-          </div>
+        <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
+          <div className="text-2xl font-bold text-purple-600">{adminUsers}</div>
+          <div className="text-sm text-gray-600">Admins</div>
         </div>
       </div>
 
       {/* Search and Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search users by username or email..."
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={fetchUsers}
-              className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh
-            </button>
-            <div className="text-sm text-gray-500">
-              {filtered.length} of {users.length} users
-            </div>
-          </div>
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder="Search users by username or email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={fetchUsers}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Refresh
+          </button>
+          <span className="text-sm text-gray-600">
+            {filteredUsers.length} of {users.length} users
+          </span>
         </div>
       </div>
-      {toast.message && <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: "", type: "info" })} />}
-      <UserDetailModal
-        user={selectedUser}
-        open={modalOpen}
-        onClose={closeModal}
-        onBlock={handleBlock}
-        onUnblock={handleUnblock}
-        onDelete={handleDelete}
-      />
-      {/* Users Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        {loading ? (
-          <div className="p-12 text-center">
-            <div className="inline-flex items-center gap-3">
-              <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-gray-600">Loading users...</span>
-            </div>
+
+      {/* Users List */}
+      {filteredUsers.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="text-gray-500 mb-2">No users found.</div>
+          <div className="text-sm text-gray-400">
+            {searchTerm ? "Try adjusting your search terms." : "Users will appear here once they register."}
           </div>
-        ) : error ? (
-          <div className="p-12 text-center">
-            <div className="inline-flex items-center gap-3 text-red-600">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>{error}</span>
-            </div>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="inline-flex flex-col items-center gap-3 text-gray-500">
-              <svg className="w-12 h-12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-              </svg>
-              <span>No users found</span>
-            </div>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filtered.map(user => (
-                  <tr
-                    key={user.id}
-                    className="hover:bg-gray-50 cursor-pointer transition-colors"
-                    onClick={e => {
-                      // Only open modal if not clicking a button
-                      if (e.target.tagName !== "BUTTON") openModal(user);
-                    }}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">#{user.id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                          <span className="text-sm font-semibold text-blue-600">
-                            {user.username.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{user.username}</div>
-                        </div>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-gray-500 font-semibold border-b">
+                <th className="pb-3 px-4">User</th>
+                <th className="pb-3 px-4">Email</th>
+                <th className="pb-3 px-4">Role</th>
+                <th className="pb-3 px-4">Status</th>
+                <th className="pb-3 px-4">Joined</th>
+                <th className="pb-3 px-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.map((user) => (
+                <tr key={user.id} className="border-b hover:bg-gray-50">
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-semibold text-gray-600">
+                          {user.username?.charAt(0).toUpperCase()}
+                        </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.role === "ADMIN" ? "bg-purple-100 text-purple-800" :
-                        user.role === "RESTAURANT" ? "bg-orange-100 text-orange-800" :
-                        "bg-blue-100 text-blue-800"
-                      }`}>
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.role === "BLOCKED" ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
-                      }`}>
-                        {user.role === "BLOCKED" ? "Blocked" : "Active"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center gap-2">
-                        {user.role !== "BLOCKED" ? (
-                          <button 
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-yellow-700 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors" 
-                            onClick={e => { e.stopPropagation(); handleBlock(user); }}
-                          >
-                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
-                            </svg>
-                            Block
-                          </button>
-                        ) : (
-                          <button 
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors" 
-                            onClick={e => { e.stopPropagation(); handleUnblock(user); }}
-                          >
-                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Unblock
-                          </button>
-                        )}
-                        <button 
-                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors" 
-                          onClick={e => { e.stopPropagation(); handleDelete(user); }}
+                      <div>
+                        <div className="font-semibold text-[#16213e]">{user.username}</div>
+                        <div className="text-xs text-gray-500">ID: {user.id}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 text-gray-700">{user.email}</td>
+                  <td className="py-3 px-4">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      user.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
+                      user.role === 'RESTAURANT' ? 'bg-orange-100 text-orange-800' :
+                      'bg-blue-100 text-blue-800'
+                    }`}>
+                      {user.role}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      user.isBlocked ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                    }`}>
+                      {user.isBlocked ? 'Blocked' : 'Active'}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-gray-600">
+                    {new Date(user.createdAt || user.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex gap-2">
+                      {user.isBlocked ? (
+                        <button
+                          onClick={() => unblockUser(user)}
+                          className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition-colors"
                         >
-                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                          Delete
+                          Unblock
                         </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                      ) : (
+                        <button
+                          onClick={() => blockUser(user)}
+                          className="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition-colors"
+                        >
+                          Block
+                        </button>
+                      )}
+                      <button
+                        onClick={() => deleteUser(user)}
+                        className="px-3 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 } 

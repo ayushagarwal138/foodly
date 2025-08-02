@@ -1,330 +1,217 @@
-import React, { useEffect, useState } from "react";
-import Toast from "../Toast";
-import RestaurantDetailModal from "./RestaurantDetailModal";
+import React, { useState, useEffect } from "react";
+import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function RestaurantsPage() {
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-  const [toast, setToast] = useState({ message: "", type: "info" });
-  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const token = localStorage.getItem("token");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const fetchRestaurants = async () => {
     setError("");
     try {
-      const res = await fetch("/api/admin/restaurants", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to fetch restaurants");
-      const data = await res.json();
-      setRestaurants(data);
+      const data = await api.get(API_ENDPOINTS.ADMIN_RESTAURANTS);
+      console.log("Fetched restaurants:", data);
+      setRestaurants(Array.isArray(data) ? data : []);
     } catch (err) {
+      console.error("Error fetching restaurants:", err);
       setError(err.message);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const approveRestaurant = async (restaurant) => {
+    try {
+      const data = await api.post(API_ENDPOINTS.ADMIN_RESTAURANT_APPROVE(restaurant.id));
+      console.log("Approved restaurant:", data);
+      setRestaurants(prev => prev.map(r => 
+        r.id === restaurant.id ? { ...r, isApproved: true } : r
+      ));
+    } catch (err) {
+      console.error("Error approving restaurant:", err);
+      setError(err.message);
+    }
+  };
+
+  const deactivateRestaurant = async (restaurant) => {
+    try {
+      const data = await api.post(API_ENDPOINTS.ADMIN_RESTAURANT_DEACTIVATE(restaurant.id));
+      console.log("Deactivated restaurant:", data);
+      setRestaurants(prev => prev.map(r => 
+        r.id === restaurant.id ? { ...r, isActive: false } : r
+      ));
+    } catch (err) {
+      console.error("Error deactivating restaurant:", err);
+      setError(err.message);
+    }
+  };
+
+  const deleteRestaurant = async (restaurant) => {
+    if (!window.confirm(`Are you sure you want to delete restaurant '${restaurant.name}'?`)) return;
+    
+    try {
+      await api.delete(API_ENDPOINTS.ADMIN_RESTAURANT_DELETE(restaurant.id));
+      console.log("Deleted restaurant:", restaurant.id);
+      setRestaurants(prev => prev.filter(r => r.id !== restaurant.id));
+    } catch (err) {
+      console.error("Error deleting restaurant:", err);
+      setError(err.message);
     }
   };
 
   useEffect(() => {
-    fetchRestaurants();
-    const interval = setInterval(fetchRestaurants, 5000);
-    return () => clearInterval(interval);
-  }, [token]);
+    async function initialFetch() {
+      setLoading(true);
+      await fetchRestaurants();
+      setLoading(false);
+    }
+    initialFetch();
+  }, []);
 
-  const filtered = restaurants.filter(r =>
-    r.name.toLowerCase().includes(search.toLowerCase()) ||
-    (r.owner?.username || "").toLowerCase().includes(search.toLowerCase())
+  const filteredRestaurants = restaurants.filter(restaurant =>
+    restaurant.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    restaurant.cuisineType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    restaurant.address?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  async function handleApprove(r) {
-    if (!window.confirm(`Approve restaurant ${r.name}?`)) return;
-    try {
-      const res = await fetch(`/api/admin/restaurants/${r.id}/approve`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to approve restaurant");
-      setToast({ message: `Restaurant ${r.name} approved.`, type: "success" });
-      fetchRestaurants();
-    } catch (err) {
-      setToast({ message: err.message, type: "error" });
-    }
-  }
-  async function handleDeactivate(r) {
-    if (!window.confirm(`Deactivate restaurant ${r.name}?`)) return;
-    try {
-      const res = await fetch(`/api/admin/restaurants/${r.id}/deactivate`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to deactivate restaurant");
-      setToast({ message: `Restaurant ${r.name} deactivated.`, type: "success" });
-      fetchRestaurants();
-    } catch (err) {
-      setToast({ message: err.message, type: "error" });
-    }
-  }
-  async function handleDelete(r) {
-    if (!window.confirm(`Delete restaurant ${r.name}? This cannot be undone.`)) return;
-    try {
-      const res = await fetch(`/api/admin/restaurants/${r.id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to delete restaurant");
-      setToast({ message: `Restaurant ${r.name} deleted.`, type: "success" });
-      fetchRestaurants();
-    } catch (err) {
-      setToast({ message: err.message, type: "error" });
-    }
-  }
+  const totalRestaurants = restaurants.length;
+  const approvedRestaurants = restaurants.filter(r => r.isApproved).length;
+  const pendingRestaurants = restaurants.filter(r => !r.isApproved).length;
+  const activeRestaurants = restaurants.filter(r => r.isActive).length;
 
-  function openModal(restaurant) {
-    setSelectedRestaurant(restaurant);
-    setModalOpen(true);
-  }
-  function closeModal() {
-    setModalOpen(false);
-    setSelectedRestaurant(null);
-  }
+  if (loading) return <div className="p-10 text-center">Loading...</div>;
+  if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-800">Restaurant Management</h1>
-        </div>
-        <p className="text-gray-600">Manage restaurant registrations, approvals, and status</p>
-      </div>
+    <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
+      <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Restaurant Management</h2>
+      <p className="text-gray-600 mb-8">Manage restaurant registrations, approvals, and status</p>
 
-      {/* Stats Cards */}
+      {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Restaurants</p>
-              <p className="text-2xl font-bold text-gray-900">{restaurants.length}</p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-          </div>
+        <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+          <div className="text-2xl font-bold text-blue-600">{totalRestaurants}</div>
+          <div className="text-sm text-gray-600">Total Restaurants</div>
         </div>
-        
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Active Restaurants</p>
-              <p className="text-2xl font-bold text-green-600">{restaurants.filter(r => r.status === "ACTIVE").length}</p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
+        <div className="bg-green-50 rounded-xl p-6 border border-green-200">
+          <div className="text-2xl font-bold text-green-600">{approvedRestaurants}</div>
+          <div className="text-sm text-gray-600">Approved</div>
         </div>
-        
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending Approval</p>
-              <p className="text-2xl font-bold text-yellow-600">{restaurants.filter(r => r.status === "PENDING").length}</p>
-            </div>
-            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
+        <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-200">
+          <div className="text-2xl font-bold text-yellow-600">{pendingRestaurants}</div>
+          <div className="text-sm text-gray-600">Pending Approval</div>
         </div>
-        
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Inactive</p>
-              <p className="text-2xl font-bold text-red-600">{restaurants.filter(r => r.status === "INACTIVE").length}</p>
-            </div>
-            <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
-              </svg>
-            </div>
-          </div>
+        <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
+          <div className="text-2xl font-bold text-purple-600">{activeRestaurants}</div>
+          <div className="text-sm text-gray-600">Active</div>
         </div>
       </div>
 
       {/* Search and Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search restaurants by name or owner..."
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={fetchRestaurants}
-              className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh
-            </button>
-            <div className="text-sm text-gray-500">
-              {filtered.length} of {restaurants.length} restaurants
-            </div>
-          </div>
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder="Search restaurants by name, cuisine, or address..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={fetchRestaurants}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Refresh
+          </button>
+          <span className="text-sm text-gray-600">
+            {filteredRestaurants.length} of {restaurants.length} restaurants
+          </span>
         </div>
       </div>
-      {toast.message && <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: "", type: "info" })} />}
-      <RestaurantDetailModal
-        restaurant={selectedRestaurant}
-        open={modalOpen}
-        onClose={closeModal}
-        onApprove={handleApprove}
-        onDeactivate={handleDeactivate}
-        onDelete={handleDelete}
-      />
-      {/* Restaurants Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        {loading ? (
-          <div className="p-12 text-center">
-            <div className="inline-flex items-center gap-3">
-              <div className="w-6 h-6 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-gray-600">Loading restaurants...</span>
-            </div>
+
+      {/* Restaurants List */}
+      {filteredRestaurants.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="text-gray-500 mb-2">No restaurants found.</div>
+          <div className="text-sm text-gray-400">
+            {searchTerm ? "Try adjusting your search terms." : "Restaurants will appear here once they register."}
           </div>
-        ) : error ? (
-          <div className="p-12 text-center">
-            <div className="inline-flex items-center gap-3 text-red-600">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>{error}</span>
-            </div>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="inline-flex flex-col items-center gap-3 text-gray-500">
-              <svg className="w-12 h-12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              <span>No restaurants found</span>
-            </div>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Restaurant</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filtered.map(r => (
-                  <tr
-                    key={r.id}
-                    className="hover:bg-gray-50 cursor-pointer transition-colors"
-                    onClick={e => {
-                      if (e.target.tagName !== "BUTTON") openModal(r);
-                    }}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredRestaurants.map((restaurant) => (
+            <div key={restaurant.id} className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-[#16213e]">{restaurant.name}</h3>
+                  <p className="text-sm text-gray-600">{restaurant.cuisineType}</p>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    restaurant.isApproved ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+                  }`}>
+                    {restaurant.isApproved ? "Approved" : "Pending"}
+                  </span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    restaurant.isActive ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"
+                  }`}>
+                    {restaurant.isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="space-y-2 mb-4">
+                <div className="text-sm">
+                  <span className="text-gray-600">Address:</span>
+                  <span className="ml-2 text-gray-800">{restaurant.address}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="text-gray-600">Phone:</span>
+                  <span className="ml-2 text-gray-800">{restaurant.phone}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="text-gray-600">Owner:</span>
+                  <span className="ml-2 text-gray-800">{restaurant.ownerName || restaurant.owner?.username}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="text-gray-600">Registered:</span>
+                  <span className="ml-2 text-gray-800">
+                    {new Date(restaurant.createdAt || restaurant.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+              
+              <p className="text-gray-700 text-sm mb-4">{restaurant.description}</p>
+              
+              <div className="flex gap-2">
+                {!restaurant.isApproved && (
+                  <button
+                    onClick={() => approveRestaurant(restaurant)}
+                    className="flex-1 px-3 py-2 bg-green-600 text-white rounded text-sm font-medium hover:bg-green-700 transition-colors"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">#{r.id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                          </svg>
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{r.name}</div>
-                          <div className="text-sm text-gray-500">{r.address || "No address"}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{r.owner?.username || "-"}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{r.owner?.email || "-"}</div>
-                      <div className="text-sm text-gray-500">{r.phone || "No phone"}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        r.isActive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                      }`}>
-                        {r.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center gap-2">
-                        {r.isActive ? (
-                          <button 
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-yellow-700 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors" 
-                            onClick={e => { e.stopPropagation(); handleDeactivate(r); }}
-                          >
-                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
-                            </svg>
-                            Deactivate
-                          </button>
-                        ) : (
-                          <button 
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors" 
-                            onClick={e => { e.stopPropagation(); handleApprove(r); }}
-                          >
-                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Approve
-                          </button>
-                        )}
-                        <button 
-                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors" 
-                          onClick={e => { e.stopPropagation(); handleDelete(r); }}
-                        >
-                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                    Approve
+                  </button>
+                )}
+                {restaurant.isActive && (
+                  <button
+                    onClick={() => deactivateRestaurant(restaurant)}
+                    className="flex-1 px-3 py-2 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-700 transition-colors"
+                  >
+                    Deactivate
+                  </button>
+                )}
+                <button
+                  onClick={() => deleteRestaurant(restaurant)}
+                  className="px-3 py-2 bg-gray-600 text-white rounded text-sm font-medium hover:bg-gray-700 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 } 
