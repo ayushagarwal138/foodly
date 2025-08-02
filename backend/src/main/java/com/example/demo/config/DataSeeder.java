@@ -12,6 +12,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import java.text.Normalizer;
+import java.util.regex.Pattern;
 
 @Configuration
 public class DataSeeder {
@@ -54,6 +56,7 @@ public class DataSeeder {
                 r1.setDescription("Best pizza in town!");
                 r1.setOpeningHours("10:00 AM - 10:00 PM");
                 r1.setIsActive(true);
+                r1.setSlug(slugify("Pizza Palace"));
                 // Assign owner to restaurant
                 customerRepo.findByUsername("restaurant").ifPresent(r1::setOwner);
                 restaurantRepo.save(r1);
@@ -66,6 +69,7 @@ public class DataSeeder {
                 r2.setDescription("Fresh sushi and sashimi");
                 r2.setOpeningHours("11:00 AM - 11:00 PM");
                 r2.setIsActive(true);
+                r2.setSlug(slugify("Sushi Central"));
                 restaurantRepo.save(r2);
 
                 MenuItem m1 = new MenuItem();
@@ -93,6 +97,15 @@ public class DataSeeder {
                 menuItemRepo.save(m4);
             }
 
+            // Update existing restaurants to have slugs if they don't
+            restaurantRepo.findAll().forEach(restaurant -> {
+                if (restaurant.getSlug() == null || restaurant.getSlug().isEmpty()) {
+                    restaurant.setSlug(slugify(restaurant.getName()));
+                    restaurantRepo.save(restaurant);
+                    System.out.println("Updated restaurant '" + restaurant.getName() + "' with slug: " + restaurant.getSlug());
+                }
+            });
+
             // Add sample wishlist data for demo users
             if (customerRepo.count() > 0 && restaurantRepo.count() > 0) {
                 User demoUser = customerRepo.findAll().get(0);
@@ -106,5 +119,13 @@ public class DataSeeder {
                 wishlistRepo.save(wishlistRestaurant);
             }
         };
+    }
+
+    // Helper method to slugify a string
+    private String slugify(String input) {
+        String nowhitespace = Pattern.compile("\\s").matcher(input).replaceAll("-");
+        String normalized = Normalizer.normalize(nowhitespace, Normalizer.Form.NFD);
+        String slug = Pattern.compile("[^a-zA-Z0-9-]").matcher(normalized).replaceAll("");
+        return slug.toLowerCase();
     }
 } 
