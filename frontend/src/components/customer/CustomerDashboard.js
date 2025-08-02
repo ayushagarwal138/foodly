@@ -32,6 +32,14 @@ const pathToLabel = [
 
 export default function CustomerDashboard() {
   const location = useLocation();
+  const token = localStorage.getItem("token");
+  const userRole = localStorage.getItem("userRole");
+  
+  // Check authentication
+  if (!token || userRole !== "CUSTOMER") {
+    return <Navigate to="/customer/login" replace />;
+  }
+  
   // Find the current label based on the path (longest match wins)
   const current =
     pathToLabel.find(({ path }) => location.pathname.startsWith(path))?.label || "Dashboard";

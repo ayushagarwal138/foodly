@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "./CartContext";
+import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function Header({ setCurrent }) {
   const [username, setUsername] = useState(localStorage.getItem("username") || "");
@@ -17,21 +18,35 @@ export default function Header({ setCurrent }) {
       const token = localStorage.getItem("token");
       const userRole = localStorage.getItem("userRole");
       if (userId && token && userRole) {
-        let url = "";
-        if (userRole.toUpperCase() === "CUSTOMER") {
-          url = `/api/customers/${userId}`;
-        } else if (userRole.toUpperCase() === "RESTAURANT") {
-          url = `/api/restaurants/${userId}`;
-        }
-        if (url) {
-          fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-            .then(res => res.ok ? res.json() : null)
-            .then(profile => {
-              if (profile && (profile.username || profile.name)) {
-                setUsername(profile.username || profile.name);
-                localStorage.setItem("username", profile.username || profile.name);
-              }
-            });
+        try {
+          if (userRole.toUpperCase() === "CUSTOMER") {
+            api.get(API_ENDPOINTS.CUSTOMER_PROFILE(userId))
+              .then(profile => {
+                if (profile && (profile.username || profile.name)) {
+                  setUsername(profile.username || profile.name);
+                  localStorage.setItem("username", profile.username || profile.name);
+                }
+              })
+              .catch(err => {
+                console.warn("Failed to fetch customer profile:", err);
+                // Don't logout on profile fetch failure, just continue without username
+              });
+          } else if (userRole.toUpperCase() === "RESTAURANT") {
+            api.get(API_ENDPOINTS.RESTAURANT_BY_OWNER(userId))
+              .then(profile => {
+                if (profile && (profile.name || (profile.owner && profile.owner.username))) {
+                  const displayName = profile.name || profile.owner.username;
+                  setUsername(displayName);
+                  localStorage.setItem("username", displayName);
+                }
+              })
+              .catch(err => {
+                console.warn("Failed to fetch restaurant profile:", err);
+                // Don't logout on profile fetch failure, just continue without username
+              });
+          }
+        } catch (err) {
+          console.warn("Error in profile fetch:", err);
         }
       }
     }
