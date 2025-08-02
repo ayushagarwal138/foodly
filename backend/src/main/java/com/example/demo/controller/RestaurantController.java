@@ -37,8 +37,25 @@ public class RestaurantController {
     private CustomerRepository customerRepository;
 
     @GetMapping
-    public List<Restaurant> getAllRestaurants() {
-        return restaurantRepository.findAll();
+    public List<Map<String, Object>> getAllRestaurants() {
+        return restaurantRepository.findAll().stream()
+            .map(restaurant -> {
+                Map<String, Object> result = new java.util.HashMap<>();
+                result.put("id", restaurant.getId());
+                result.put("name", restaurant.getName());
+                result.put("address", restaurant.getAddress());
+                result.put("phone", restaurant.getPhone());
+                result.put("cuisine", restaurant.getCuisineType()); // Map cuisineType to cuisine
+                result.put("description", restaurant.getDescription());
+                result.put("openingHours", restaurant.getOpeningHours());
+                result.put("slug", restaurant.getSlug());
+                result.put("isActive", restaurant.getIsActive());
+                result.put("rating", 4.5); // Default rating for demo
+                result.put("reviewCount", 10); // Default review count for demo
+                result.put("eta", 30); // Default delivery time for demo
+                return result;
+            })
+            .collect(java.util.stream.Collectors.toList());
     }
 
     @GetMapping("/{id}")
@@ -50,11 +67,14 @@ public class RestaurantController {
         result.put("name", restaurant.getName());
         result.put("address", restaurant.getAddress());
         result.put("phone", restaurant.getPhone());
-        result.put("cuisineType", restaurant.getCuisineType());
+        result.put("cuisine", restaurant.getCuisineType()); // Map cuisineType to cuisine
         result.put("description", restaurant.getDescription());
         result.put("openingHours", restaurant.getOpeningHours());
         result.put("slug", restaurant.getSlug());
         result.put("isActive", restaurant.getIsActive());
+        result.put("rating", 4.5); // Default rating for demo
+        result.put("reviewCount", 10); // Default review count for demo
+        result.put("eta", 30); // Default delivery time for demo
         // Owner details
         if (restaurant.getOwner() != null) {
             Map<String, Object> owner = new java.util.HashMap<>();
@@ -73,7 +93,32 @@ public class RestaurantController {
     public ResponseEntity<?> getRestaurantBySlug(@PathVariable String slug) {
         Optional<Restaurant> restaurant = restaurantRepository.findBySlug(slug);
         if (restaurant.isPresent()) {
-            return ResponseEntity.ok(restaurant.get());
+            Restaurant r = restaurant.get();
+            Map<String, Object> result = new java.util.HashMap<>();
+            result.put("id", r.getId());
+            result.put("name", r.getName());
+            result.put("address", r.getAddress());
+            result.put("phone", r.getPhone());
+            result.put("cuisine", r.getCuisineType()); // Map cuisineType to cuisine
+            result.put("description", r.getDescription());
+            result.put("openingHours", r.getOpeningHours());
+            result.put("slug", r.getSlug());
+            result.put("isActive", r.getIsActive());
+            result.put("rating", 4.5); // Default rating for demo
+            result.put("reviewCount", 10); // Default review count for demo
+            result.put("eta", 30); // Default delivery time for demo
+            // Owner details
+            if (r.getOwner() != null) {
+                Map<String, Object> owner = new java.util.HashMap<>();
+                owner.put("id", r.getOwner().getId());
+                owner.put("username", r.getOwner().getUsername());
+                owner.put("email", r.getOwner().getEmail());
+                owner.put("role", r.getOwner().getRole());
+                result.put("owner", owner);
+            } else {
+                result.put("owner", null);
+            }
+            return ResponseEntity.ok(result);
         } else {
             return ResponseEntity.status(404).body("Restaurant not found");
         }
@@ -90,7 +135,7 @@ public class RestaurantController {
         result.put("name", restaurant.getName());
         result.put("address", restaurant.getAddress());
         result.put("phone", restaurant.getPhone());
-        result.put("cuisineType", restaurant.getCuisineType());
+        result.put("cuisine", restaurant.getCuisineType()); // Map cuisineType to cuisine
         result.put("description", restaurant.getDescription());
         result.put("openingHours", restaurant.getOpeningHours());
         result.put("slug", restaurant.getSlug());
