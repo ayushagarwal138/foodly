@@ -76,11 +76,23 @@ export default function AllRestaurants() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredRestaurants.map((restaurant) => (
             <div key={restaurant.id} className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
-              <img
-                src={restaurant.image || "https://via.placeholder.com/300x200?text=Restaurant"}
-                alt={restaurant.name}
-                className="w-full h-48 object-cover"
-              />
+              <div className="w-full h-48 bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
+                {restaurant.image ? (
+                  <img
+                    src={restaurant.image}
+                    alt={restaurant.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div className="flex flex-col items-center justify-center text-orange-600 font-bold text-lg" style={{ display: restaurant.image ? 'none' : 'flex' }}>
+                  <span className="text-4xl mb-2">🍽️</span>
+                  <span>{restaurant.name}</span>
+                </div>
+              </div>
               <div className="p-4">
                 <h3 className="text-lg font-semibold text-[#16213e] mb-2">{restaurant.name}</h3>
                 <p className="text-gray-600 text-sm mb-2">{restaurant.cuisine}</p>

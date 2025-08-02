@@ -60,12 +60,22 @@ export default function WishlistPage() {
           {wishlist.map((item, idx) => (
             <li key={idx} className="flex items-center gap-4 bg-gray-50 rounded-xl p-4 border border-gray-100">
               {item.type === "restaurant" ? (
-                <img
-                  src={item.img}
-                  alt={item.name}
-                  className="w-14 h-14 rounded-xl object-cover border border-gray-200 bg-gray-50"
-                  onError={e => { e.target.onerror = null; e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(item.name) + '&background=eee&color=555&size=56'; }}
-                />
+                <div className="w-14 h-14 rounded-xl border border-gray-200 bg-orange-100 flex items-center justify-center">
+                  {item.img ? (
+                    <img
+                      src={item.img}
+                      alt={item.name}
+                      className="w-full h-full rounded-xl object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div className="flex items-center justify-center text-orange-600 font-bold text-lg" style={{ display: item.img ? 'none' : 'flex' }}>
+                    🍽️
+                  </div>
+                </div>
               ) : (
                 <span className="w-14 h-14 flex items-center justify-center rounded-xl bg-orange-100 text-orange-600 font-bold text-xl border border-gray-200">🍽️</span>
               )}

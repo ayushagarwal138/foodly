@@ -175,12 +175,23 @@ export default function CustomerSearch({ restaurants, query: parentQuery, setQue
               title={`View ${r.name}`}
             >
               <div className="relative w-full flex justify-center mb-4">
-                <img
-                  src={r.img}
-                  alt={r.name}
-                  className="w-32 h-32 rounded-2xl object-cover border border-gray-200 bg-gray-100 shadow-lg group-hover:scale-105 transition-transform duration-200"
-                  onError={e => { e.target.onerror = null; e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(r.name) + '&background=eee&color=555&size=128'; }}
-                />
+                <div className="w-32 h-32 rounded-2xl border border-gray-200 bg-orange-100 shadow-lg group-hover:scale-105 transition-transform duration-200 flex items-center justify-center">
+                  {r.img ? (
+                    <img
+                      src={r.img}
+                      alt={r.name}
+                      className="w-full h-full rounded-2xl object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div className="flex flex-col items-center justify-center text-orange-600 font-bold text-lg" style={{ display: r.img ? 'none' : 'flex' }}>
+                    <span className="text-3xl mb-1">🍽️</span>
+                    <span className="text-xs text-center">{r.name}</span>
+                  </div>
+                </div>
                 <span className="absolute top-2 left-2 bg-orange-500 text-white text-xs font-bold rounded-full px-3 py-1 shadow">{r.cuisine}</span>
                 <span className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold rounded-full px-3 py-1 shadow">{r.rating}★</span>
               </div>
