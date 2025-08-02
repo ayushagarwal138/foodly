@@ -1,38 +1,36 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
-
-const STATUS_OPTIONS = ["New", "Accepted", "Preparing", "Out for Delivery", "Delivered", "Cancelled"];
-const STATUS_COLORS = {
-  "New": "bg-blue-100 text-blue-700",
-  "Accepted": "bg-green-100 text-green-700",
-  "Preparing": "bg-yellow-100 text-yellow-700",
-  "Out for Delivery": "bg-orange-100 text-orange-700",
-  "Delivered": "bg-green-100 text-green-700",
-  "Cancelled": "bg-gray-200 text-gray-500"
-};
+import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("all");
   const restaurantId = localStorage.getItem("restaurantId");
   const token = localStorage.getItem("token");
 
   const fetchOrders = useCallback(async () => {
     setError("");
     try {
-      const res = await fetch(`/api/restaurants/${restaurantId}/orders`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to fetch orders");
-      const data = await res.json();
+      const data = await api.get(API_ENDPOINTS.RESTAURANT_ORDERS(restaurantId));
       console.log("Fetched orders:", data);
-      setOrders(data);
+      setOrders(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error fetching orders:", err);
       setError(err.message);
     }
-  }, [restaurantId, token]);
+  }, [restaurantId]);
+
+  const updateOrderStatus = async (orderId, newStatus) => {
+    try {
+      const data = await api.patch(API_ENDPOINTS.ORDER_STATUS(orderId), { status: newStatus });
+      console.log("Updated order status:", data);
+      await fetchOrders(); // Refresh the list
+    } catch (err) {
+      console.error("Error updating order status:", err);
+      setError("Failed to update order status. Please try again.");
+    }
+  };
 
   // Initial fetch
   useEffect(() => {
@@ -57,29 +55,16 @@ export default function OrdersPage() {
     return () => clearInterval(pollInterval);
   }, [restaurantId, token, fetchOrders]);
 
-  async function updateStatus(orderId, newStatus) {
-    try {
-      const res = await fetch(`/api/orders/${orderId}/status`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-      if (!res.ok) throw new Error("Failed to update status");
-      // Instead of updating the state directly, fetch fresh data
-      await fetchOrders();
-    } catch (err) {
-      setError(err.message);
-    }
-  }
+  if (loading) return <div className="p-10 text-center">Loading...</div>;
+  if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
 
-  if (loading) return <div className="p-10 text-center"><span className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></span><div>Loading orders...</div></div>;
-  if (error) return <div className="p-10 text-center text-red-600 bg-red-50 border border-red-200 rounded-xl max-w-xl mx-auto">{error}</div>;
+  // Filter orders by status
+  const filteredOrders = selectedStatus === "all" 
+    ? orders 
+    : orders.filter(order => order.status === selectedStatus);
 
-  // Sort orders by status priority and time (latest first)
-  const sortedOrders = [...orders].sort((a, b) => {
+  // Sort orders by date (newest first) and status
+  const sortedOrders = [...filteredOrders].sort((a, b) => {
     // First sort by status priority
     const statusPriority = {
       "New": 0,
@@ -92,78 +77,110 @@ export default function OrdersPage() {
     const statusDiff = statusPriority[a.status] - statusPriority[b.status];
     if (statusDiff !== 0) return statusDiff;
     
-    // Then sort by date/time (latest first)
-    const dateA = new Date(a.time || a.createdAt || a.date || 0);
-    const dateB = new Date(b.time || b.createdAt || b.date || 0);
+    // Then sort by date (newest first)
+    const dateA = new Date(a.date || a.createdAt);
+    const dateB = new Date(b.date || b.createdAt);
     return dateB - dateA;
   });
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "New": return "bg-blue-100 text-blue-800";
+      case "Accepted": return "bg-yellow-100 text-yellow-800";
+      case "Preparing": return "bg-orange-100 text-orange-800";
+      case "Out for Delivery": return "bg-purple-100 text-purple-800";
+      case "Delivered": return "bg-green-100 text-green-800";
+      case "Cancelled": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getNextStatus = (currentStatus) => {
+    switch (currentStatus) {
+      case "New": return "Accepted";
+      case "Accepted": return "Preparing";
+      case "Preparing": return "Out for Delivery";
+      case "Out for Delivery": return "Delivered";
+      default: return null;
+    }
+  };
+
   return (
-    <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
-      <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Orders</h2>
+    <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
+      <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Restaurant Orders</h2>
+      
+      {/* Status Filter */}
+      <div className="mb-6">
+        <select
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="all">All Orders</option>
+          <option value="New">New</option>
+          <option value="Accepted">Accepted</option>
+          <option value="Preparing">Preparing</option>
+          <option value="Out for Delivery">Out for Delivery</option>
+          <option value="Delivered">Delivered</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
+
       {sortedOrders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16">
-          <span className="text-5xl mb-4">📦</span>
-          <div className="text-gray-500 text-lg font-medium">No orders available.</div>
-        </div>
+        <div className="text-gray-500 text-center py-8">No orders found.</div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm rounded-xl overflow-hidden">
-            <thead>
-              <tr className="text-left text-gray-500 font-semibold bg-gray-50">
-                <th className="pb-2 px-4">Order ID</th>
-                <th className="pb-2 px-4">Customer</th>
-                <th className="pb-2 px-4">Items</th>
-                <th className="pb-2 px-4">Total</th>
-                <th className="pb-2 px-4">Time</th>
-                <th className="pb-2 px-4">Status</th>
-                <th className="pb-2 px-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedOrders.map((o, idx) => (
-                <tr key={o.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                  <td className="py-3 px-4 font-semibold text-[#16213e]">{o.id}</td>
-                  <td className="py-3 px-4">{o.customerName || o.customer || "-"}</td>
-                  <td className="py-3 px-4">
-                    {Array.isArray(o.items) ? (
-                      <ul className="list-disc pl-4">
-                        {o.items.map((i, idx) => (
-                          <li key={i.menuItemId || i.name || idx}>
-                            {i.qty || i.quantity} x {i.name} @ ₹{i.price.toFixed(2)}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : o.items}
-                  </td>
-                  <td className="py-3 px-4">₹{o.total.toFixed(2)}</td>
-                  <td className="py-3 px-4">{o.time || o.createdAt || "-"}</td>
-                  <td className="py-3 px-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold mr-2 ${STATUS_COLORS[o.status] || "bg-gray-100 text-gray-700"}`}>{o.status}</span>
-                    <select
-                      className="ml-2 px-2 py-1 rounded border focus:ring-2 focus:ring-blue-200"
-                      value={o.status}
-                      onChange={e => updateStatus(o.id, e.target.value)}
+        <div className="space-y-4">
+          {sortedOrders.map((order) => (
+            <div key={order.id} className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-[#16213e]">Order #{order.id}</h3>
+                  <p className="text-gray-600 text-sm">
+                    {new Date(order.date || order.createdAt).toLocaleString()}
+                  </p>
+                  <p className="text-gray-600 text-sm">Customer: {order.customerName || "Unknown"}</p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                  {order.status}
+                </span>
+              </div>
+
+              <div className="mb-4">
+                <h4 className="font-medium text-[#16213e] mb-2">Items:</h4>
+                <ul className="space-y-1">
+                  {order.items && order.items.map((item, index) => (
+                    <li key={index} className="text-sm text-gray-600">
+                      {item.quantity}x {item.name} - ${item.price}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <div className="text-lg font-semibold text-[#16213e]">
+                  Total: ${order.total || order.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0}
+                </div>
+                <div className="flex gap-2">
+                  {getNextStatus(order.status) && (
+                    <button
+                      onClick={() => updateOrderStatus(order.id, getNextStatus(order.status))}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
                     >
-                      {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </td>
-                  <td className="py-3 px-4 flex gap-2 flex-wrap">
-                    <button className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full font-bold shadow hover:bg-blue-200 transition-all duration-200 text-xs" style={{minWidth:'90px'}}>Details</button>
-                    {/* Chat with Customer Button */}
-                    <Link to={`/restaurant/support?orderId=${o.id}&customerId=${o.userId}`}>
-                      <button
-                        className="bg-green-100 text-green-700 px-4 py-2 rounded-full font-bold shadow hover:bg-green-200 transition-all duration-200 text-xs"
-                        style={{minWidth:'120px'}}
-                      >
-                        Chat with Customer
-                      </button>
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      Mark as {getNextStatus(order.status)}
+                    </button>
+                  )}
+                  {order.status === "New" && (
+                    <button
+                      onClick={() => updateOrderStatus(order.id, "Cancelled")}
+                      className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm"
+                    >
+                      Cancel Order
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
