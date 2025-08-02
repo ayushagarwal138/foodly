@@ -48,7 +48,7 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
         role: role.toUpperCase() // send role in uppercase
       });
       
-      // Store authentication data first
+      // Store authentication data
       localStorage.setItem("token", data.token);
       localStorage.setItem("userRole", role.toUpperCase());
       if (data.id) localStorage.setItem("userId", data.id);
@@ -59,42 +59,20 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
       localStorage.removeItem("restaurantName");
       localStorage.removeItem("restaurantId");
       
-      // Fetch user profile and store username/email (optional - don't fail login if this fails)
-      if (data.id && data.token) {
-        // Add a small delay to ensure token is properly set
-        setTimeout(async () => {
-          try {
-            let profile;
-            if (role.toUpperCase() === "CUSTOMER") {
-              profile = await api.get(API_ENDPOINTS.CUSTOMER_PROFILE(data.id));
-            } else if (role.toUpperCase() === "RESTAURANT") {
-              profile = await api.get(API_ENDPOINTS.RESTAURANT_BY_OWNER(data.id));
-            }
-            
-            if (profile) {
-              if (role.toUpperCase() === "CUSTOMER") {
-                if (profile.username) localStorage.setItem("username", profile.username);
-                if (profile.email) localStorage.setItem("email", profile.email);
-              } else if (role.toUpperCase() === "RESTAURANT") {
-                if (profile.id) localStorage.setItem("restaurantId", profile.id);
-                if (profile.name) localStorage.setItem("restaurantName", profile.name);
-                if (profile.owner) {
-                  if (profile.owner.username) localStorage.setItem("username", profile.owner.username);
-                  if (profile.owner.email) localStorage.setItem("email", profile.owner.email);
-                }
-              }
-            }
-          } catch (profileError) {
-            console.warn("Failed to fetch profile (this is optional):", profileError);
-            // Don't fail the login if profile fetch fails
-            // Set basic info from login response
-            localStorage.setItem("username", formData.username);
-          }
-        }, 100); // Small delay to ensure token is set
+      // Set basic info from login response
+      localStorage.setItem("username", formData.username);
+      if (data.restaurantId) {
+        localStorage.setItem("restaurantId", data.restaurantId);
       }
       
       setToast({ message: "Login successful!", type: "success" });
-      setTimeout(() => navigate(`/${role.toLowerCase()}`), 1000);
+      
+      // Redirect immediately after successful login
+      console.log("Login successful, redirecting to:", `/${role.toLowerCase()}`);
+      setTimeout(() => {
+        console.log("Executing navigation to:", `/${role.toLowerCase()}`);
+        navigate(`/${role.toLowerCase()}`);
+      }, 1000);
     } catch (err) {
       console.error("Login error:", err);
       setError(err.message);
