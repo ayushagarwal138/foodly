@@ -1,5 +1,6 @@
 // API Configuration and utility functions
 // Use environment variable for API base URL, fallback to relative URLs for local development
+// Updated to use correct backend URL: https://foodly-backend-uv7m.onrender.com
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://foodly-backend-uv7m.onrender.com';
 
 // API endpoints
