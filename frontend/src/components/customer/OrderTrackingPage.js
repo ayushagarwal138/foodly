@@ -45,7 +45,10 @@ export default function OrderTrackingPage() {
   };
 
   const fetchChatMessages = async () => {
-    if (!order || !order.restaurantId) return;
+    if (!order || !order.restaurantId) {
+      console.log("Cannot fetch chat messages: order or restaurantId missing", { order, restaurantId: order?.restaurantId });
+      return;
+    }
     
     try {
       const data = await api.get(`${API_ENDPOINTS.SUPPORT_MESSAGES}?orderId=${orderId}&customerId=${userId}&restaurantId=${order.restaurantId}`);

@@ -11,10 +11,24 @@ export default function OrdersPage() {
   const [newMessage, setNewMessage] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
-  const restaurantId = localStorage.getItem("restaurantId");
+  const [restaurantId, setRestaurantId] = useState(null);
   const token = localStorage.getItem("token");
+  const userId = localStorage.getItem("userId");
+
+  const fetchRestaurantId = useCallback(async () => {
+    try {
+      const data = await api.get(API_ENDPOINTS.RESTAURANT_BY_OWNER(userId));
+      console.log("Fetched restaurant:", data);
+      setRestaurantId(data.id);
+    } catch (err) {
+      console.error("Error fetching restaurant ID:", err);
+      setError("Failed to fetch restaurant information");
+    }
+  }, [userId]);
 
   const fetchOrders = useCallback(async () => {
+    if (!restaurantId) return;
+    
     setError("");
     try {
       const data = await api.get(API_ENDPOINTS.RESTAURANT_ORDERS(restaurantId));
@@ -88,11 +102,18 @@ export default function OrdersPage() {
   useEffect(() => {
     async function initialFetch() {
       setLoading(true);
-      await fetchOrders();
+      await fetchRestaurantId();
       setLoading(false);
     }
-    if (restaurantId && token) {
+    if (userId && token) {
       initialFetch();
+    }
+  }, [userId, token, fetchRestaurantId]);
+
+  // Fetch orders when restaurant ID is available
+  useEffect(() => {
+    if (restaurantId && token) {
+      fetchOrders();
     }
   }, [restaurantId, token, fetchOrders]);
 

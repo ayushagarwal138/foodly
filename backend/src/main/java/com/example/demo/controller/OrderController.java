@@ -38,8 +38,25 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public Optional<Order> getOrderById(@PathVariable Long id) {
-        return orderRepository.findById(id);
+    public Map<String, Object> getOrderById(@PathVariable Long id) {
+        Order order = orderRepository.findById(id).orElseThrow();
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("id", order.getId());
+        result.put("userId", order.getUserId());
+        result.put("restaurantId", order.getRestaurantId());
+        result.put("status", order.getStatus());
+        result.put("total", order.getTotal());
+        result.put("items", order.getItems());
+        result.put("date", order.getId()); // You may want to add a date field if available
+        result.put("createdAt", order.getId()); // Add createdAt for consistency
+        // Add restaurant name
+        String restaurantName = "";
+        if (order.getRestaurantId() != null) {
+            var restOpt = restaurantRepository.findById(order.getRestaurantId());
+            if (restOpt.isPresent()) restaurantName = restOpt.get().getName();
+        }
+        result.put("restaurantName", restaurantName);
+        return result;
     }
 
     @PostMapping
@@ -146,8 +163,17 @@ public class OrderController {
             throw new RuntimeException("Only restaurant owners can update order status");
         }
         
+        // Find the restaurant owned by this user
+        var restaurantOpt = restaurantRepository.findAll().stream()
+            .filter(r -> r.getOwner() != null && r.getOwner().getId().equals(user.getId()))
+            .findFirst();
+        
+        if (restaurantOpt.isEmpty()) {
+            throw new RuntimeException("Restaurant not found for this user");
+        }
+        
         // Verify restaurant owns this order
-        if (!order.getRestaurantId().equals(user.getId())) {
+        if (!order.getRestaurantId().equals(restaurantOpt.get().getId())) {
             throw new RuntimeException("You can only update orders for your restaurant");
         }
         
