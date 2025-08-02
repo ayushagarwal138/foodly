@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "./CartContext";
-import { api, API_ENDPOINTS } from "../../config/api";
+import { api, publicApi, API_ENDPOINTS } from "../../config/api";
 
 export default function RestaurantPage() {
   const { slug } = useParams();
@@ -25,11 +25,11 @@ export default function RestaurantPage() {
       setLoading(true);
       setError("");
       try {
-        // Fetch restaurant info by slug
-        const data = await api.get(API_ENDPOINTS.RESTAURANT_BY_SLUG(slug));
+        // Fetch restaurant info by slug (public endpoint)
+        const data = await publicApi.get(API_ENDPOINTS.RESTAURANT_BY_SLUG(slug));
         setInfo(data);
-        // Fetch menu for this restaurant (customer view - shows all items with availability status)
-        const menuData = await api.get(API_ENDPOINTS.RESTAURANT_MENU(data.id));
+        // Fetch menu for this restaurant (public endpoint)
+        const menuData = await publicApi.get(API_ENDPOINTS.RESTAURANT_MENU(data.id));
         // Group menu items by category
         const groupedMenu = {};
         (Array.isArray(menuData) ? menuData : []).forEach(item => {

@@ -113,6 +113,41 @@ export const apiRequest = async (endpoint, options = {}) => {
   }
 };
 
+// Public API request function for endpoints that don't require authentication
+export const publicApiRequest = async (endpoint, options = {}) => {
+  const defaultOptions = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  };
+
+  const config = {
+    ...defaultOptions,
+    ...options,
+    headers: {
+      ...defaultOptions.headers,
+      ...options.headers,
+    },
+  };
+
+  const url = `${API_BASE_URL}${endpoint}`;
+  
+  try {
+    const response = await fetch(url, config);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Public API request failed:', error);
+    throw error;
+  }
+};
+
 // Convenience methods
 export const api = {
   get: (endpoint) => apiRequest(endpoint),
@@ -132,6 +167,30 @@ export const api = {
   }),
   
   patch: (endpoint, data) => apiRequest(endpoint, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+};
+
+// Public API convenience methods (no authentication required)
+export const publicApi = {
+  get: (endpoint) => publicApiRequest(endpoint),
+  
+  post: (endpoint, data) => publicApiRequest(endpoint, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  
+  put: (endpoint, data) => publicApiRequest(endpoint, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  
+  delete: (endpoint) => publicApiRequest(endpoint, {
+    method: 'DELETE',
+  }),
+  
+  patch: (endpoint, data) => publicApiRequest(endpoint, {
     method: 'PATCH',
     body: JSON.stringify(data),
   }),

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { api, API_ENDPOINTS } from "../../config/api";
+import { publicApi, API_ENDPOINTS } from "../../config/api";
 
 export default function AllRestaurants() {
   const [restaurants, setRestaurants] = useState([]);
@@ -12,7 +12,7 @@ export default function AllRestaurants() {
   const fetchRestaurants = async () => {
     setError("");
     try {
-      const data = await api.get(API_ENDPOINTS.RESTAURANTS);
+      const data = await publicApi.get(API_ENDPOINTS.RESTAURANTS);
       console.log("Fetched restaurants:", data);
       setRestaurants(data);
     } catch (err) {
