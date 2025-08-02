@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "./CartContext";
+import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function RestaurantPage() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [info, setInfo] = useState(null);
   const [menu, setMenu] = useState({});
   const [loading, setLoading] = useState(true);
@@ -24,14 +26,10 @@ export default function RestaurantPage() {
       setError("");
       try {
         // Fetch restaurant info by slug
-        const res = await fetch(`/api/restaurants/slug/${slug}`);
-        if (!res.ok) throw new Error("Restaurant not found");
-        const data = await res.json();
+        const data = await api.get(API_ENDPOINTS.RESTAURANT_BY_SLUG(slug));
         setInfo(data);
         // Fetch menu for this restaurant (customer view - shows all items with availability status)
-        const menuRes = await fetch(`/api/restaurants/${data.id}/menu`);
-        if (!menuRes.ok) throw new Error("Menu not found");
-        const menuData = await menuRes.json();
+        const menuData = await api.get(API_ENDPOINTS.RESTAURANT_MENU(data.id));
         // Group menu items by category
         const groupedMenu = {};
         (Array.isArray(menuData) ? menuData : []).forEach(item => {
@@ -65,7 +63,8 @@ export default function RestaurantPage() {
     }
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("You must be logged in as a customer to add items to the cart.");
+      // Redirect to login instead of showing alert
+      navigate("/customer/login");
       return;
     }
     const existing = cart.items.find(i => i.menu_item_id === menuItemId);
@@ -86,139 +85,128 @@ export default function RestaurantPage() {
       menu_item_id: i.menu_item_id ?? i.id,
       restaurantId: i.restaurantId ?? restaurantId
     }));
-    fetch("/api/cart", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ items: sanitized, address: cart.address || "" })
-    })
-      .then(res => res.ok ? res.json() : Promise.reject())
+    
+    // Use centralized api utility
+    api.put(API_ENDPOINTS.CART, { items: sanitized, address: cart.address || "" })
       .then(data => setCart(data))
-      .catch(() => {});
+      .catch(err => {
+        console.error("Error updating cart:", err);
+        if (err.message.includes("unauthorized") || err.message.includes("401")) {
+          navigate("/customer/login");
+        }
+      });
   }
 
   function removeFromCart(item) {
-    const token = localStorage.getItem("token");
     // Ensure all items have menu_item_id
     const updated = cart.items.filter(i => i.menu_item_id !== item.menu_item_id);
     const sanitized = updated.map(i => ({
       ...i,
       menu_item_id: i.menu_item_id ?? i.id
     }));
-    fetch("/api/cart", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ items: sanitized, address: cart.address || "" })
-    })
-      .then(res => res.ok ? res.json() : Promise.reject())
+    
+    // Use centralized api utility
+    api.put(API_ENDPOINTS.CART, { items: sanitized, address: cart.address || "" })
       .then(data => setCart(data))
-      .catch(() => {});
+      .catch(err => {
+        console.error("Error updating cart:", err);
+        if (err.message.includes("unauthorized") || err.message.includes("401")) {
+          navigate("/customer/login");
+        }
+      });
   }
 
   function updateQty(item, qty) {
-    const token = localStorage.getItem("token");
     // Ensure all items have menu_item_id
     const updated = cart.items.map(i => i.menu_item_id === item.menu_item_id ? { ...i, qty } : i);
     const sanitized = updated.map(i => ({
       ...i,
       menu_item_id: i.menu_item_id ?? i.id
     }));
-    fetch("/api/cart", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ items: sanitized, address: cart.address || "" })
-    })
-      .then(res => res.ok ? res.json() : Promise.reject())
+    
+    // Use centralized api utility
+    api.put(API_ENDPOINTS.CART, { items: sanitized, address: cart.address || "" })
       .then(data => setCart(data))
-      .catch(() => {});
+      .catch(err => {
+        console.error("Error updating cart:", err);
+        if (err.message.includes("unauthorized") || err.message.includes("401")) {
+          navigate("/customer/login");
+        }
+      });
   }
 
   function clearCart() {
-    const token = localStorage.getItem("token");
-    fetch("/api/cart", {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    // Use centralized api utility
+    api.delete(API_ENDPOINTS.CART)
       .then(() => setCart({ items: [], address: "" }))
-      .catch(() => {});
+      .catch(err => {
+        console.error("Error clearing cart:", err);
+        if (err.message.includes("unauthorized") || err.message.includes("401")) {
+          navigate("/customer/login");
+        }
+      });
   }
 
   const total = (cart.items || []).reduce((sum, i) => sum + i.price * i.qty, 0);
 
   async function handleFavoriteRestaurant() {
-    if (!userId || !token || !info) return;
+    if (!userId || !token || !info) {
+      navigate("/customer/login");
+      return;
+    }
     setFavLoading(true);
     setFavError("");
     setFavSuccess(false);
     try {
-      const res = await fetch(`/api/customers/${userId}/wishlist`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          type: "RESTAURANT",
-          name: info.name,
-          restaurant: info.name,
-          restaurantId: info.id
-        })
+      await api.post(API_ENDPOINTS.CUSTOMER_WISHLIST(userId), {
+        type: "RESTAURANT",
+        name: info.name,
+        restaurant: info.name,
+        restaurantId: info.id
       });
-      if (res.status === 409) {
+      setFavSuccess(true);
+      setTimeout(() => setFavSuccess(false), 2000);
+    } catch (err) {
+      if (err.message.includes("409")) {
         setFavError("Restaurant is already in your favorites");
         setTimeout(() => setFavError(""), 3000);
-      } else if (!res.ok) {
-        throw new Error("Failed to add favorite");
+      } else if (err.message.includes("unauthorized") || err.message.includes("401")) {
+        navigate("/customer/login");
       } else {
-        setFavSuccess(true);
-        setTimeout(() => setFavSuccess(false), 2000);
+        setFavError("Could not add to favorites");
       }
-    } catch (err) {
-      setFavError("Could not add to favorites");
     } finally {
       setFavLoading(false);
     }
   }
 
   async function handleFavoriteDish(item) {
-    if (!userId || !token || !info) return;
+    if (!userId || !token || !info) {
+      navigate("/customer/login");
+      return;
+    }
     setFavDishLoading(item.id);
     setFavDishError("");
     setFavDishSuccess("");
     try {
-      const res = await fetch(`/api/customers/${userId}/wishlist`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          type: "DISH",
-          name: item.name,
-          restaurant: info.name,
-          restaurantId: info.id,
-          menuItemId: item.id
-        })
+      await api.post(API_ENDPOINTS.CUSTOMER_WISHLIST(userId), {
+        type: "DISH",
+        name: item.name,
+        restaurant: info.name,
+        restaurantId: info.id,
+        menuItemId: item.id
       });
-      if (res.status === 409) {
+      setFavDishSuccess(item.id);
+      setTimeout(() => setFavDishSuccess("") , 2000);
+    } catch (err) {
+      if (err.message.includes("409")) {
         setFavDishError("Dish is already in your favorites");
         setTimeout(() => setFavDishError(""), 3000);
-      } else if (!res.ok) {
-        throw new Error("Failed to add favorite");
+      } else if (err.message.includes("unauthorized") || err.message.includes("401")) {
+        navigate("/customer/login");
       } else {
-        setFavDishSuccess(item.id);
-        setTimeout(() => setFavDishSuccess("") , 2000);
+        setFavDishError("Could not add to favorites");
       }
-    } catch (err) {
-      setFavDishError("Could not add to favorites");
     } finally {
       setFavDishLoading("");
     }
