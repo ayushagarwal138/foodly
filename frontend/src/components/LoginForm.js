@@ -49,7 +49,7 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
       });
       
       localStorage.setItem("token", data.token);
-      localStorage.setItem("userRole", role);
+      localStorage.setItem("userRole", role.toUpperCase());
       if (data.id) localStorage.setItem("userId", data.id);
       // Clear previous info
       localStorage.removeItem("username");
