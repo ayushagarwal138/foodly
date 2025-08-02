@@ -29,10 +29,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String path = request.getRequestURI();
         System.out.println("JwtRequestFilter path: " + path);
-        if (path.startsWith("/auth/login") || path.startsWith("/auth/signup")) {
+        
+        // Skip JWT validation for auth endpoints and health checks
+        if (path.startsWith("/auth/") || path.equals("/") || path.equals("/health") || path.startsWith("/actuator/")) {
+            System.out.println("Skipping JWT validation for path: " + path);
             chain.doFilter(request, response);
             return;
         }
+        
         final String authHeader = request.getHeader("Authorization");
         String username = null;
         String jwt = null;
