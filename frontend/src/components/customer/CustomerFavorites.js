@@ -152,7 +152,7 @@ export default function CustomerFavorites() {
                       </div>
                       <div className="flex space-x-2">
                         <Link
-                          to={`/restaurant/${restaurant.restaurantId}`}
+                          to={`/customer/restaurant/${restaurant.restaurantId}`}
                           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                         >
                           View Menu
@@ -188,7 +188,7 @@ export default function CustomerFavorites() {
                       </div>
                       <div className="flex space-x-2">
                         <Link
-                          to={`/restaurant/${dish.restaurantId}`}
+                          to={`/customer/restaurant/${dish.restaurantId}`}
                           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                         >
                           View Menu
