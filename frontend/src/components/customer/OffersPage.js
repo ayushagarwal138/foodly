@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { api, API_ENDPOINTS } from "../../config/api";
 
 // Sample offers data - in a real app, this would come from an API
 const sampleOffers = [
@@ -105,21 +106,8 @@ export default function OffersPage() {
     async function fetchOffers() {
       setLoading(true);
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch("/api/offers", {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setOffers(data);
-        } else {
-          // Fallback to sample data if API fails
-          console.warn("Failed to fetch offers from API, using sample data");
-          setOffers(sampleOffers);
-        }
+        const data = await api.get(API_ENDPOINTS.OFFERS);
+        setOffers(data);
       } catch (error) {
         console.error("Error fetching offers:", error);
         // Fallback to sample data

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import ReviewModal from "./ReviewModal";
+import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function CustomerOrders() {
   const [orders, setOrders] = useState([]);
@@ -12,18 +13,14 @@ export default function CustomerOrders() {
   const fetchOrders = useCallback(async () => {
     setError("");
     try {
-      const res = await fetch("/api/orders/my", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error("Failed to fetch orders");
-      const data = await res.json();
+      const data = await api.get(API_ENDPOINTS.MY_ORDERS);
       console.log("Fetched orders:", data);
       setOrders(data);
     } catch (err) {
       console.error("Error fetching orders:", err);
       setError(err.message);
     }
-  }, [token]);
+  }, []);
 
   // Initial fetch
   useEffect(() => {

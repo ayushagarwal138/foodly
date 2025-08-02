@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function RatingsReviewsPage() {
   const [reviews, setReviews] = useState([]);
@@ -10,14 +11,7 @@ export default function RatingsReviewsPage() {
   const fetchReviews = async () => {
     setError("");
     try {
-      const res = await fetch("/api/reviews/my", {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      });
-      if (!res.ok) throw new Error("Failed to fetch reviews");
-      const data = await res.json();
+      const data = await api.get(API_ENDPOINTS.MY_REVIEWS);
       console.log("Received reviews:", data);
       setReviews(data);
     } catch (err) {
