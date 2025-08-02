@@ -37,7 +37,7 @@ export default function SupportPage() {
     
     setError("");
     try {
-      const data = await api.get(API_ENDPOINTS.SUPPORT_MESSAGES + `/restaurant/${restaurantId}`);
+      const data = await api.get(API_ENDPOINTS.SUPPORT_MESSAGES_BY_RESTAURANT(restaurantId));
       console.log("Fetched support messages:", data);
       setMessages(Array.isArray(data) ? data : []);
     } catch (err) {

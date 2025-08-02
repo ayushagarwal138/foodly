@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ayush1}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./database/migration.sql:/docker-entrypoint-initdb.d/migration.sql
     ports:
       - "5432:5432"
     networks:

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import StatCard from "./StatCard";
 import CustomerSearch from "./CustomerSearch";
+import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function DashboardMain() {
   const navigate = useNavigate();
@@ -20,22 +21,13 @@ export default function DashboardMain() {
       setError("");
       try {
         // Fetch orders
-        const ordersRes = await fetch("/api/orders/my", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const ordersData = ordersRes.ok ? await ordersRes.json() : [];
+        const ordersData = await api.get(API_ENDPOINTS.MY_ORDERS);
         setOrders(ordersData);
         // Fetch favorites
-        const favRes = await fetch(`/api/customers/${userId}/favorites`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const favData = favRes.ok ? await favRes.json() : { restaurants: [], dishes: [] };
+        const favData = await api.get(API_ENDPOINTS.CUSTOMER_FAVORITES(userId));
         setFavorites(favData);
         // Fetch restaurants
-        const restRes = await fetch("/api/restaurants", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const restData = restRes.ok ? await restRes.json() : [];
+        const restData = await api.get(API_ENDPOINTS.RESTAURANTS);
         setRestaurants(restData);
       } catch (err) {
         setError(err.message);

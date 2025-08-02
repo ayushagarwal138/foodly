@@ -1,5 +1,20 @@
+-- Foodly Database Migration Script
+-- This script sets up the complete database structure with triggers and indexes
+
+-- Create extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Create function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
 -- USERS: customers, restaurant owners, admins
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
@@ -10,7 +25,7 @@ CREATE TABLE users (
 );
 
 -- RESTAURANTS: owned by a user with role 'RESTAURANT'
-CREATE TABLE restaurants (
+CREATE TABLE IF NOT EXISTS restaurants (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     address VARCHAR(255),
@@ -27,7 +42,7 @@ CREATE TABLE restaurants (
 );
 
 -- MENU ITEMS: belong to a restaurant
-CREATE TABLE menu_items (
+CREATE TABLE IF NOT EXISTS menu_items (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     price DECIMAL(10,2) NOT NULL,
@@ -43,7 +58,7 @@ CREATE TABLE menu_items (
 );
 
 -- ORDERS: placed by a customer, for a restaurant
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL, -- customer
     restaurant_id BIGINT NOT NULL,
@@ -55,7 +70,7 @@ CREATE TABLE orders (
 );
 
 -- ORDER ITEMS: items in an order
-CREATE TABLE order_items (
+CREATE TABLE IF NOT EXISTS order_items (
     id BIGSERIAL PRIMARY KEY,
     order_id BIGINT NOT NULL,
     menu_item_id BIGINT NOT NULL,
@@ -66,7 +81,7 @@ CREATE TABLE order_items (
 );
 
 -- REVIEWS: left by a customer for an order/restaurant
-CREATE TABLE reviews (
+CREATE TABLE IF NOT EXISTS reviews (
     id BIGSERIAL PRIMARY KEY,
     customer_id BIGINT NOT NULL,
     order_id BIGINT,
@@ -83,7 +98,7 @@ CREATE TABLE reviews (
 );
 
 -- WISHLIST: customer can wishlist restaurants or dishes
-CREATE TABLE wishlist (
+CREATE TABLE IF NOT EXISTS wishlist (
     id BIGSERIAL PRIMARY KEY,
     customer_id BIGINT NOT NULL,
     type VARCHAR(20) NOT NULL, -- 'RESTAURANT' or 'DISH'
@@ -96,7 +111,7 @@ CREATE TABLE wishlist (
 );
 
 -- CART: customer cart items
-CREATE TABLE cart (
+CREATE TABLE IF NOT EXISTS cart (
     id BIGSERIAL PRIMARY KEY,
     customer_id BIGINT NOT NULL,
     menu_item_id BIGINT NOT NULL,
@@ -107,7 +122,7 @@ CREATE TABLE cart (
 );
 
 -- OFFERS: promotional offers and coupons
-CREATE TABLE offers (
+CREATE TABLE IF NOT EXISTS offers (
     id BIGSERIAL PRIMARY KEY,
     type VARCHAR(50) NOT NULL, -- 'discount', 'free-delivery', 'cashback', 'combo', 'free-item'
     title VARCHAR(255) NOT NULL,
@@ -129,7 +144,7 @@ CREATE TABLE offers (
 );
 
 -- CHAT MESSAGES: for customer support and order communication
-CREATE TABLE chat_messages (
+CREATE TABLE IF NOT EXISTS chat_messages (
     id BIGSERIAL PRIMARY KEY,
     order_id BIGINT,
     customer_id BIGINT NOT NULL,
@@ -141,6 +156,27 @@ CREATE TABLE chat_messages (
     FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
 );
+
+-- Create triggers for updated_at columns
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+CREATE TRIGGER update_users_updated_at 
+    BEFORE UPDATE ON users 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_restaurants_updated_at ON restaurants;
+CREATE TRIGGER update_restaurants_updated_at 
+    BEFORE UPDATE ON restaurants 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_menu_items_updated_at ON menu_items;
+CREATE TRIGGER update_menu_items_updated_at 
+    BEFORE UPDATE ON menu_items 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_offers_updated_at ON offers;
+CREATE TRIGGER update_offers_updated_at 
+    BEFORE UPDATE ON offers 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
