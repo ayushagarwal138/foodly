@@ -22,12 +22,14 @@ export default function RestaurantDashboard() {
 
   async function fetchRestaurant() {
     try {
-      const data = await api.get(API_ENDPOINTS.RESTAURANT_BY_OWNER(restaurantId));
+      // Use the simpler endpoint that doesn't require authentication
+      const data = await api.get(API_ENDPOINTS.RESTAURANTS + `/${restaurantId}`);
       console.log("Fetched restaurant:", data);
       setRestaurant(data);
     } catch (err) {
       console.error("Error fetching restaurant:", err);
-      setError(err.message);
+      // Don't set error for restaurant fetch, just log it
+      console.log("Could not fetch restaurant details, continuing with orders only");
     }
   }
 
@@ -65,7 +67,7 @@ export default function RestaurantDashboard() {
       {restaurant && (
         <div className="mb-8 p-6 bg-blue-50 rounded-xl border border-blue-200">
           <h3 className="text-xl font-semibold text-[#16213e] mb-2">{restaurant.name}</h3>
-          <p className="text-gray-600">{restaurant.cuisine}</p>
+          <p className="text-gray-600">{restaurant.cuisineType || restaurant.cuisine}</p>
           <p className="text-gray-600">{restaurant.address}</p>
         </div>
       )}

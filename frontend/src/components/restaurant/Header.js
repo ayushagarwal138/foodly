@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function Header({ setCurrent }) {
   const [username, setUsername] = useState(localStorage.getItem("username") || "");
@@ -13,9 +14,10 @@ export default function Header({ setCurrent }) {
     const restaurantId = localStorage.getItem("restaurantId");
     const token = localStorage.getItem("token");
     const userRole = localStorage.getItem("userRole");
+    
     if (restaurantId && token && userRole && userRole.toUpperCase() === "RESTAURANT") {
-      fetch(`/api/restaurants/${restaurantId}`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(res => res.ok ? res.json() : null)
+      // Use the centralized API configuration
+      api.get(API_ENDPOINTS.RESTAURANTS + `/${restaurantId}`)
         .then(profile => {
           if (profile && profile.name) {
             setRestaurantName(profile.name);
@@ -30,6 +32,10 @@ export default function Header({ setCurrent }) {
               localStorage.setItem("email", profile.owner.email);
             }
           }
+        })
+        .catch(err => {
+          console.error("Error fetching restaurant profile:", err);
+          // Continue without restaurant details
         });
     }
   }, []);
