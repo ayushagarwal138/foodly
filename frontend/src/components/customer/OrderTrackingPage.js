@@ -34,6 +34,7 @@ export default function OrderTrackingPage() {
     setError("");
     try {
       const data = await api.get(API_ENDPOINTS.ORDER_BY_ID(orderId));
+      console.log("Fetched order data:", data);
       setOrder(data);
       setCurrentStatus(data.status || "New");
     } catch (err) {
@@ -45,13 +46,21 @@ export default function OrderTrackingPage() {
   };
 
   const fetchChatMessages = async () => {
-    if (!order || !order.restaurantId) {
-      console.log("Cannot fetch chat messages: order or restaurantId missing", { order, restaurantId: order?.restaurantId });
+    console.log("Attempting to fetch chat messages with:", { order, orderId, userId, restaurantId: order?.restaurantId });
+    
+    if (!order) {
+      console.log("Order not loaded yet");
+      return;
+    }
+    
+    if (!order.restaurantId) {
+      console.log("Restaurant ID missing from order:", order);
       return;
     }
     
     try {
       const data = await api.get(`${API_ENDPOINTS.SUPPORT_MESSAGES}?orderId=${orderId}&customerId=${userId}&restaurantId=${order.restaurantId}`);
+      console.log("Fetched chat messages:", data);
       setChatMessages(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error fetching chat messages:", err);
@@ -61,6 +70,11 @@ export default function OrderTrackingPage() {
 
   const sendChatMessage = async () => {
     if (!newMessage.trim() || !order) return;
+    
+    if (!order.restaurantId) {
+      setError("Cannot send message: Restaurant information not available");
+      return;
+    }
     
     setSendingMessage(true);
     try {
@@ -72,6 +86,7 @@ export default function OrderTrackingPage() {
         message: newMessage
       };
       
+      console.log("Sending chat message:", messageData);
       const data = await api.post(API_ENDPOINTS.SUPPORT_MESSAGES, messageData);
       setChatMessages(prev => [...prev, data]);
       setNewMessage("");
@@ -84,6 +99,12 @@ export default function OrderTrackingPage() {
   };
 
   const openChatModal = async () => {
+    console.log("Opening chat modal with order:", order);
+    if (!order || !order.restaurantId) {
+      setError("Cannot open chat: Order information not complete");
+      return;
+    }
+    
     setShowChatModal(true);
     await fetchChatMessages();
   };
@@ -145,6 +166,22 @@ export default function OrderTrackingPage() {
   return (
     <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
       <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Order Tracking</h2>
+      
+      {/* Debug Information */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-6 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+          <h3 className="text-lg font-semibold text-yellow-800 mb-2">Debug Info</h3>
+          <div className="text-sm text-yellow-700 space-y-1">
+            <div>Order ID: {orderId}</div>
+            <div>User ID: {userId}</div>
+            <div>Order Loaded: {order ? 'Yes' : 'No'}</div>
+            <div>Restaurant ID: {order?.restaurantId || 'Missing'}</div>
+            <div>Order Status: {currentStatus}</div>
+            <div>Chat Modal Open: {showChatModal ? 'Yes' : 'No'}</div>
+            <div>Chat Messages: {chatMessages.length}</div>
+          </div>
+        </div>
+      )}
       
       {/* Order Details */}
       <div className="mb-6 p-4 bg-gray-50 rounded-xl">

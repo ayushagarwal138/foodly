@@ -17,9 +17,11 @@ export default function OrdersPage() {
 
   const fetchRestaurantId = useCallback(async () => {
     try {
+      console.log("Fetching restaurant ID for user:", userId);
       const data = await api.get(API_ENDPOINTS.RESTAURANT_BY_OWNER(userId));
-      console.log("Fetched restaurant:", data);
+      console.log("Fetched restaurant data:", data);
       setRestaurantId(data.id);
+      console.log("Set restaurant ID to:", data.id);
     } catch (err) {
       console.error("Error fetching restaurant ID:", err);
       setError("Failed to fetch restaurant information");
@@ -27,10 +29,14 @@ export default function OrdersPage() {
   }, [userId]);
 
   const fetchOrders = useCallback(async () => {
-    if (!restaurantId) return;
+    if (!restaurantId) {
+      console.log("No restaurant ID available, skipping order fetch");
+      return;
+    }
     
     setError("");
     try {
+      console.log("Fetching orders for restaurant ID:", restaurantId);
       const data = await api.get(API_ENDPOINTS.RESTAURANT_ORDERS(restaurantId));
       console.log("Fetched orders:", data);
       setOrders(Array.isArray(data) ? data : []);
@@ -42,8 +48,9 @@ export default function OrdersPage() {
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
+      console.log("Updating order status:", { orderId, newStatus, restaurantId });
       const data = await api.patch(API_ENDPOINTS.ORDER_STATUS(orderId), { status: newStatus });
-      console.log("Updated order status:", data);
+      console.log("Updated order status response:", data);
       await fetchOrders(); // Refresh the list
     } catch (err) {
       console.error("Error updating order status:", err);
@@ -204,6 +211,22 @@ export default function OrdersPage() {
   return (
     <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
       <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Restaurant Orders</h2>
+      
+      {/* Debug Information */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-6 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+          <h3 className="text-lg font-semibold text-yellow-800 mb-2">Debug Info</h3>
+          <div className="text-sm text-yellow-700 space-y-1">
+            <div>User ID: {userId}</div>
+            <div>Restaurant ID: {restaurantId || 'Not loaded'}</div>
+            <div>Orders Count: {orders.length}</div>
+            <div>Loading: {loading ? 'Yes' : 'No'}</div>
+            <div>Error: {error || 'None'}</div>
+            <div>Chat Modal Open: {showChatModal ? 'Yes' : 'No'}</div>
+            <div>Selected Order: {selectedOrder?.id || 'None'}</div>
+          </div>
+        </div>
+      )}
       
       {/* Status Filter */}
       <div className="mb-6">
