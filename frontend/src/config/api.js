@@ -70,6 +70,9 @@ export const API_ENDPOINTS = {
   ADMIN_REVIEWS: '/api/admin/reviews',
   ADMIN_REVIEW_DELETE: (id) => `/api/admin/reviews/${id}`,
   ADMIN_REVIEW_FLAG: (id) => `/api/admin/reviews/${id}/flag`,
+  
+  // Admin offers endpoints
+  ADMIN_OFFERS: '/api/offers/admin/all',
 };
 
 // API utility functions
