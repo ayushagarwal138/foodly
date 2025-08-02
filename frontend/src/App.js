@@ -9,7 +9,7 @@ import {
 import LoginForm from "./components/LoginForm";
 import SignupForm from "./components/SignupForm";
 import CustomerDashboard from "./components/customer/CustomerDashboard";
-import RestaurantDashboard from "./components/restaurant/RestaurantDashboard";
+import RestaurantLayout from "./components/restaurant/RestaurantLayout";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import { CartProvider } from "./components/customer/CartContext";
 
@@ -40,7 +40,7 @@ function App() {
         <Route path="/restaurant/login" element={<LoginForm role="Restaurant" />} />
         <Route path="/admin/login" element={<LoginForm role="Admin" />} />
         <Route path="/customer/*" element={<CartProvider><CustomerDashboard /></CartProvider>} />
-        <Route path="/restaurant/*" element={<RestaurantDashboard />} />
+        <Route path="/restaurant/*" element={<RestaurantLayout />} />
         <Route path="/admin/*" element={<AdminDashboard />} />
       </Routes>
     </Router>
