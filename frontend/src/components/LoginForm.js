@@ -9,12 +9,12 @@ const ROLES = [
   { label: "Admin", value: "Admin", icon: "⚙️" },
 ];
 
-export default function LoginForm() {
+export default function LoginForm({ role: initialRole = "Customer" }) {
   const [formData, setFormData] = useState({
     username: "",
     password: ""
   });
-  const [role, setRole] = useState("Customer");
+  const [role, setRole] = useState(initialRole);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
