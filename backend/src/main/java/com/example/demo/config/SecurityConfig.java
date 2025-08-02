@@ -11,17 +11,34 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.Arrays;
 import com.example.demo.config.JwtRequestFilter;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig {
+public class SecurityConfig implements WebMvcConfigurer {
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
     
     @Value("${cors.allowed-origins:http://localhost:3000}")
     private String allowedOrigins;
+    
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        String[] origins = allowedOrigins.split(",");
+        for (int i = 0; i < origins.length; i++) {
+            origins[i] = origins[i].trim();
+        }
+        
+        registry.addMapping("/**")
+            .allowedOrigins(origins)
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+            .allowedHeaders("*")
+            .allowCredentials(true)
+            .maxAge(3600);
+    }
     
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -55,10 +72,35 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+        
+        // Parse allowed origins from property
+        String[] origins = allowedOrigins.split(",");
+        for (int i = 0; i < origins.length; i++) {
+            origins[i] = origins[i].trim(); // Remove any whitespace
+        }
+        
+        System.out.println("=== CORS Configuration Debug ===");
+        System.out.println("Raw allowed origins: " + allowedOrigins);
+        System.out.println("Parsed origins: " + Arrays.toString(origins));
+        
+        configuration.setAllowedOrigins(Arrays.asList(origins));
+        
+        // Allow all common HTTP methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        
+        // Allow all headers including Authorization
         configuration.setAllowedHeaders(Arrays.asList("*"));
+        
+        // Allow credentials
         configuration.setAllowCredentials(true);
+        
+        // Set max age for preflight requests
+        configuration.setMaxAge(3600L);
+        
+        // Add exposed headers
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        
+        System.out.println("CORS configuration created successfully");
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
