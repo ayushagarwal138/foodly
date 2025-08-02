@@ -1,254 +1,158 @@
 import React, { useState, useEffect } from "react";
+import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function CustomerProfile() {
-  const [editMode, setEditMode] = useState(false);
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [tempUsername, setTempUsername] = useState("");
-  const [tempEmail, setTempEmail] = useState("");
+  const [profile, setProfile] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    preferences: []
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showPasswordSection, setShowPasswordSection] = useState(false);
-  const [showAddressSection, setShowAddressSection] = useState(false);
-  // Password change state
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordMsg, setPasswordMsg] = useState("");
-  // Address management state
-  const [addresses, setAddresses] = useState([
-    "123 Main St, Springfield",
-    "456 Oak Ave, Metropolis"
-  ]);
-  const [newAddress, setNewAddress] = useState("");
-
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({});
   const userId = localStorage.getItem("userId");
-  const token = localStorage.getItem("token");
+
+  const fetchProfile = async () => {
+    setError("");
+    try {
+      const data = await api.get(API_ENDPOINTS.CUSTOMER_PROFILE(userId));
+      console.log("Fetched profile:", data);
+      setProfile(data);
+      setFormData(data);
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+      setError(err.message);
+    }
+  };
+
+  const updateProfile = async () => {
+    try {
+      const data = await api.put(API_ENDPOINTS.CUSTOMER_PROFILE(userId), formData);
+      setProfile(data);
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      setError(err.message);
+    }
+  };
 
   useEffect(() => {
-    async function fetchProfile() {
+    async function initialFetch() {
       setLoading(true);
-      setError("");
-      try {
-        const res = await fetch(`/api/customers/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error("Failed to fetch profile");
-        const data = await res.json();
-        setUsername(data.username);
-        setEmail(data.email);
-        setTempUsername(data.username);
-        setTempEmail(data.email);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    if (userId && token) fetchProfile();
-  }, [userId, token]);
-
-  const handleEdit = () => {
-    setTempUsername(username);
-    setTempEmail(email);
-    setEditMode(true);
-  };
-
-  const handleCancel = () => {
-    setEditMode(false);
-    setError("");
-  };
-
-  const handleSave = async () => {
-    setError("");
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/customers/${userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          username: tempUsername,
-          email: tempEmail
-        })
-      });
-      if (!res.ok) throw new Error("Failed to update profile");
-      setUsername(tempUsername);
-      setEmail(tempEmail);
-      localStorage.setItem("username", tempUsername);
-      setEditMode(false);
-    } catch (err) {
-      setError(err.message);
-    } finally {
+      await fetchProfile();
       setLoading(false);
     }
-  };
+    if (userId) {
+      initialFetch();
+    }
+  }, [userId]);
 
-  // Password change logic (local only)
-  const handlePasswordChange = (e) => {
-    e.preventDefault();
-    setPasswordMsg("");
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordMsg("Please fill in all fields.");
-      return;
-    }
-    if (newPassword.length < 8) {
-      setPasswordMsg("New password must be at least 8 characters.");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordMsg("New passwords do not match.");
-      return;
-    }
-    // Simulate password change
-    setPasswordMsg("Password changed successfully (demo only)");
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-  };
-
-  // Address management logic (local only)
-  const handleAddAddress = (e) => {
-    e.preventDefault();
-    if (!newAddress.trim()) return;
-    setAddresses([...addresses, newAddress.trim()]);
-    setNewAddress("");
-  };
-  const handleRemoveAddress = (idx) => {
-    setAddresses(addresses.filter((_, i) => i !== idx));
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   if (loading) return <div className="p-10 text-center">Loading...</div>;
   if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="max-w-xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
-      <h2 className="text-2xl font-bold mb-6 text-[#16213e]">My Profile</h2>
-      <div className="flex flex-col gap-6">
-        {/* Basic Info */}
+    <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-[#16213e]">My Profile</h2>
+        <button
+          onClick={() => setIsEditing(!isEditing)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          {isEditing ? "Cancel" : "Edit Profile"}
+        </button>
+      </div>
+
+      <div className="space-y-6">
         <div>
-          <label className="block text-gray-600 font-medium mb-1">Username</label>
-          {editMode ? (
+          <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+          {isEditing ? (
             <input
-              className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200"
-              value={tempUsername}
-              onChange={e => setTempUsername(e.target.value)}
+              type="text"
+              name="name"
+              value={formData.name || ""}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           ) : (
-            <div className="text-lg font-semibold text-[#16213e]">{username}</div>
+            <p className="text-gray-900">{profile.name}</p>
           )}
         </div>
+
         <div>
-          <label className="block text-gray-600 font-medium mb-1">Email</label>
-          {editMode ? (
+          <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+          {isEditing ? (
             <input
-              className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200"
-              value={tempEmail}
-              onChange={e => setTempEmail(e.target.value)}
+              type="email"
+              name="email"
+              value={formData.email || ""}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           ) : (
-            <div className="text-lg font-semibold text-[#16213e]">{email}</div>
+            <p className="text-gray-900">{profile.email}</p>
           )}
         </div>
-        <div className="flex gap-4 mt-4">
-          {editMode ? (
-            <>
-              <button
-                className="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold shadow hover:bg-blue-700 transition"
-                onClick={handleSave}
-                disabled={loading}
-              >
-                Save
-              </button>
-              <button
-                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-xl font-bold shadow hover:bg-gray-300 transition"
-                onClick={handleCancel}
-                disabled={loading}
-              >
-                Cancel
-              </button>
-            </>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+          {isEditing ? (
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone || ""}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           ) : (
+            <p className="text-gray-900">{profile.phone}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+          {isEditing ? (
+            <textarea
+              name="address"
+              value={formData.address || ""}
+              onChange={handleInputChange}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          ) : (
+            <p className="text-gray-900">{profile.address}</p>
+          )}
+        </div>
+
+        {isEditing && (
+          <div className="flex gap-4">
             <button
-              className="bg-orange-500 text-white px-6 py-2 rounded-xl font-bold shadow hover:bg-orange-600 transition"
-              onClick={handleEdit}
+              onClick={updateProfile}
+              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
             >
-              Edit Profile
+              Save Changes
             </button>
-          )}
-        </div>
-        {/* Password Change Section */}
-        <div className="mt-8">
-          <button
-            className="text-blue-600 font-semibold hover:underline text-sm mb-2"
-            onClick={() => setShowPasswordSection(v => !v)}
-          >
-            {showPasswordSection ? "Hide" : "Change Password"}
-          </button>
-          {showPasswordSection && (
-            <form className="flex flex-col gap-3 mt-2" onSubmit={handlePasswordChange}>
-              <input
-                type="password"
-                className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200"
-                placeholder="Current password"
-                value={currentPassword}
-                onChange={e => setCurrentPassword(e.target.value)}
-              />
-              <input
-                type="password"
-                className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200"
-                placeholder="New password"
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-              />
-              <input
-                type="password"
-                className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200"
-                placeholder="Confirm new password"
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-              />
-              <button className="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold shadow hover:bg-blue-700 transition mt-2" type="submit">
-                Change Password
-              </button>
-              {passwordMsg && <div className={`text-sm mt-1 ${passwordMsg.includes('success') ? 'text-green-600' : 'text-red-600'}`}>{passwordMsg}</div>}
-            </form>
-          )}
-        </div>
-        {/* Address Management Section */}
-        <div className="mt-8">
-          <button
-            className="text-blue-600 font-semibold hover:underline text-sm mb-2"
-            onClick={() => setShowAddressSection(v => !v)}
-          >
-            {showAddressSection ? "Hide" : "Manage Addresses"}
-          </button>
-          {showAddressSection && (
-            <div className="flex flex-col gap-3 mt-2">
-              <ul className="mb-2">
-                {addresses.map((addr, idx) => (
-                  <li key={idx} className="flex items-center gap-2 mb-1">
-                    <span className="flex-1 text-gray-700">{addr}</span>
-                    <button className="text-red-500 text-xs hover:underline" onClick={() => handleRemoveAddress(idx)}>Remove</button>
-                  </li>
-                ))}
-              </ul>
-              <form className="flex gap-2" onSubmit={handleAddAddress}>
-                <input
-                  className="flex-1 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200"
-                  placeholder="Add new address"
-                  value={newAddress}
-                  onChange={e => setNewAddress(e.target.value)}
-                />
-                <button className="bg-orange-500 text-white px-4 py-2 rounded-xl font-bold shadow hover:bg-orange-600 transition text-xs" type="submit">
-                  Add
-                </button>
-              </form>
-            </div>
-          )}
-        </div>
+            <button
+              onClick={() => {
+                setIsEditing(false);
+                setFormData(profile);
+              }}
+              className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
