@@ -24,7 +24,6 @@ import com.example.demo.repository.CustomerRepository;
 
 @RestController
 @RequestMapping("/api/restaurants")
-@CrossOrigin(origins = "*")
 public class RestaurantController {
     @Autowired
     private RestaurantRepository restaurantRepository;

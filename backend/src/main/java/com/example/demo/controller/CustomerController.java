@@ -19,7 +19,6 @@ import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/customers")
-@CrossOrigin(origins = "*")
 public class CustomerController {
     @Autowired
     private CustomerRepository customerRepository;
