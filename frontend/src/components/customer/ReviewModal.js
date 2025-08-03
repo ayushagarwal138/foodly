@@ -1,36 +1,38 @@
 import React, { useState } from 'react';
+import { api, API_ENDPOINTS } from '../../config/api';
 
 export default function ReviewModal({ isOpen, onClose, orderId, restaurantId, items }) {
   const [reviews, setReviews] = useState({});
   const [error, setError] = useState("");
-  const token = localStorage.getItem("token");
-  const userId = localStorage.getItem("userId");
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    if (submitting) return;
+    
+    setSubmitting(true);
+    setError("");
+    
     try {
+      console.log("Submitting reviews with data:", {
+        orderId,
+        restaurantId,
+        items,
+        reviews
+      });
+      
       // Submit each review
       for (const [menuItemId, review] of Object.entries(reviews)) {
         if (review.rating && review.text) {
-          const res = await fetch("/api/reviews", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({
-              orderId,
-              restaurantId,
-              menuItemId,
-              rating: review.rating,
-              text: review.text
-            })
-          });
-
-          if (!res.ok) {
-            throw new Error(`Failed to submit review: ${res.status}`);
-          }
-
-          const data = await res.json();
+          const reviewData = {
+            orderId: orderId,
+            restaurantId: restaurantId,
+            menuItemId: menuItemId,
+            rating: review.rating,
+            text: review.text
+          };
+          
+          console.log("Submitting review data:", reviewData);
+          const data = await api.post(API_ENDPOINTS.REVIEWS, reviewData);
           console.log("Review submitted successfully:", data);
         }
       }
@@ -38,16 +40,22 @@ export default function ReviewModal({ isOpen, onClose, orderId, restaurantId, it
     } catch (error) {
       console.error("Failed to submit reviews:", error);
       setError("Failed to submit reviews. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   if (!isOpen) return null;
+
+  console.log("ReviewModal received items:", items);
 
   // Ensure items have the correct menu_item_id field
   const normalizedItems = items.map(item => ({
     ...item,
     menu_item_id: item.menu_item_id || item.menuItemId || item.id
   }));
+  
+  console.log("ReviewModal normalized items:", normalizedItems);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -95,10 +103,15 @@ export default function ReviewModal({ isOpen, onClose, orderId, restaurantId, it
             Skip
           </button>
           <button
-            className="bg-orange-500 text-white px-6 py-2 rounded-full font-bold shadow hover:bg-orange-600 transition"
+            className={`px-6 py-2 rounded-full font-bold shadow transition ${
+              submitting 
+                ? 'bg-gray-400 text-white cursor-not-allowed' 
+                : 'bg-orange-500 text-white hover:bg-orange-600'
+            }`}
             onClick={handleSubmit}
+            disabled={submitting}
           >
-            Submit Reviews
+            {submitting ? 'Submitting...' : 'Submit Reviews'}
           </button>
         </div>
       </div>
