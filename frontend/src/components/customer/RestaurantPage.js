@@ -29,7 +29,7 @@ export default function RestaurantPage() {
         const data = await publicApi.get(API_ENDPOINTS.RESTAURANT_BY_SLUG(slug));
         setInfo(data);
         // Fetch menu for this restaurant (public endpoint)
-        const menuData = await publicApi.get(API_ENDPOINTS.RESTAURANT_MENU(data.id));
+        const menuData = await publicApi.get(API_ENDPOINTS.RESTAURANT_MENU_CUSTOMER(data.id));
         // Group menu items by category
         const groupedMenu = {};
         (Array.isArray(menuData) ? menuData : []).forEach(item => {
