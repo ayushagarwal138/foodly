@@ -16,6 +16,8 @@ export default function MenuPage() {
     showQuantity: false
   });
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [showEditForm, setShowEditForm] = useState(false);
   const restaurantId = localStorage.getItem("restaurantId");
 
   const fetchMenu = async () => {
@@ -109,6 +111,36 @@ export default function MenuPage() {
     }
   };
 
+  const editMenuItem = async () => {
+    try {
+      const itemData = {
+        ...editingItem,
+        price: parseFloat(editingItem.price),
+        quantityAvailable: editingItem.showQuantity ? parseInt(editingItem.quantityAvailable) : null
+      };
+      
+      const data = await api.put(API_ENDPOINTS.MENU_ITEM_UPDATE(restaurantId, editingItem.id), itemData);
+      console.log("Updated menu item:", data);
+      setMenuItems(prev => prev.map(menuItem => 
+        menuItem.id === editingItem.id ? data : menuItem
+      ));
+      setEditingItem(null);
+      setShowEditForm(false);
+    } catch (err) {
+      console.error("Error updating menu item:", err);
+      setError(err.message);
+    }
+  };
+
+  const startEditing = (item) => {
+    setEditingItem({
+      ...item,
+      quantityAvailable: item.quantityAvailable || ""
+    });
+    setShowEditForm(true);
+    setShowAddForm(false);
+  };
+
   const deleteMenuItem = async (item) => {
     try {
       // Check if item can be deleted
@@ -141,6 +173,14 @@ export default function MenuPage() {
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setNewItem(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEditingItem(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
@@ -297,6 +337,145 @@ export default function MenuPage() {
         </div>
       )}
 
+      {/* Edit Menu Item Form */}
+      {showEditForm && editingItem && (
+        <div className="mb-8 p-6 bg-blue-50 rounded-xl border border-blue-200">
+          <h3 className="text-lg font-semibold text-[#16213e] mb-4">Edit Menu Item</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+              <input
+                type="text"
+                name="name"
+                value={editingItem.name}
+                onChange={handleEditInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Item name"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+              <input
+                type="text"
+                name="category"
+                value={editingItem.category || ""}
+                onChange={handleEditInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., Appetizer, Main Course, Dessert"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Price</label>
+              <input
+                type="number"
+                name="price"
+                value={editingItem.price}
+                onChange={handleEditInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+              <div className="flex items-center gap-4 mt-2">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="veg"
+                    value="true"
+                    checked={editingItem.veg === true}
+                    onChange={() => setEditingItem(prev => ({ ...prev, veg: true }))}
+                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">🟢 Vegetarian</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="veg"
+                    value="false"
+                    checked={editingItem.veg === false}
+                    onChange={() => setEditingItem(prev => ({ ...prev, veg: false }))}
+                    className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">🔴 Non-Vegetarian</span>
+                </label>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Availability</label>
+              <div className="flex items-center mt-2">
+                <input
+                  type="checkbox"
+                  name="isAvailable"
+                  checked={editingItem.isAvailable}
+                  onChange={handleEditInputChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700">Item is available for ordering</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Quantity Tracking</label>
+              <div className="flex items-center mt-2">
+                <input
+                  type="checkbox"
+                  name="showQuantity"
+                  checked={editingItem.showQuantity}
+                  onChange={handleEditInputChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700">Track quantity available</span>
+              </div>
+            </div>
+            {editingItem.showQuantity && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Quantity Available</label>
+                <input
+                  type="number"
+                  name="quantityAvailable"
+                  value={editingItem.quantityAvailable}
+                  onChange={handleEditInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter quantity"
+                  min="0"
+                />
+              </div>
+            )}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+              <textarea
+                name="description"
+                value={editingItem.description || ""}
+                onChange={handleEditInputChange}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Item description"
+              />
+            </div>
+          </div>
+          <div className="flex gap-4 mt-4">
+            <button
+              onClick={editMenuItem}
+              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Update Item
+            </button>
+            <button
+              onClick={() => {
+                setShowEditForm(false);
+                setEditingItem(null);
+              }}
+              className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Menu Items List */}
       {menuItems.length === 0 ? (
         <div className="text-center py-8">
@@ -360,6 +539,12 @@ export default function MenuPage() {
                 </div>
                 
                 <div className="flex gap-2">
+                  <button
+                    onClick={() => startEditing(item)}
+                    className="px-3 py-1 rounded text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                  >
+                    Edit
+                  </button>
                   <button
                     onClick={() => toggleVegStatus(item)}
                     className={`px-3 py-1 rounded text-xs font-medium ${

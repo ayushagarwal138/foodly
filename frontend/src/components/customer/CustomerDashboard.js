@@ -17,6 +17,7 @@ import SupportChatPage from './SupportChatPage';
 import Footer from './Footer';
 import AllRestaurants from './AllRestaurants';
 import OffersPage from './OffersPage';
+import UnreadMessageNotification from '../UnreadMessageNotification';
 
 const pathToLabel = [
   { path: "/customer/restaurants", label: "Restaurants" },
@@ -72,6 +73,7 @@ export default function CustomerDashboard() {
         </div>
       </div>
       <Footer />
+      <UnreadMessageNotification userType="customer" />
     </div>
   );
 } 

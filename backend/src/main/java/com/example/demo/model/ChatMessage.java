@@ -15,6 +15,7 @@ public class ChatMessage {
     private String sender; // "customer" or "restaurant"
     private String message;
     private Date timestamp = new Date();
+    private Boolean isRead = false; // Track if message has been read
 
     // Getters and setters
     public Long getId() { return id; }
@@ -31,4 +32,6 @@ public class ChatMessage {
     public void setMessage(String message) { this.message = message; }
     public Date getTimestamp() { return timestamp; }
     public void setTimestamp(Date timestamp) { this.timestamp = timestamp; }
+    public Boolean getIsRead() { return isRead; }
+    public void setIsRead(Boolean isRead) { this.isRead = isRead; }
 } 

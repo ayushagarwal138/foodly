@@ -8,6 +8,7 @@ import ReviewsPage from "./ReviewsPage";
 import ProfilePage from "./ProfilePage";
 import SupportPage from "./SupportPage";
 import AnalyticsPage from './AnalyticsPage';
+import UnreadMessageNotification from '../UnreadMessageNotification';
 import { api, API_ENDPOINTS } from "../../config/api";
 
 const pathToLabel = [
@@ -207,6 +208,7 @@ export default function RestaurantLayout() {
           </Routes>
         </main>
       </div>
+      <UnreadMessageNotification userType="restaurant" />
     </div>
   );
 } 

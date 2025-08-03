@@ -62,6 +62,63 @@ public class SupportController {
         }
         
         msg.setTimestamp(new java.util.Date());
+        msg.setIsRead(false); // New messages are unread by default
         return chatRepo.save(msg);
+    }
+
+    @GetMapping("/messages/unread-count")
+    public Map<String, Object> getUnreadMessageCount(
+        @RequestParam(required = false) Long customerId,
+        @RequestParam(required = false) Long restaurantId
+    ) {
+        Map<String, Object> result = new HashMap<>();
+        
+        if (customerId != null) {
+            // Count unread messages for customer (messages from restaurant)
+            long customerUnread = chatRepo.countByCustomerIdAndSenderAndIsReadFalse(customerId, "restaurant");
+            result.put("customerUnread", customerUnread);
+        }
+        
+        if (restaurantId != null) {
+            // Count unread messages for restaurant (messages from customer)
+            long restaurantUnread = chatRepo.countByRestaurantIdAndSenderAndIsReadFalse(restaurantId, "customer");
+            result.put("restaurantUnread", restaurantUnread);
+        }
+        
+        return result;
+    }
+
+    @PutMapping("/messages/{messageId}/mark-read")
+    public ChatMessage markMessageAsRead(@PathVariable Long messageId) {
+        ChatMessage message = chatRepo.findById(messageId).orElseThrow(() -> new RuntimeException("Message not found"));
+        message.setIsRead(true);
+        return chatRepo.save(message);
+    }
+
+    @PutMapping("/messages/mark-all-read")
+    public Map<String, Object> markAllMessagesAsRead(
+        @RequestParam(required = false) Long customerId,
+        @RequestParam(required = false) Long restaurantId,
+        @RequestParam(required = false) Long orderId
+    ) {
+        Map<String, Object> result = new HashMap<>();
+        
+        if (customerId != null && orderId != null) {
+            // Mark all restaurant messages as read for this customer and order
+            List<ChatMessage> messages = chatRepo.findByOrderIdAndCustomerIdAndSenderAndIsReadFalse(orderId, customerId, "restaurant");
+            messages.forEach(msg -> msg.setIsRead(true));
+            chatRepo.saveAll(messages);
+            result.put("markedAsRead", messages.size());
+        }
+        
+        if (restaurantId != null && orderId != null) {
+            // Mark all customer messages as read for this restaurant and order
+            List<ChatMessage> messages = chatRepo.findByOrderIdAndRestaurantIdAndSenderAndIsReadFalse(orderId, restaurantId, "customer");
+            messages.forEach(msg -> msg.setIsRead(true));
+            chatRepo.saveAll(messages);
+            result.put("markedAsRead", messages.size());
+        }
+        
+        return result;
     }
 } 

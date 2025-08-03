@@ -489,6 +489,51 @@ public class RestaurantController {
         }
     }
 
+    @PutMapping("/{restaurantId}/menu/{menuItemId}")
+    public ResponseEntity<?> updateMenuItem(@PathVariable Long restaurantId, @PathVariable Long menuItemId, 
+                                           @RequestBody MenuItem menuItemDetails, @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Restaurant restaurant = restaurantRepository.findById(restaurantId).orElseThrow(() -> new RuntimeException("Restaurant not found"));
+            MenuItem menuItem = menuItemRepository.findById(menuItemId).orElseThrow(() -> new RuntimeException("Menu item not found"));
+            
+            // Only owner can update
+            if (restaurant.getOwner() == null || !restaurant.getOwner().getUsername().equals(userDetails.getUsername())) {
+                return ResponseEntity.status(403).body("Forbidden");
+            }
+            if (!menuItem.getRestaurant().getId().equals(restaurantId)) {
+                return ResponseEntity.status(400).body("Menu item does not belong to this restaurant");
+            }
+            
+            // Update all fields
+            if (menuItemDetails.getName() != null) {
+                menuItem.setName(menuItemDetails.getName());
+            }
+            if (menuItemDetails.getPrice() != null) {
+                menuItem.setPrice(menuItemDetails.getPrice());
+            }
+            if (menuItemDetails.getCategory() != null) {
+                menuItem.setCategory(menuItemDetails.getCategory());
+            }
+            if (menuItemDetails.getVeg() != null) {
+                menuItem.setVeg(menuItemDetails.getVeg());
+            }
+            if (menuItemDetails.getIsAvailable() != null) {
+                menuItem.setIsAvailable(menuItemDetails.getIsAvailable());
+            }
+            if (menuItemDetails.getQuantityAvailable() != null) {
+                menuItem.setQuantityAvailable(menuItemDetails.getQuantityAvailable());
+            }
+            if (menuItemDetails.getShowQuantity() != null) {
+                menuItem.setShowQuantity(menuItemDetails.getShowQuantity());
+            }
+            
+            MenuItem updated = menuItemRepository.save(menuItem);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Failed to update menu item: " + e.getMessage());
+        }
+    }
+
     @DeleteMapping("/{restaurantId}/menu/{menuItemId}")
     public ResponseEntity<?> deleteMenuItem(@PathVariable Long restaurantId, @PathVariable Long menuItemId, @AuthenticationPrincipal UserDetails userDetails) {
         try {

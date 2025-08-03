@@ -30,6 +30,7 @@ export const API_ENDPOINTS = {
   
   // Menu items
   MENU_ITEM_AVAILABILITY: (restaurantId, itemId) => `/api/restaurants/${restaurantId}/menu/${itemId}/availability`,
+  MENU_ITEM_UPDATE: (restaurantId, itemId) => `/api/restaurants/${restaurantId}/menu/${itemId}`,
   MENU_ITEM_CAN_DELETE: (restaurantId, itemId) => `/api/restaurants/${restaurantId}/menu/${itemId}/can-delete`,
   MENU_ITEM_DELETE: (restaurantId, itemId) => `/api/restaurants/${restaurantId}/menu/${itemId}`,
   
@@ -64,6 +65,9 @@ export const API_ENDPOINTS = {
   SUPPORT_MESSAGES_BY_RESTAURANT: (restaurantId) => `/api/support/messages/restaurant/${restaurantId}`,
   SUPPORT_MESSAGES_BY_ORDER: (orderId, customerId, restaurantId) => 
     `/api/support/messages?orderId=${orderId}&customerId=${customerId}&restaurantId=${restaurantId}`,
+  SUPPORT_UNREAD_COUNT: '/api/support/messages/unread-count',
+  SUPPORT_MARK_READ: (messageId) => `/api/support/messages/${messageId}/mark-read`,
+  SUPPORT_MARK_ALL_READ: '/api/support/messages/mark-all-read',
   
   // Admin endpoints
   ADMIN_USERS: '/api/admin/users',

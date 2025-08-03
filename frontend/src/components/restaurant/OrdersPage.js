@@ -132,6 +132,18 @@ export default function OrdersPage() {
     setSelectedOrder(order);
     setShowChatModal(true);
     await fetchChatMessages(order.id);
+    
+    // Mark all messages as read when opening chat
+    try {
+      await api.put(API_ENDPOINTS.SUPPORT_MARK_ALL_READ, null, {
+        params: {
+          restaurantId: restaurantId,
+          orderId: order.id
+        }
+      });
+    } catch (err) {
+      console.error('Error marking messages as read:', err);
+    }
   };
 
   const closeChatModal = () => {
