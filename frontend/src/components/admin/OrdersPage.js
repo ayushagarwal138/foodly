@@ -173,7 +173,7 @@ export default function OrdersPage() {
                       <div className="text-xs text-gray-500">{order.restaurantAddress}</div>
                     </div>
                   </td>
-                  <td className="py-3 px-4 font-semibold text-[#16213e]">${order.total || 0}</td>
+                  <td className="py-3 px-4 font-semibold text-[#16213e]">₹{order.total || 0}</td>
                   <td className="py-3 px-4">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       order.status === "Delivered" ? "bg-green-100 text-green-800" :

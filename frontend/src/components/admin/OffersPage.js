@@ -167,11 +167,11 @@ export default function OffersPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Min Order:</span>
-                  <span className="font-semibold text-[#16213e]">${offer.minOrderAmount || 0}</span>
+                  <span className="font-semibold text-[#16213e]">₹{offer.minOrderAmount || 0}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Max Discount:</span>
-                  <span className="font-semibold text-[#16213e]">${offer.maxDiscountAmount || 0}</span>
+                  <span className="font-semibold text-[#16213e]">₹{offer.maxDiscountAmount || 0}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Valid Until:</span>

@@ -197,7 +197,7 @@ export default function OrderTrackingPage() {
             "Order items"
           }
         </div>
-        <div className="text-gray-600">Total: <span className="font-semibold text-[#16213e]">${order.total?.toFixed ? order.total.toFixed(2) : order.total}</span></div>
+                    <div className="text-gray-600">Total: <span className="font-semibold text-[#16213e]">₹{order.total?.toFixed ? order.total.toFixed(2) : order.total}</span></div>
       </div>
 
       {/* Current Status */}

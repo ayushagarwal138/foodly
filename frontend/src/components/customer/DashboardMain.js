@@ -161,7 +161,7 @@ export default function DashboardMain() {
                   <tr key={o.id} className="border-t last:border-b-0">
                     <td className="py-2 font-semibold text-[#16213e]">{o.id}</td>
                     <td className="py-2">{o.status}</td>
-                    <td className="py-2">${o.total?.toFixed ? o.total.toFixed(2) : o.total}</td>
+                    <td className="py-2">₹{o.total?.toFixed ? o.total.toFixed(2) : o.total}</td>
                     <td className="py-2">
                       <button className="text-blue-600 hover:underline text-xs font-semibold" onClick={() => navigate(`/customer/track?id=${o.id}`)}>Track</button>
                     </td>

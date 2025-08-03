@@ -319,16 +319,16 @@ export default function OrdersPage() {
                 <h4 className="font-medium text-[#16213e] mb-2">Items:</h4>
                 <ul className="space-y-1">
                   {order.items && order.items.map((item, index) => (
-                    <li key={index} className="text-sm text-gray-600">
-                      {item.quantity}x {item.name} - ${item.price}
-                    </li>
+                                          <li key={index} className="text-sm text-gray-600">
+                        {item.quantity}x {item.name} - ₹{item.price}
+                      </li>
                   ))}
                 </ul>
               </div>
 
               <div className="flex justify-between items-center">
                 <div className="text-lg font-semibold text-[#16213e]">
-                  Total: ${order.total || order.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0}
+                  Total: ₹{order.total || order.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0}
                 </div>
                 <div className="flex gap-2">
                   <button

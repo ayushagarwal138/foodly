@@ -97,7 +97,7 @@ export default function PlatformAnalytics() {
           <div className="text-xs text-green-600 mt-1">+{recentOrders} this week</div>
         </div>
         <div className="bg-green-50 rounded-xl p-6 border border-green-200">
-          <div className="text-2xl font-bold text-green-600">${totalRevenue.toFixed(2)}</div>
+                          <div className="text-2xl font-bold text-green-600">₹{totalRevenue.toFixed(2)}</div>
           <div className="text-sm text-gray-600">Total Revenue</div>
           <div className="text-xs text-green-600 mt-1">From completed orders</div>
         </div>

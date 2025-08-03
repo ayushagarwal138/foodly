@@ -115,11 +115,11 @@ export default function AnalyticsPage() {
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-gray-600">Average Order Value:</span>
-              <span className="font-semibold">${analytics.averageOrderValue || 0}</span>
+                              <span className="font-semibold">₹{analytics.averageOrderValue || 0}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Total Revenue:</span>
-              <span className="font-semibold">${analytics.totalRevenue || 0}</span>
+                              <span className="font-semibold">₹{analytics.totalRevenue || 0}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Completion Rate:</span>

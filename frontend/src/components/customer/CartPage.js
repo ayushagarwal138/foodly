@@ -165,7 +165,7 @@ export default function CartPage() {
       }
 
       // Calculate discount
-      const discount = couponApplied ? Math.min(subtotal * 0.1, 50) : 0; // 10% off, max $50
+      const discount = couponApplied ? Math.min(subtotal * 0.1, 50) : 0; // 10% off, max ₹50
 
       await api.post(API_ENDPOINTS.ORDERS, {
         items: validItems,
@@ -195,8 +195,8 @@ export default function CartPage() {
   }
 
   const subtotal = (cart.items || []).reduce((sum, item) => sum + item.price * item.qty, 0);
-  const discount = couponApplied ? Math.min(subtotal * 0.1, 50) : 0; // 10% off, max $50
-  const deliveryFee = subtotal > 0 ? 5 : 0; // $5 delivery fee
+          const discount = couponApplied ? Math.min(subtotal * 0.1, 50) : 0; // 10% off, max ₹50
+        const deliveryFee = subtotal > 0 ? 5 : 0; // ₹5 delivery fee
   const total = Math.max(0, subtotal - discount + deliveryFee);
 
   if (loading) {

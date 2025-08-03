@@ -319,7 +319,7 @@ export default function MenuPage() {
                   </div>
                   <p className="text-sm text-gray-600">{item.category}</p>
                 </div>
-                <span className="text-lg font-bold text-[#16213e]">${item.price}</span>
+                                  <span className="text-lg font-bold text-[#16213e]">₹{item.price}</span>
               </div>
               
               <p className="text-gray-700 mb-4">{item.description}</p>

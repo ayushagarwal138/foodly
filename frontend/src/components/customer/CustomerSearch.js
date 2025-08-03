@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 const CUISINES = ["All", "Italian", "Japanese", "American"];
 const RATINGS = ["All", 4, 3, 2, 1];
-const PRICES = ["All", "$", "$$", "$$$"];
+const PRICES = ["All", "₹", "₹₹", "₹₹₹"];
 const VEG_OPTIONS = ["All", "Veg", "Non-Veg"];
 
 function slugify(name) {
@@ -107,7 +107,7 @@ export default function CustomerSearch({ restaurants, query: parentQuery, setQue
       // Use real cuisineType if present
       const rCuisine = r.cuisineType || r.cuisine || "Cuisine";
       const rRating = r.rating || (r.name && r.name.includes("Pizza") ? 4.5 : r.name && r.name.includes("Sushi") ? 4.2 : 4.0);
-      const rPrice = r.price || (r.name && r.name.includes("Pizza") ? "$" : r.name && r.name.includes("Sushi") ? "$$$" : "$$" );
+      const rPrice = r.price || (r.name && r.name.includes("Pizza") ? "₹" : r.name && r.name.includes("Sushi") ? "₹₹₹" : "₹₹" );
       const rVeg = r.veg !== undefined ? r.veg : (r.name && r.name.includes("Sushi") ? "Non-Veg" : "Veg");
       const rEta = r.eta || (r.name && r.name.includes("Pizza") ? 30 : r.name && r.name.includes("Sushi") ? 40 : 25);
       // Filter dishes by query and veg
@@ -212,7 +212,7 @@ export default function CustomerSearch({ restaurants, query: parentQuery, setQue
                   <li key={d.name} className="flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-2">
                     <div className="flex-1 flex items-center gap-2">
                       <span className="text-gray-700 font-medium">{d.name}</span>
-                      <span className="text-gray-500 font-semibold">${d.price.toFixed(2)}</span>
+                      <span className="text-gray-500 font-semibold">₹{d.price.toFixed(2)}</span>
                     </div>
                     <div className="flex gap-2 mt-2 sm:mt-0">
                       <button className="bg-orange-500 text-white px-4 py-2 rounded-full font-bold shadow hover:bg-orange-600 transition text-xs" onClick={e => { e.stopPropagation(); alert('Order ' + d.name); }}>
