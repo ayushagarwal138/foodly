@@ -35,7 +35,8 @@ public class SecurityConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
             .allowedOrigins(origins)
             .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-            .allowedHeaders("*")
+            .allowedHeaders("Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", 
+                          "Access-Control-Request-Method", "Access-Control-Request-Headers")
             .allowCredentials(true)
             .maxAge(3600);
     }
