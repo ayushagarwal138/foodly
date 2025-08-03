@@ -33,7 +33,12 @@ public class OrderController {
     private RestaurantRepository restaurantRepository;
 
     @GetMapping
-    public List<Order> getAllOrders() {
+    public List<Order> getAllOrders(@AuthenticationPrincipal UserDetails userDetails) {
+        // Only admin users should be able to see all orders
+        User user = customerRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+        if (!"ADMIN".equals(user.getRole())) {
+            throw new RuntimeException("Access denied. Only admin users can view all orders.");
+        }
         return orderRepository.findAll();
     }
 
