@@ -69,7 +69,7 @@ export default function OrdersPage() {
       console.log("Request Data:", requestData);
       
       console.log("Updating order status:", { orderId, newStatus, restaurantId });
-      const data = await api.patch(API_ENDPOINTS.ORDER_STATUS(orderId), requestData);
+      const data = await api.put(API_ENDPOINTS.ORDER_STATUS(orderId), requestData);
       console.log("Updated order status response:", data);
       
       // Update the order in the local state immediately
