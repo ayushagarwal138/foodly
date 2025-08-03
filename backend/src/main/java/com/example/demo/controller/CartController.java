@@ -35,18 +35,18 @@ public class CartController {
         List<Map<String, Object>> items = cartItems.stream()
             .map(item -> {
                 Map<String, Object> map = new java.util.HashMap<>();
-                map.put("name", item.getName());
-                map.put("price", item.getPrice());
+                map.put("name", item.getMenuItem().getName());
+                map.put("price", item.getMenuItem().getPrice());
                 map.put("qty", item.getQuantity());
-                map.put("restaurantId", item.getRestaurantId());
-                map.put("menu_item_id", item.getMenuItemId()); // <-- Ensure this is included
+                map.put("restaurantId", item.getMenuItem().getRestaurant().getId());
+                map.put("menu_item_id", item.getMenuItem().getId());
                 return map;
             })
             .toList();
         
         return Map.of(
             "items", items,
-            "address", cartItems.isEmpty() ? "" : cartItems.get(0).getAddress()
+            "address", "" // Cart doesn't store address in database
         );
     }
 
@@ -58,7 +58,6 @@ public class CartController {
         cartRepository.deleteByCustomerId(customer.getId());
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> items = (List<Map<String, Object>>) request.get("items");
-        String address = (String) request.get("address");
         if (items != null) {
             for (Map<String, Object> item : items) {
                 Object menuItemIdObj = item.get("menu_item_id");
@@ -87,36 +86,13 @@ public class CartController {
                 
                 Cart cartItem = new Cart();
                 cartItem.setCustomer(customer);
-                cartItem.setName((String) item.get("name"));
-                cartItem.setPrice(Double.valueOf(item.get("price").toString()));
+                cartItem.setMenuItem(menuItem);
                 cartItem.setQuantity(Integer.valueOf(item.get("qty").toString()));
-                cartItem.setMenuItemId(menuItemId);
-                Object restaurantIdObj = item.get("restaurantId");
-                if (restaurantIdObj == null) {
-                    throw new IllegalArgumentException("restaurantId is required in cart item");
-                }
-                cartItem.setRestaurantId(Long.valueOf(restaurantIdObj.toString()));
-                cartItem.setAddress(address);
                 cartRepository.save(cartItem);
             }
         }
         // Return updated cart (same as getCart)
-        List<Cart> cartItems = cartRepository.findByCustomerId(customer.getId());
-        List<Map<String, Object>> responseItems = cartItems.stream()
-            .map(item -> {
-                Map<String, Object> map = new java.util.HashMap<>();
-                map.put("name", item.getName());
-                map.put("price", item.getPrice());
-                map.put("qty", item.getQuantity());
-                map.put("menu_item_id", item.getMenuItemId());
-                map.put("restaurantId", item.getRestaurantId());
-                return map;
-            })
-            .toList();
-        return Map.of(
-            "items", responseItems,
-            "address", cartItems.isEmpty() ? "" : cartItems.get(0).getAddress()
-        );
+        return getCart(userDetails);
     }
 
     @DeleteMapping
