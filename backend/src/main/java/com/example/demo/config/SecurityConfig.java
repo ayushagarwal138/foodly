@@ -96,8 +96,11 @@ public class SecurityConfig implements WebMvcConfigurer {
         // Allow all common HTTP methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         
-        // Allow all headers including Authorization
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        // Allow specific headers instead of wildcard
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", 
+            "Access-Control-Request-Method", "Access-Control-Request-Headers"
+        ));
         
         // Allow credentials
         configuration.setAllowCredentials(true);
