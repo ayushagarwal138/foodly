@@ -1,6 +1,7 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "restaurants")
@@ -21,6 +22,9 @@ public class Restaurant {
     @OneToOne
     @JoinColumn(name = "owner_id")
     private User owner;
+    
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<MenuItem> menuItems;
 
     // Getters and setters
     public Long getId() { return id; }
@@ -52,4 +56,7 @@ public class Restaurant {
     
     public User getOwner() { return owner; }
     public void setOwner(User owner) { this.owner = owner; }
+    
+    public List<MenuItem> getMenuItems() { return menuItems; }
+    public void setMenuItems(List<MenuItem> menuItems) { this.menuItems = menuItems; }
 } 

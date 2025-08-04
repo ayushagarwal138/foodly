@@ -195,15 +195,47 @@ public class RestaurantController {
         if (!restaurant.getOwner().getId().equals(authenticatedUser.getId())) {
             throw new RuntimeException("Access denied. You can only view menu for your own restaurant.");
         }
-        return menuItemRepository.findByRestaurantId(id);
+        
+        System.out.println("=== Restaurant Menu Fetch Debug ===");
+        System.out.println("Restaurant ID: " + id);
+        System.out.println("User: " + authenticatedUser.getUsername());
+        
+        List<MenuItem> items = menuItemRepository.findByRestaurant_Id(id);
+        System.out.println("Items found: " + items.size());
+        
+        return items;
     }
 
     @GetMapping("/{id}/menu/customer")
     public List<MenuItem> getMenuForCustomer(@PathVariable Long id) {
         // For customers, only show available items
-        return menuItemRepository.findByRestaurantId(id).stream()
-            .filter(item -> item.getIsAvailable() != null && item.getIsAvailable())
-            .collect(java.util.stream.Collectors.toList());
+        System.out.println("=== Menu Fetch Debug ===");
+        System.out.println("Restaurant ID: " + id);
+        
+        try {
+            List<MenuItem> allItems = menuItemRepository.findByRestaurant_Id(id);
+            System.out.println("Total items found: " + allItems.size());
+            
+            if (allItems.isEmpty()) {
+                // Try to find the restaurant first
+                var restaurant = restaurantRepository.findById(id);
+                System.out.println("Restaurant exists: " + restaurant.isPresent());
+                if (restaurant.isPresent()) {
+                    System.out.println("Restaurant name: " + restaurant.get().getName());
+                }
+            }
+            
+            List<MenuItem> availableItems = allItems.stream()
+                .filter(item -> item.getIsAvailable() != null && item.getIsAvailable())
+                .collect(java.util.stream.Collectors.toList());
+            
+            System.out.println("Available items: " + availableItems.size());
+            return availableItems;
+        } catch (Exception e) {
+            System.out.println("Error fetching menu items: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @GetMapping("/{id}/orders")
@@ -319,7 +351,7 @@ public class RestaurantController {
         }
         analytics.put("revenueTrends", revenueTrends);
         // Menu performance
-        List<MenuItem> menuItems = menuItemRepository.findByRestaurantId(id);
+        List<MenuItem> menuItems = menuItemRepository.findByRestaurant_Id(id);
         Map<String, Integer> dishSales = new java.util.HashMap<>();
         for (MenuItem item : menuItems) {
             int count = 0;
