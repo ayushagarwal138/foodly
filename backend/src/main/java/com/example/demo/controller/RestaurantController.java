@@ -184,7 +184,7 @@ public class RestaurantController {
     }
 
     @GetMapping("/{id}/menu")
-    public List<MenuItem> getMenuForRestaurant(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+    public List<Map<String, Object>> getMenuForRestaurant(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
         // Verify that the authenticated user owns this restaurant
         User authenticatedUser = customerRepository.findByUsername(userDetails.getUsername())
             .orElseThrow(() -> new RuntimeException("User not found"));
@@ -203,11 +203,11 @@ public class RestaurantController {
         List<MenuItem> items = menuItemRepository.findByRestaurant_Id(id);
         System.out.println("Items found: " + items.size());
         
-        return items;
+        return items.stream().map(this::convertToMenuItemDTO).collect(java.util.stream.Collectors.toList());
     }
 
     @GetMapping("/{id}/menu/customer")
-    public List<MenuItem> getMenuForCustomer(@PathVariable Long id) {
+    public List<Map<String, Object>> getMenuForCustomer(@PathVariable Long id) {
         // For customers, only show available items
         System.out.println("=== Menu Fetch Debug ===");
         System.out.println("Restaurant ID: " + id);
@@ -230,7 +230,7 @@ public class RestaurantController {
                 .collect(java.util.stream.Collectors.toList());
             
             System.out.println("Available items: " + availableItems.size());
-            return availableItems;
+            return availableItems.stream().map(this::convertToMenuItemDTO).collect(java.util.stream.Collectors.toList());
         } catch (Exception e) {
             System.out.println("Error fetching menu items: " + e.getMessage());
             e.printStackTrace();
@@ -450,7 +450,19 @@ public class RestaurantController {
         menuItem.setRestaurant(restaurant);
         // No need to manually set category/veg, already bound from request body
         MenuItem saved = menuItemRepository.save(menuItem);
-        return ResponseEntity.ok(saved);
+        
+        // Create a response without circular references
+        Map<String, Object> response = new java.util.HashMap<>();
+        response.put("id", saved.getId());
+        response.put("name", saved.getName());
+        response.put("price", saved.getPrice());
+        response.put("category", saved.getCategory());
+        response.put("veg", saved.getVeg());
+        response.put("isAvailable", saved.getIsAvailable());
+        response.put("quantityAvailable", saved.getQuantityAvailable());
+        response.put("showQuantity", saved.getShowQuantity());
+        
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{restaurantId}/menu/{menuItemId}/can-delete")
@@ -513,9 +525,24 @@ public class RestaurantController {
             if (request.containsKey("showQuantity")) {
                 menuItem.setShowQuantity((Boolean) request.get("showQuantity"));
             }
+            if (request.containsKey("veg")) {
+                menuItem.setVeg((Boolean) request.get("veg"));
+            }
             
             MenuItem updated = menuItemRepository.save(menuItem);
-            return ResponseEntity.ok(updated);
+            
+            // Create a response without circular references
+            Map<String, Object> response = new java.util.HashMap<>();
+            response.put("id", updated.getId());
+            response.put("name", updated.getName());
+            response.put("price", updated.getPrice());
+            response.put("category", updated.getCategory());
+            response.put("veg", updated.getVeg());
+            response.put("isAvailable", updated.getIsAvailable());
+            response.put("quantityAvailable", updated.getQuantityAvailable());
+            response.put("showQuantity", updated.getShowQuantity());
+            
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Failed to update menu item availability: " + e.getMessage());
         }
@@ -560,7 +587,19 @@ public class RestaurantController {
             }
             
             MenuItem updated = menuItemRepository.save(menuItem);
-            return ResponseEntity.ok(updated);
+            
+            // Create a response without circular references
+            Map<String, Object> response = new java.util.HashMap<>();
+            response.put("id", updated.getId());
+            response.put("name", updated.getName());
+            response.put("price", updated.getPrice());
+            response.put("category", updated.getCategory());
+            response.put("veg", updated.getVeg());
+            response.put("isAvailable", updated.getIsAvailable());
+            response.put("quantityAvailable", updated.getQuantityAvailable());
+            response.put("showQuantity", updated.getShowQuantity());
+            
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Failed to update menu item: " + e.getMessage());
         }
@@ -611,5 +650,19 @@ public class RestaurantController {
         String normalized = Normalizer.normalize(nowhitespace, Normalizer.Form.NFD);
         String slug = Pattern.compile("[^a-zA-Z0-9-]").matcher(normalized).replaceAll("");
         return slug.toLowerCase();
+    }
+    
+    // Helper method to convert MenuItem to DTO
+    private Map<String, Object> convertToMenuItemDTO(MenuItem item) {
+        Map<String, Object> dto = new java.util.HashMap<>();
+        dto.put("id", item.getId());
+        dto.put("name", item.getName());
+        dto.put("price", item.getPrice());
+        dto.put("category", item.getCategory());
+        dto.put("veg", item.getVeg());
+        dto.put("isAvailable", item.getIsAvailable());
+        dto.put("quantityAvailable", item.getQuantityAvailable());
+        dto.put("showQuantity", item.getShowQuantity());
+        return dto;
     }
 } 

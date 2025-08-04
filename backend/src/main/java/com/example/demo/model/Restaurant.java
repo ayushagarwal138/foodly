@@ -1,6 +1,7 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.util.List;
 
 @Entity
@@ -24,6 +25,7 @@ public class Restaurant {
     private User owner;
     
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<MenuItem> menuItems;
 
     // Getters and setters

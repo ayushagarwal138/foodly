@@ -1,6 +1,7 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Table(name = "menu_items")
@@ -18,6 +19,7 @@ public class MenuItem {
 
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
+    @JsonBackReference
     private Restaurant restaurant;
 
     // Getters and setters
