@@ -5,6 +5,7 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     role VARCHAR(50) NOT NULL, -- 'CUSTOMER', 'RESTAURANT', 'ADMIN'
+    is_blocked BOOLEAN DEFAULT FALSE, -- Track if user is blocked
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -59,6 +60,7 @@ CREATE TABLE order_items (
     id BIGSERIAL PRIMARY KEY,
     order_id BIGINT NOT NULL,
     menu_item_id BIGINT NOT NULL,
+    name VARCHAR(255) NOT NULL, -- name of the menu item
     quantity INT NOT NULL,
     price DECIMAL(10,2) NOT NULL,
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
@@ -75,6 +77,7 @@ CREATE TABLE reviews (
     menu_item_name VARCHAR(255) NOT NULL,
     rating INT NOT NULL,
     text TEXT,
+    is_flagged BOOLEAN DEFAULT FALSE, -- Track if review is flagged
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL,
@@ -87,6 +90,8 @@ CREATE TABLE wishlist (
     id BIGSERIAL PRIMARY KEY,
     customer_id BIGINT NOT NULL,
     type VARCHAR(20) NOT NULL, -- 'RESTAURANT' or 'DISH'
+    name VARCHAR(255) NOT NULL, -- name of restaurant or dish
+    restaurant VARCHAR(255), -- restaurant name (for dishes)
     restaurant_id BIGINT,
     menu_item_id BIGINT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -137,6 +142,7 @@ CREATE TABLE chat_messages (
     sender VARCHAR(20) NOT NULL, -- 'customer' or 'restaurant'
     message TEXT NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_read BOOLEAN DEFAULT FALSE, -- Track if message has been read
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL,
     FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE

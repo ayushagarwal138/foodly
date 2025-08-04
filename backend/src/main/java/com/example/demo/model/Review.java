@@ -20,6 +20,7 @@ public class Review {
     private String menuItemName;
     private Integer rating;
     private String text;
+    private Boolean isFlagged = false; // Track if review is flagged
     private Date createdAt = new Date();
     
     // Getters and setters
@@ -46,6 +47,9 @@ public class Review {
     
     public String getText() { return text; }
     public void setText(String text) { this.text = text; }
+    
+    public Boolean getIsFlagged() { return isFlagged; }
+    public void setIsFlagged(Boolean isFlagged) { this.isFlagged = isFlagged; }
     
     public Date getCreatedAt() { return createdAt; }
     public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }

@@ -87,7 +87,7 @@ export default function RestaurantDashboard() {
           <div className="text-sm text-gray-600">Completed Orders</div>
         </div>
         <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
-          <div className="text-2xl font-bold text-purple-600">${totalRevenue.toFixed(2)}</div>
+          <div className="text-2xl font-bold text-purple-600">₹{totalRevenue.toFixed(2)}</div>
           <div className="text-sm text-gray-600">Total Revenue</div>
         </div>
       </div>
@@ -112,7 +112,7 @@ export default function RestaurantDashboard() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-semibold text-[#16213e]">${order.total || 0}</div>
+                    <div className="font-semibold text-[#16213e]">₹{order.total || 0}</div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       order.status === "New" ? "bg-blue-100 text-blue-800" :
                       order.status === "Accepted" ? "bg-yellow-100 text-yellow-800" :

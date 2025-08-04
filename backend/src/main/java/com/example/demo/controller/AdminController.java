@@ -48,16 +48,18 @@ public class AdminController {
 
     // Block a user
     @PatchMapping("/users/{id}/block")
+    @PostMapping("/users/{id}/block")
     public User blockUser(@PathVariable Long id) {
         User user = customerRepository.findById(id).orElseThrow();
-        user.setRole("BLOCKED"); // Or add a status field if available
+        user.setIsBlocked(true);
         return customerRepository.save(user);
     }
     // Unblock a user
     @PatchMapping("/users/{id}/unblock")
+    @PostMapping("/users/{id}/unblock")
     public User unblockUser(@PathVariable Long id) {
         User user = customerRepository.findById(id).orElseThrow();
-        if ("BLOCKED".equals(user.getRole())) user.setRole("CUSTOMER"); // Or restore previous role
+        user.setIsBlocked(false);
         return customerRepository.save(user);
     }
     // Delete a user
@@ -68,6 +70,7 @@ public class AdminController {
 
     // Approve a restaurant (set isActive=true)
     @PatchMapping("/restaurants/{id}/approve")
+    @PostMapping("/restaurants/{id}/approve")
     public Restaurant approveRestaurant(@PathVariable Long id) {
         Restaurant r = restaurantRepository.findById(id).orElseThrow();
         r.setIsActive(true);
@@ -75,6 +78,7 @@ public class AdminController {
     }
     // Deactivate a restaurant (set isActive=false)
     @PatchMapping("/restaurants/{id}/deactivate")
+    @PostMapping("/restaurants/{id}/deactivate")
     public Restaurant deactivateRestaurant(@PathVariable Long id) {
         Restaurant r = restaurantRepository.findById(id).orElseThrow();
         r.setIsActive(false);
@@ -88,6 +92,7 @@ public class AdminController {
 
     // Cancel an order (set status="Cancelled")
     @PatchMapping("/orders/{id}/cancel")
+    @PostMapping("/orders/{id}/cancel")
     public Order cancelOrder(@PathVariable Long id) {
         Order o = orderRepository.findById(id).orElseThrow();
         o.setStatus("Cancelled");
@@ -95,6 +100,7 @@ public class AdminController {
     }
     // Refund an order (set status="Refunded")
     @PatchMapping("/orders/{id}/refund")
+    @PostMapping("/orders/{id}/refund")
     public Order refundOrder(@PathVariable Long id) {
         Order o = orderRepository.findById(id).orElseThrow();
         o.setStatus("Refunded");
@@ -111,11 +117,12 @@ public class AdminController {
     public void deleteReview(@PathVariable Long id) {
         reviewRepository.deleteById(id);
     }
-    // Flag a review (could set a flag field, here just a stub)
+    // Flag a review
     @PatchMapping("/reviews/{id}/flag")
+    @PostMapping("/reviews/{id}/flag")
     public Review flagReview(@PathVariable Long id) {
         Review r = reviewRepository.findById(id).orElseThrow();
-        // r.setFlagged(true); // If you have a flagged field
+        r.setIsFlagged(true);
         return reviewRepository.save(r);
     }
 } 

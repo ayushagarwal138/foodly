@@ -13,6 +13,7 @@ public class User {
     private String password;
     private String email;
     private String role; // CUSTOMER, RESTAURANT, ADMIN
+    private Boolean isBlocked = false; // Track if user is blocked
 
     // Getters and setters
     public Long getId() { return id; }
@@ -25,4 +26,7 @@ public class User {
     public void setEmail(String email) { this.email = email; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+    
+    public Boolean getIsBlocked() { return isBlocked; }
+    public void setIsBlocked(Boolean isBlocked) { this.isBlocked = isBlocked; }
 } 

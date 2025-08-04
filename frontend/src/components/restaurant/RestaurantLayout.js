@@ -127,7 +127,7 @@ function DashboardContent() {
         </div>
         <div className="bg-white rounded-2xl shadow p-6 flex flex-col items-center border border-gray-100 hover:scale-105 transition-transform duration-200">
           <div className="text-3xl mb-2">💰</div>
-          <div className="text-2xl font-bold text-[#16213e]">${totalRevenue.toFixed(2)}</div>
+                      <div className="text-2xl font-bold text-[#16213e]">₹{totalRevenue.toFixed(2)}</div>
           <div className="text-gray-500">Total Revenue</div>
         </div>
         <div className="bg-white rounded-2xl shadow p-6 flex flex-col items-center border border-gray-100 hover:scale-105 transition-transform duration-200">
@@ -158,7 +158,7 @@ function DashboardContent() {
                   o.status === "New" ? "bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold" :
                   "bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold"
                 }>{o.status}</span>
-                <span className="text-[#16213e] font-bold">${o.total || 0}</span>
+                <span className="text-[#16213e] font-bold">₹{o.total || 0}</span>
               </li>
             ))}
           </ul>
