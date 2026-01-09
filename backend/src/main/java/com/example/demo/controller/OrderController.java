@@ -41,6 +41,29 @@ public class OrderController {
             dto.put("restaurantId", order.getRestaurantId());
             dto.put("status", order.getStatus());
             dto.put("total", order.getTotal());
+            dto.put("createdAt", order.getCreatedAt());
+            dto.put("created_at", order.getCreatedAt()); // Also include snake_case for compatibility
+            
+            // Add customer information
+            if (order.getUserId() != null) {
+                var userOpt = customerRepository.findById(order.getUserId());
+                if (userOpt.isPresent()) {
+                    User customer = userOpt.get();
+                    dto.put("customerName", customer.getUsername());
+                    dto.put("customerEmail", customer.getEmail());
+                }
+            }
+            
+            // Add restaurant information
+            if (order.getRestaurantId() != null) {
+                var restaurantOpt = restaurantRepository.findById(order.getRestaurantId());
+                if (restaurantOpt.isPresent()) {
+                    var restaurant = restaurantOpt.get();
+                    dto.put("restaurantName", restaurant.getName());
+                    dto.put("restaurantAddress", restaurant.getAddress());
+                }
+            }
+            
             // Convert order items to DTOs
             if (order.getItems() != null) {
                 List<Map<String, Object>> items = order.getItems().stream().map(item -> {
@@ -53,6 +76,8 @@ public class OrderController {
                     return itemDto;
                 }).collect(java.util.stream.Collectors.toList());
                 dto.put("items", items);
+            } else {
+                dto.put("items", new java.util.ArrayList<>());
             }
             return dto;
         }).collect(java.util.stream.Collectors.toList());
@@ -67,9 +92,34 @@ public class OrderController {
         result.put("restaurantId", order.getRestaurantId());
         result.put("status", order.getStatus());
         result.put("total", order.getTotal());
-        result.put("items", order.getItems());
-        result.put("date", order.getId()); // You may want to add a date field if available
-        result.put("createdAt", order.getId()); // Add createdAt for consistency
+        // Convert order items to DTOs
+        if (order.getItems() != null) {
+            List<Map<String, Object>> items = order.getItems().stream().map(item -> {
+                Map<String, Object> itemDto = new java.util.HashMap<>();
+                itemDto.put("id", item.getId());
+                itemDto.put("menuItemId", item.getMenuItemId());
+                itemDto.put("name", item.getName());
+                itemDto.put("price", item.getPrice());
+                itemDto.put("quantity", item.getQuantity());
+                return itemDto;
+            }).collect(java.util.stream.Collectors.toList());
+            result.put("items", items);
+        } else {
+            result.put("items", new java.util.ArrayList<>());
+        }
+        result.put("date", order.getCreatedAt() != null ? order.getCreatedAt() : order.getId());
+        result.put("createdAt", order.getCreatedAt());
+        result.put("created_at", order.getCreatedAt()); // Also include snake_case for compatibility
+        
+        // Add customer information
+        if (order.getUserId() != null) {
+            var userOpt = customerRepository.findById(order.getUserId());
+            if (userOpt.isPresent()) {
+                User customer = userOpt.get();
+                result.put("customerName", customer.getUsername());
+                result.put("customerEmail", customer.getEmail());
+            }
+        }
         // Add restaurant name
         String restaurantName = "";
         if (order.getRestaurantId() != null) {
@@ -81,7 +131,7 @@ public class OrderController {
     }
 
     @PostMapping
-    public Order placeOrder(@RequestBody Map<String, Object> req, @AuthenticationPrincipal UserDetails userDetails) {
+    public Map<String, Object> placeOrder(@RequestBody Map<String, Object> req, @AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
             throw new RuntimeException("User not authenticated");
         }
@@ -120,7 +170,30 @@ public class OrderController {
             oi.setOrder(savedOrder);
             orderItemRepository.save(oi);
         }
-        return savedOrder;
+        
+        // Return DTO instead of entity
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("id", savedOrder.getId());
+        result.put("userId", savedOrder.getUserId());
+        result.put("restaurantId", savedOrder.getRestaurantId());
+        result.put("status", savedOrder.getStatus());
+        result.put("total", savedOrder.getTotal());
+        // Convert order items to DTOs
+        if (savedOrder.getItems() != null) {
+            List<Map<String, Object>> itemsDto = savedOrder.getItems().stream().map(item -> {
+                Map<String, Object> itemDto = new java.util.HashMap<>();
+                itemDto.put("id", item.getId());
+                itemDto.put("menuItemId", item.getMenuItemId());
+                itemDto.put("name", item.getName());
+                itemDto.put("price", item.getPrice());
+                itemDto.put("quantity", item.getQuantity());
+                return itemDto;
+            }).collect(java.util.stream.Collectors.toList());
+            result.put("items", itemsDto);
+        } else {
+            result.put("items", new java.util.ArrayList<>());
+        }
+        return result;
     }
 
     @GetMapping("/my")
@@ -138,9 +211,28 @@ public class OrderController {
             map.put("restaurantId", o.getRestaurantId());
             map.put("status", o.getStatus());
             map.put("total", o.getTotal());
-            map.put("items", o.getItems());
-            map.put("date", o.getId()); // You may want to add a date field if available
-            map.put("createdAt", o.getId()); // Add createdAt for consistency
+            // Convert order items to DTOs
+            if (o.getItems() != null) {
+                List<Map<String, Object>> items = o.getItems().stream().map(item -> {
+                    Map<String, Object> itemDto = new java.util.HashMap<>();
+                    itemDto.put("id", item.getId());
+                    itemDto.put("menuItemId", item.getMenuItemId());
+                    itemDto.put("name", item.getName());
+                    itemDto.put("price", item.getPrice());
+                    itemDto.put("quantity", item.getQuantity());
+                    return itemDto;
+                }).collect(java.util.stream.Collectors.toList());
+                map.put("items", items);
+            } else {
+                map.put("items", new java.util.ArrayList<>());
+            }
+            map.put("date", o.getCreatedAt() != null ? o.getCreatedAt() : o.getId());
+            map.put("createdAt", o.getCreatedAt());
+            map.put("created_at", o.getCreatedAt()); // Also include snake_case for compatibility
+            
+            // Add customer information (we already have customer from line 201, but include it in map for consistency)
+            map.put("customerName", customer.getUsername());
+            map.put("customerEmail", customer.getEmail());
             // Add restaurant name
             String restaurantName = "";
             if (o.getRestaurantId() != null) {
@@ -154,21 +246,82 @@ public class OrderController {
     }
 
     @GetMapping("/restaurant/{restaurantId}")
-    public List<Order> getOrdersForRestaurant(@PathVariable Long restaurantId) {
+    public List<Map<String, Object>> getOrdersForRestaurant(@PathVariable Long restaurantId) {
         return orderRepository.findAll().stream()
             .filter(o -> o.getRestaurantId().equals(restaurantId))
             .sorted((a, b) -> b.getId().compareTo(a.getId())) // Sort by ID descending (latest first)
-            .toList();
+            .map(order -> {
+                Map<String, Object> dto = new java.util.HashMap<>();
+                dto.put("id", order.getId());
+                dto.put("userId", order.getUserId());
+                dto.put("restaurantId", order.getRestaurantId());
+                dto.put("status", order.getStatus());
+                dto.put("total", order.getTotal());
+                dto.put("createdAt", order.getCreatedAt());
+                dto.put("created_at", order.getCreatedAt()); // Also include snake_case for compatibility
+                
+                // Add restaurant information
+                if (order.getRestaurantId() != null) {
+                    var restaurantOpt = restaurantRepository.findById(order.getRestaurantId());
+                    if (restaurantOpt.isPresent()) {
+                        var restaurant = restaurantOpt.get();
+                        dto.put("restaurantName", restaurant.getName());
+                        dto.put("restaurantAddress", restaurant.getAddress());
+                    }
+                }
+                
+                // Convert order items to DTOs
+                if (order.getItems() != null) {
+                    List<Map<String, Object>> items = order.getItems().stream().map(item -> {
+                        Map<String, Object> itemDto = new java.util.HashMap<>();
+                        itemDto.put("id", item.getId());
+                        itemDto.put("menuItemId", item.getMenuItemId());
+                        itemDto.put("name", item.getName());
+                        itemDto.put("price", item.getPrice());
+                        itemDto.put("quantity", item.getQuantity());
+                        return itemDto;
+                    }).collect(java.util.stream.Collectors.toList());
+                    dto.put("items", items);
+                } else {
+                    dto.put("items", new java.util.ArrayList<>());
+                }
+                return dto;
+            })
+            .collect(java.util.stream.Collectors.toList());
     }
 
     @PutMapping("/{id}")
-    public Order updateOrder(@PathVariable Long id, @RequestBody Order orderDetails) {
+    public Map<String, Object> updateOrder(@PathVariable Long id, @RequestBody Order orderDetails) {
         Order order = orderRepository.findById(id).orElseThrow();
         order.setUserId(orderDetails.getUserId());
         order.setRestaurantId(orderDetails.getRestaurantId());
         order.setStatus(orderDetails.getStatus());
         order.setTotal(orderDetails.getTotal());
-        return orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+        
+        // Return DTO instead of entity
+        Map<String, Object> dto = new java.util.HashMap<>();
+        dto.put("id", saved.getId());
+        dto.put("userId", saved.getUserId());
+        dto.put("restaurantId", saved.getRestaurantId());
+        dto.put("status", saved.getStatus());
+        dto.put("total", saved.getTotal());
+        // Convert order items to DTOs
+        if (saved.getItems() != null) {
+            List<Map<String, Object>> items = saved.getItems().stream().map(item -> {
+                Map<String, Object> itemDto = new java.util.HashMap<>();
+                itemDto.put("id", item.getId());
+                itemDto.put("menuItemId", item.getMenuItemId());
+                itemDto.put("name", item.getName());
+                itemDto.put("price", item.getPrice());
+                itemDto.put("quantity", item.getQuantity());
+                return itemDto;
+            }).collect(java.util.stream.Collectors.toList());
+            dto.put("items", items);
+        } else {
+            dto.put("items", new java.util.ArrayList<>());
+        }
+        return dto;
     }
 
     @DeleteMapping("/{id}")
@@ -236,9 +389,34 @@ public class OrderController {
             result.put("restaurantId", updatedOrder.getRestaurantId());
             result.put("status", updatedOrder.getStatus());
             result.put("total", updatedOrder.getTotal());
-            result.put("items", updatedOrder.getItems());
-            result.put("date", updatedOrder.getId());
-            result.put("createdAt", updatedOrder.getId());
+            // Convert order items to DTOs
+            if (updatedOrder.getItems() != null) {
+                List<Map<String, Object>> items = updatedOrder.getItems().stream().map(item -> {
+                    Map<String, Object> itemDto = new java.util.HashMap<>();
+                    itemDto.put("id", item.getId());
+                    itemDto.put("menuItemId", item.getMenuItemId());
+                    itemDto.put("name", item.getName());
+                    itemDto.put("price", item.getPrice());
+                    itemDto.put("quantity", item.getQuantity());
+                    return itemDto;
+                }).collect(java.util.stream.Collectors.toList());
+                result.put("items", items);
+            } else {
+                result.put("items", new java.util.ArrayList<>());
+            }
+            result.put("date", updatedOrder.getCreatedAt() != null ? updatedOrder.getCreatedAt() : updatedOrder.getId());
+            result.put("createdAt", updatedOrder.getCreatedAt());
+            result.put("created_at", updatedOrder.getCreatedAt()); // Also include snake_case for compatibility
+            
+            // Add customer information
+            if (updatedOrder.getUserId() != null) {
+                var userOpt = customerRepository.findById(updatedOrder.getUserId());
+                if (userOpt.isPresent()) {
+                    User customer = userOpt.get();
+                    result.put("customerName", customer.getUsername());
+                    result.put("customerEmail", customer.getEmail());
+                }
+            }
             
             // Add restaurant name
             String restaurantName = "";

@@ -1,5 +1,5 @@
 # Backend Dockerfile
-FROM openjdk:21-jdk-slim
+FROM eclipse-temurin:21-jdk
 
 # Set working directory
 WORKDIR /app
@@ -22,7 +22,7 @@ COPY src src
 RUN ./mvnw clean package -DskipTests
 
 # Create a new stage for runtime
-FROM openjdk:21-slim
+FROM eclipse-temurin:21-jre
 
 # Set working directory
 WORKDIR /app
@@ -37,4 +37,4 @@ EXPOSE 8080
 ENV SPRING_PROFILES_ACTIVE=production
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"] 
+ENTRYPOINT ["java", "-jar", "app.jar"]

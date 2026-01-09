@@ -77,6 +77,29 @@ public class AdminController {
             dto.put("restaurantId", order.getRestaurantId());
             dto.put("status", order.getStatus());
             dto.put("total", order.getTotal());
+            dto.put("createdAt", order.getCreatedAt());
+            dto.put("created_at", order.getCreatedAt()); // Also include snake_case for compatibility
+            
+            // Add customer information
+            if (order.getUserId() != null) {
+                var userOpt = customerRepository.findById(order.getUserId());
+                if (userOpt.isPresent()) {
+                    User customer = userOpt.get();
+                    dto.put("customerName", customer.getUsername());
+                    dto.put("customerEmail", customer.getEmail());
+                }
+            }
+            
+            // Add restaurant information
+            if (order.getRestaurantId() != null) {
+                var restaurantOpt = restaurantRepository.findById(order.getRestaurantId());
+                if (restaurantOpt.isPresent()) {
+                    Restaurant restaurant = restaurantOpt.get();
+                    dto.put("restaurantName", restaurant.getName());
+                    dto.put("restaurantAddress", restaurant.getAddress());
+                }
+            }
+            
             // Convert order items to DTOs
             if (order.getItems() != null) {
                 List<Map<String, Object>> items = order.getItems().stream().map(item -> {
@@ -89,6 +112,8 @@ public class AdminController {
                     return itemDto;
                 }).collect(Collectors.toList());
                 dto.put("items", items);
+            } else {
+                dto.put("items", new java.util.ArrayList<>());
             }
             return dto;
         }).collect(Collectors.toList());
