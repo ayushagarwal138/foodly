@@ -1,6 +1,7 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Date;
 
 @Entity
@@ -12,6 +13,7 @@ public class Review {
     
     @ManyToOne
     @JoinColumn(name = "customer_id")
+    @JsonIgnoreProperties({"password", "email"})
     private User customer;
     
     private Long orderId;

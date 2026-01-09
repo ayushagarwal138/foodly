@@ -12,6 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -27,40 +30,119 @@ public class AdminController {
     private ReviewRepository reviewRepository;
 
     @GetMapping("/users")
-    public List<User> getAllUsers() {
-        return customerRepository.findAll();
+    public List<Map<String, Object>> getAllUsers() {
+        return customerRepository.findAll().stream().map(user -> {
+            Map<String, Object> dto = new HashMap<>();
+            dto.put("id", user.getId());
+            dto.put("username", user.getUsername());
+            dto.put("email", user.getEmail());
+            dto.put("role", user.getRole());
+            dto.put("isBlocked", user.getIsBlocked() != null ? user.getIsBlocked() : false);
+            // Note: createdAt would need to be added to User model if needed
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     @GetMapping("/restaurants")
-    public List<Restaurant> getAllRestaurants() {
-        return restaurantRepository.findAll();
+    public List<Map<String, Object>> getAllRestaurants() {
+        return restaurantRepository.findAll().stream().map(restaurant -> {
+            Map<String, Object> dto = new HashMap<>();
+            dto.put("id", restaurant.getId());
+            dto.put("name", restaurant.getName());
+            dto.put("address", restaurant.getAddress());
+            dto.put("phone", restaurant.getPhone());
+            dto.put("cuisineType", restaurant.getCuisineType());
+            dto.put("description", restaurant.getDescription());
+            dto.put("openingHours", restaurant.getOpeningHours());
+            dto.put("isActive", restaurant.getIsActive());
+            dto.put("slug", restaurant.getSlug());
+            // Note: createdAt would need to be added to Restaurant model if needed
+            if (restaurant.getOwner() != null) {
+                Map<String, Object> owner = new HashMap<>();
+                owner.put("id", restaurant.getOwner().getId());
+                owner.put("username", restaurant.getOwner().getUsername());
+                owner.put("email", restaurant.getOwner().getEmail());
+                dto.put("owner", owner);
+            }
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     @GetMapping("/orders")
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+    public List<Map<String, Object>> getAllOrders() {
+        return orderRepository.findAll().stream().map(order -> {
+            Map<String, Object> dto = new HashMap<>();
+            dto.put("id", order.getId());
+            dto.put("userId", order.getUserId());
+            dto.put("restaurantId", order.getRestaurantId());
+            dto.put("status", order.getStatus());
+            dto.put("total", order.getTotal());
+            // Convert order items to DTOs
+            if (order.getItems() != null) {
+                List<Map<String, Object>> items = order.getItems().stream().map(item -> {
+                    Map<String, Object> itemDto = new HashMap<>();
+                    itemDto.put("id", item.getId());
+                    itemDto.put("menuItemId", item.getMenuItemId());
+                    itemDto.put("name", item.getName());
+                    itemDto.put("price", item.getPrice());
+                    itemDto.put("quantity", item.getQuantity());
+                    return itemDto;
+                }).collect(Collectors.toList());
+                dto.put("items", items);
+            }
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     @GetMapping("/reviews")
-    public List<Review> getAllReviews() {
-        return reviewRepository.findAll();
+    public List<Map<String, Object>> getAllReviews() {
+        return reviewRepository.findAll().stream().map(review -> {
+            Map<String, Object> dto = new HashMap<>();
+            dto.put("id", review.getId());
+            dto.put("orderId", review.getOrderId());
+            dto.put("restaurantId", review.getRestaurantId());
+            dto.put("menuItemId", review.getMenuItemId());
+            dto.put("menuItemName", review.getMenuItemName());
+            dto.put("rating", review.getRating());
+            dto.put("text", review.getText());
+            dto.put("isFlagged", review.getIsFlagged());
+            dto.put("createdAt", review.getCreatedAt());
+            if (review.getCustomer() != null) {
+                dto.put("customerName", review.getCustomer().getUsername());
+            }
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     // Block a user
     @PatchMapping("/users/{id}/block")
     @PostMapping("/users/{id}/block")
-    public User blockUser(@PathVariable Long id) {
+    public Map<String, Object> blockUser(@PathVariable Long id) {
         User user = customerRepository.findById(id).orElseThrow();
         user.setIsBlocked(true);
-        return customerRepository.save(user);
+        User saved = customerRepository.save(user);
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("id", saved.getId());
+        dto.put("username", saved.getUsername());
+        dto.put("email", saved.getEmail());
+        dto.put("role", saved.getRole());
+        dto.put("isBlocked", saved.getIsBlocked());
+        return dto;
     }
     // Unblock a user
     @PatchMapping("/users/{id}/unblock")
     @PostMapping("/users/{id}/unblock")
-    public User unblockUser(@PathVariable Long id) {
+    public Map<String, Object> unblockUser(@PathVariable Long id) {
         User user = customerRepository.findById(id).orElseThrow();
         user.setIsBlocked(false);
-        return customerRepository.save(user);
+        User saved = customerRepository.save(user);
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("id", saved.getId());
+        dto.put("username", saved.getUsername());
+        dto.put("email", saved.getEmail());
+        dto.put("role", saved.getRole());
+        dto.put("isBlocked", saved.getIsBlocked());
+        return dto;
     }
     // Delete a user
     @DeleteMapping("/users/{id}")
@@ -71,18 +153,28 @@ public class AdminController {
     // Approve a restaurant (set isActive=true)
     @PatchMapping("/restaurants/{id}/approve")
     @PostMapping("/restaurants/{id}/approve")
-    public Restaurant approveRestaurant(@PathVariable Long id) {
+    public Map<String, Object> approveRestaurant(@PathVariable Long id) {
         Restaurant r = restaurantRepository.findById(id).orElseThrow();
         r.setIsActive(true);
-        return restaurantRepository.save(r);
+        Restaurant saved = restaurantRepository.save(r);
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("id", saved.getId());
+        dto.put("name", saved.getName());
+        dto.put("isActive", saved.getIsActive());
+        return dto;
     }
     // Deactivate a restaurant (set isActive=false)
     @PatchMapping("/restaurants/{id}/deactivate")
     @PostMapping("/restaurants/{id}/deactivate")
-    public Restaurant deactivateRestaurant(@PathVariable Long id) {
+    public Map<String, Object> deactivateRestaurant(@PathVariable Long id) {
         Restaurant r = restaurantRepository.findById(id).orElseThrow();
         r.setIsActive(false);
-        return restaurantRepository.save(r);
+        Restaurant saved = restaurantRepository.save(r);
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("id", saved.getId());
+        dto.put("name", saved.getName());
+        dto.put("isActive", saved.getIsActive());
+        return dto;
     }
     // Delete a restaurant
     @DeleteMapping("/restaurants/{id}")
@@ -93,18 +185,28 @@ public class AdminController {
     // Cancel an order (set status="Cancelled")
     @PatchMapping("/orders/{id}/cancel")
     @PostMapping("/orders/{id}/cancel")
-    public Order cancelOrder(@PathVariable Long id) {
+    public Map<String, Object> cancelOrder(@PathVariable Long id) {
         Order o = orderRepository.findById(id).orElseThrow();
         o.setStatus("Cancelled");
-        return orderRepository.save(o);
+        Order saved = orderRepository.save(o);
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("id", saved.getId());
+        dto.put("status", saved.getStatus());
+        dto.put("total", saved.getTotal());
+        return dto;
     }
     // Refund an order (set status="Refunded")
     @PatchMapping("/orders/{id}/refund")
     @PostMapping("/orders/{id}/refund")
-    public Order refundOrder(@PathVariable Long id) {
+    public Map<String, Object> refundOrder(@PathVariable Long id) {
         Order o = orderRepository.findById(id).orElseThrow();
         o.setStatus("Refunded");
-        return orderRepository.save(o);
+        Order saved = orderRepository.save(o);
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("id", saved.getId());
+        dto.put("status", saved.getStatus());
+        dto.put("total", saved.getTotal());
+        return dto;
     }
     // Delete an order
     @DeleteMapping("/orders/{id}")
@@ -120,9 +222,13 @@ public class AdminController {
     // Flag a review
     @PatchMapping("/reviews/{id}/flag")
     @PostMapping("/reviews/{id}/flag")
-    public Review flagReview(@PathVariable Long id) {
+    public Map<String, Object> flagReview(@PathVariable Long id) {
         Review r = reviewRepository.findById(id).orElseThrow();
         r.setIsFlagged(true);
-        return reviewRepository.save(r);
+        Review saved = reviewRepository.save(r);
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("id", saved.getId());
+        dto.put("isFlagged", saved.getIsFlagged());
+        return dto;
     }
 } 

@@ -33,13 +33,34 @@ public class OrderController {
     private RestaurantRepository restaurantRepository;
 
     @GetMapping
-    public List<Order> getAllOrders(@AuthenticationPrincipal UserDetails userDetails) {
+    public List<Map<String, Object>> getAllOrders(@AuthenticationPrincipal UserDetails userDetails) {
         // Only admin users should be able to see all orders
         User user = customerRepository.findByUsername(userDetails.getUsername()).orElseThrow();
         if (!"ADMIN".equals(user.getRole())) {
             throw new RuntimeException("Access denied. Only admin users can view all orders.");
         }
-        return orderRepository.findAll();
+        return orderRepository.findAll().stream().map(order -> {
+            Map<String, Object> dto = new java.util.HashMap<>();
+            dto.put("id", order.getId());
+            dto.put("userId", order.getUserId());
+            dto.put("restaurantId", order.getRestaurantId());
+            dto.put("status", order.getStatus());
+            dto.put("total", order.getTotal());
+            // Convert order items to DTOs
+            if (order.getItems() != null) {
+                List<Map<String, Object>> items = order.getItems().stream().map(item -> {
+                    Map<String, Object> itemDto = new java.util.HashMap<>();
+                    itemDto.put("id", item.getId());
+                    itemDto.put("menuItemId", item.getMenuItemId());
+                    itemDto.put("name", item.getName());
+                    itemDto.put("price", item.getPrice());
+                    itemDto.put("quantity", item.getQuantity());
+                    return itemDto;
+                }).collect(java.util.stream.Collectors.toList());
+                dto.put("items", items);
+            }
+            return dto;
+        }).collect(java.util.stream.Collectors.toList());
     }
 
     @GetMapping("/{id}")
