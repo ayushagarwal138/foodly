@@ -20,8 +20,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User customer = customerRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        // Add ROLE_ prefix for Spring Security
-        String role = customer.getRole();
+        // Add ROLE_ prefix for Spring Security and ensure role is uppercase
+        String role = customer.getRole() != null ? customer.getRole().toUpperCase() : "CUSTOMER";
         return new org.springframework.security.core.userdetails.User(
                 customer.getUsername(),
                 customer.getPassword(),

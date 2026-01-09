@@ -185,10 +185,32 @@ export default function RestaurantLayout() {
     return () => window.removeEventListener('openSidebar', handleOpenSidebar);
   }, []);
 
-  // Check authentication
-  if (!restaurantId || !token) {
+  // Check authentication - allow restaurant users even if restaurantId is not set yet
+  const userRole = localStorage.getItem("userRole");
+  if (!token || userRole !== "RESTAURANT") {
     return <Navigate to="/restaurant/login" replace />;
   }
+  
+  // If restaurantId is not set, try to fetch it from the API
+  useEffect(() => {
+    if (!restaurantId && token && userRole === "RESTAURANT") {
+      const userId = localStorage.getItem("userId");
+      if (userId) {
+        // Try to get restaurant by owner
+        api.get(API_ENDPOINTS.RESTAURANT_BY_OWNER(userId))
+          .then(data => {
+            if (data && data.id) {
+              localStorage.setItem("restaurantId", data.id);
+              window.location.reload(); // Reload to update the component
+            }
+          })
+          .catch(err => {
+            console.error("Failed to fetch restaurant:", err);
+            // Allow access even if restaurant not found - user might need to create one
+          });
+      }
+    }
+  }, [restaurantId, token, userRole]);
 
   return (
     <div className="min-h-screen bg-gray-100 flex">

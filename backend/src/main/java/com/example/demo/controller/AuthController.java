@@ -74,18 +74,22 @@ public class AuthController {
         if (!passwordEncoder.matches(password, customer.getPassword())) {
             return Map.of("error", "Invalid credentials");
         }
-        String token = jwtUtil.generateToken(customer.getUsername(), customer.getRole());
+        // Ensure role is uppercase for JWT token
+        String customerRole = customer.getRole() != null ? customer.getRole().toUpperCase() : "CUSTOMER";
+        String token = jwtUtil.generateToken(customer.getUsername(), customerRole);
         
-        if ("RESTAURANT".equalsIgnoreCase(customer.getRole())) {
-            Optional<Restaurant> restaurant = restaurantRepository.findAll().stream()
-                .filter(r -> r.getOwner() != null && r.getOwner().getId().equals(customer.getId()))
-                .findFirst();
+        if ("RESTAURANT".equalsIgnoreCase(customerRole)) {
+            Optional<Restaurant> restaurant = restaurantRepository.findByOwner_Id(customer.getId());
             if (restaurant.isPresent()) {
                 return Map.of(
                     "token", token,
                     "id", customer.getId(),
                     "restaurantId", restaurant.get().getId()
                 );
+            } else {
+                // Still return token even if restaurant not found, but log a warning
+                System.out.println("Warning: Restaurant user " + customer.getUsername() + " has no associated restaurant");
+                return Map.of("token", token, "id", customer.getId());
             }
         }
         return Map.of("token", token, "id", customer.getId());

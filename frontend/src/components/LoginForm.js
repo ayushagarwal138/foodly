@@ -68,11 +68,21 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
       setToast({ message: "Login successful!", type: "success" });
       
       // Redirect immediately after successful login
-      console.log("Login successful, redirecting to:", `/${role.toLowerCase()}`);
+      // Map role to correct route
+      let redirectPath = `/${role.toLowerCase()}`;
+      if (role.toLowerCase() === "restaurant") {
+        redirectPath = "/restaurant";
+      } else if (role.toLowerCase() === "admin") {
+        redirectPath = "/admin";
+      } else if (role.toLowerCase() === "customer") {
+        redirectPath = "/customer";
+      }
+      
+      console.log("Login successful, redirecting to:", redirectPath);
       setTimeout(() => {
-        console.log("Executing navigation to:", `/${role.toLowerCase()}`);
-        navigate(`/${role.toLowerCase()}`);
-      }, 1000);
+        console.log("Executing navigation to:", redirectPath);
+        navigate(redirectPath);
+      }, 500);
     } catch (err) {
       console.error("Login error:", err);
       setError(err.message);
