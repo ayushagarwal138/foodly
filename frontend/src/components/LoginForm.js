@@ -156,10 +156,10 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Username Field */}
+              {/* Username/Email Field */}
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                  Username
+                  Username or Email
                 </label>
                 <div className="relative">
                   <input
@@ -168,7 +168,7 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
                     type="text"
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                    placeholder="Enter your username"
+                    placeholder="Enter your username or email"
                     value={formData.username}
                     onChange={handleChange}
                   />

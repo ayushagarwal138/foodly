@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.Optional;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -18,8 +19,15 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User customer = customerRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        // Try to find user by username first, then by email
+        Optional<User> userOpt = customerRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            // Try email if username lookup fails
+            userOpt = customerRepository.findByEmail(username);
+        }
+        
+        User customer = userOpt
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
         
         // Check if user is blocked
         if (customer.getIsBlocked() != null && customer.getIsBlocked()) {
@@ -28,7 +36,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         
         // Add ROLE_ prefix for Spring Security and ensure role is uppercase
         String role = customer.getRole() != null ? customer.getRole().toUpperCase() : "CUSTOMER";
-        System.out.println("Loading user: " + username + " with role: " + role);
+        System.out.println("Loading user: " + customer.getUsername() + " (looked up by: " + username + ") with role: " + role);
         return new org.springframework.security.core.userdetails.User(
                 customer.getUsername(),
                 customer.getPassword(),

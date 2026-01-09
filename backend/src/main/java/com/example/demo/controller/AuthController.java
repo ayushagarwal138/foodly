@@ -65,24 +65,49 @@ public class AuthController {
         String username = req.get("username");
         String password = req.get("password");
         String role = req.get("role");
+        
+        System.out.println("=== Login Attempt ===");
+        System.out.println("Username/Email: " + username);
+        System.out.println("Requested Role: " + role);
+        
+        // Try to find user by username first, then by email
         Optional<User> customerOpt = customerRepository.findByUsername(username);
         if (customerOpt.isEmpty()) {
+            // Try email if username lookup fails
+            customerOpt = customerRepository.findByEmail(username);
+            System.out.println("Username lookup failed, trying email lookup");
+        }
+        
+        if (customerOpt.isEmpty()) {
+            System.out.println("User not found: " + username);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("error", "Invalid credentials"));
         }
+        
         User customer = customerOpt.get();
+        System.out.println("User found: " + customer.getUsername() + " (ID: " + customer.getId() + ")");
+        System.out.println("User role in DB: " + customer.getRole());
+        System.out.println("Requested role: " + role);
         
         // Check if user is blocked
         if (customer.getIsBlocked() != null && customer.getIsBlocked()) {
+            System.out.println("User is blocked");
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(Map.of("error", "Your account has been blocked. Please contact support."));
         }
         
-        if (!customer.getRole().equalsIgnoreCase(role)) {
+        // Check role match (case-insensitive)
+        if (customer.getRole() == null || !customer.getRole().equalsIgnoreCase(role)) {
+            System.out.println("Role mismatch - DB: " + customer.getRole() + ", Requested: " + role);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "Role mismatch"));
+                .body(Map.of("error", "Role mismatch. Please select the correct role."));
         }
-        if (!passwordEncoder.matches(password, customer.getPassword())) {
+        
+        // Check password
+        boolean passwordMatches = passwordEncoder.matches(password, customer.getPassword());
+        System.out.println("Password match: " + passwordMatches);
+        if (!passwordMatches) {
+            System.out.println("Invalid password");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("error", "Invalid credentials"));
         }
