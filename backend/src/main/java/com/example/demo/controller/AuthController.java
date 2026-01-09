@@ -6,6 +6,8 @@ import com.example.demo.repository.CustomerRepository;
 import com.example.demo.repository.RestaurantRepository;
 import com.example.demo.service.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,26 +61,30 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public Map<String, Object> login(@RequestBody Map<String, String> req) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> req) {
         String username = req.get("username");
         String password = req.get("password");
         String role = req.get("role");
         Optional<User> customerOpt = customerRepository.findByUsername(username);
         if (customerOpt.isEmpty()) {
-            return Map.of("error", "Invalid credentials");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "Invalid credentials"));
         }
         User customer = customerOpt.get();
         
         // Check if user is blocked
         if (customer.getIsBlocked() != null && customer.getIsBlocked()) {
-            return Map.of("error", "Your account has been blocked. Please contact support.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", "Your account has been blocked. Please contact support."));
         }
         
         if (!customer.getRole().equalsIgnoreCase(role)) {
-            return Map.of("error", "Role mismatch");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "Role mismatch"));
         }
         if (!passwordEncoder.matches(password, customer.getPassword())) {
-            return Map.of("error", "Invalid credentials");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "Invalid credentials"));
         }
         // Ensure role is uppercase for JWT token
         String customerRole = customer.getRole() != null ? customer.getRole().toUpperCase() : "CUSTOMER";
@@ -87,17 +93,17 @@ public class AuthController {
         if ("RESTAURANT".equalsIgnoreCase(customerRole)) {
             Optional<Restaurant> restaurant = restaurantRepository.findByOwner_Id(customer.getId());
             if (restaurant.isPresent()) {
-                return Map.of(
+                return ResponseEntity.ok(Map.of(
                     "token", token,
                     "id", customer.getId(),
                     "restaurantId", restaurant.get().getId()
-                );
+                ));
             } else {
                 // Still return token even if restaurant not found, but log a warning
                 System.out.println("Warning: Restaurant user " + customer.getUsername() + " has no associated restaurant");
-                return Map.of("token", token, "id", customer.getId());
+                return ResponseEntity.ok(Map.of("token", token, "id", customer.getId()));
             }
         }
-        return Map.of("token", token, "id", customer.getId());
+        return ResponseEntity.ok(Map.of("token", token, "id", customer.getId()));
     }
 } 

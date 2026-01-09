@@ -48,6 +48,32 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
         role: role.toUpperCase() // send role in uppercase
       });
       
+      // Check if response contains an error
+      if (data.error) {
+        // Clear any existing authentication data on login failure
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('restaurantId');
+        setError(data.error);
+        setToast({ message: data.error, type: "error" });
+        setLoading(false);
+        return;
+      }
+      
+      // Check if token exists (required for successful login)
+      if (!data.token) {
+        // Clear any existing authentication data on login failure
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('restaurantId');
+        setError("Login failed: No token received");
+        setToast({ message: "Login failed: No token received", type: "error" });
+        setLoading(false);
+        return;
+      }
+      
       // Store authentication data
       localStorage.setItem("token", data.token);
       localStorage.setItem("userRole", role.toUpperCase());
