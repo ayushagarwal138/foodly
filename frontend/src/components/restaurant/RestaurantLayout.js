@@ -179,18 +179,15 @@ export default function RestaurantLayout() {
 
   // Sidebar open state for mobile
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const userRole = localStorage.getItem("userRole");
+  
+  // All hooks must be called before any conditional returns
   useEffect(() => {
     function handleOpenSidebar() { setSidebarOpen(true); }
     window.addEventListener('openSidebar', handleOpenSidebar);
     return () => window.removeEventListener('openSidebar', handleOpenSidebar);
   }, []);
 
-  // Check authentication - allow restaurant users even if restaurantId is not set yet
-  const userRole = localStorage.getItem("userRole");
-  if (!token || userRole !== "RESTAURANT") {
-    return <Navigate to="/restaurant/login" replace />;
-  }
-  
   // If restaurantId is not set, try to fetch it from the API
   useEffect(() => {
     if (!restaurantId && token && userRole === "RESTAURANT") {
@@ -211,6 +208,11 @@ export default function RestaurantLayout() {
       }
     }
   }, [restaurantId, token, userRole]);
+
+  // Check authentication - allow restaurant users even if restaurantId is not set yet
+  if (!token || userRole !== "RESTAURANT") {
+    return <Navigate to="/restaurant/login" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
