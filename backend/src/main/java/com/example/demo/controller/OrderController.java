@@ -1,11 +1,9 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.Order;
-import com.example.demo.model.MenuItem;
 import com.example.demo.model.User;
 import com.example.demo.model.OrderItem;
 import com.example.demo.repository.OrderRepository;
-import com.example.demo.repository.MenuItemRepository;
 import com.example.demo.repository.CustomerRepository;
 import com.example.demo.repository.OrderItemRepository;
 import com.example.demo.repository.RestaurantRepository;
@@ -16,15 +14,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
     @Autowired
     private OrderRepository orderRepository;
-    @Autowired
-    private MenuItemRepository menuItemRepository;
     @Autowired
     private CustomerRepository customerRepository;
     @Autowired
@@ -87,10 +82,12 @@ public class OrderController {
 
     @PostMapping
     public Order placeOrder(@RequestBody Map<String, Object> req, @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            throw new RuntimeException("User not authenticated");
+        }
         User customer = customerRepository.findByUsername(userDetails.getUsername()).orElseThrow();
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> items = (List<Map<String, Object>>) req.get("items");
-        String address = (String) req.get("address");
         Long restaurantId = items != null && !items.isEmpty() ? Long.valueOf(items.get(0).get("restaurantId").toString()) : null;
         if (restaurantId == null) throw new IllegalArgumentException("restaurantId is required");
         Order order = new Order();
@@ -182,9 +179,12 @@ public class OrderController {
     @PutMapping("/{orderId}/status")
     public Map<String, Object> updateOrderStatus(@PathVariable Long orderId, @RequestBody Map<String, Object> request, @AuthenticationPrincipal UserDetails userDetails) {
         try {
+            if (userDetails == null) {
+                throw new RuntimeException("User not authenticated");
+            }
             System.out.println("=== Order Status Update Debug ===");
             System.out.println("Order ID: " + orderId);
-            System.out.println("User Details: " + (userDetails != null ? userDetails.getUsername() : "NULL"));
+            System.out.println("User Details: " + userDetails.getUsername());
             System.out.println("Request: " + request);
             
             Order order = orderRepository.findById(orderId).orElseThrow();
