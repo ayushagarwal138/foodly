@@ -68,6 +68,12 @@ public class AuthController {
             return Map.of("error", "Invalid credentials");
         }
         User customer = customerOpt.get();
+        
+        // Check if user is blocked
+        if (customer.getIsBlocked() != null && customer.getIsBlocked()) {
+            return Map.of("error", "Your account has been blocked. Please contact support.");
+        }
+        
         if (!customer.getRole().equalsIgnoreCase(role)) {
             return Map.of("error", "Role mismatch");
         }

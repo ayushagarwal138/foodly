@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -56,16 +57,29 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             }
         }
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-            if (jwtUtil.validateToken(jwt, userDetails.getUsername())) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                // Debug log: print username and authorities
-                System.out.println("Authenticated user: " + userDetails.getUsername());
-                System.out.println("Authorities: " + userDetails.getAuthorities().stream().map(Object::toString).collect(Collectors.joining(", ")));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            try {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+                if (jwtUtil.validateToken(jwt, userDetails.getUsername())) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    // Debug log: print username and authorities
+                    System.out.println("Authenticated user: " + userDetails.getUsername());
+                    System.out.println("Authorities: " + userDetails.getAuthorities().stream().map(Object::toString).collect(Collectors.joining(", ")));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    System.out.println("JWT token validation failed for user: " + username);
+                }
+            } catch (UsernameNotFoundException e) {
+                System.out.println("User not found or blocked: " + username + " - " + e.getMessage());
+                // Don't set authentication, let Spring Security handle the 403/401
+            } catch (Exception e) {
+                System.out.println("Error loading user details: " + e.getMessage());
+                e.printStackTrace();
             }
+        } else if (path.startsWith("/api/admin/") || path.startsWith("/api/offers/admin/")) {
+            // For admin endpoints, log if no authentication is present
+            System.out.println("Admin endpoint accessed without authentication: " + path);
         }
         chain.doFilter(request, response);
     }

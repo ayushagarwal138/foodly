@@ -32,7 +32,14 @@ export default function PlatformAnalytics() {
       });
     } catch (err) {
       console.error("Error fetching analytics:", err);
-      setError("Failed to fetch analytics data");
+      const errorMessage = err.message || "Failed to fetch analytics data";
+      if (errorMessage.includes("403") || errorMessage.includes("Access denied")) {
+        setError("Access denied. Please ensure you are logged in as an admin user.");
+      } else if (errorMessage.includes("401") || errorMessage.includes("Authentication")) {
+        setError("Authentication failed. Please log in again.");
+      } else {
+        setError(`Failed to fetch analytics data: ${errorMessage}`);
+      }
     }
   };
 
