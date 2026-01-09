@@ -226,8 +226,8 @@ public class RestaurantController {
             }
             
             List<MenuItem> availableItems = allItems.stream()
-                .filter(item -> item.getIsAvailable() != null && item.getIsAvailable())
-                .collect(java.util.stream.Collectors.toList());
+            .filter(item -> item.getIsAvailable() != null && item.getIsAvailable())
+            .collect(java.util.stream.Collectors.toList());
             
             System.out.println("Available items: " + availableItems.size());
             return availableItems.stream().map(this::convertToMenuItemDTO).collect(java.util.stream.Collectors.toList());
