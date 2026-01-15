@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { FiPackage, FiDollarSign, FiClock, FiCheckCircle, FiArrowRight, FiCoffee, FiMenu, FiStar, FiSettings, FiAlertCircle } from "react-icons/fi";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import OrdersPage from "./OrdersPage";
@@ -8,6 +9,7 @@ import ReviewsPage from "./ReviewsPage";
 import ProfilePage from "./ProfilePage";
 import SupportPage from "./SupportPage";
 import AnalyticsPage from './AnalyticsPage';
+import Button from "../ui/Button";
 import UnreadMessageNotification from '../UnreadMessageNotification';
 import { api, API_ENDPOINTS } from "../../config/api";
 
@@ -64,8 +66,43 @@ function DashboardContent() {
     initialFetch();
   }, [restaurantId, token]);
 
-  if (loading) return <div className="p-10 text-center">Loading...</div>;
-  if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
+  const getStatusConfig = (status) => {
+    const configs = {
+      "New": { icon: FiClock, color: "blue", bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
+      "Accepted": { icon: FiCheckCircle, color: "secondary", bg: "bg-secondary-50", text: "text-secondary-700", border: "border-secondary-200" },
+      "Preparing": { icon: FiPackage, color: "yellow", bg: "bg-yellow-50", text: "text-yellow-700", border: "border-yellow-200" },
+      "Out for Delivery": { icon: FiPackage, color: "purple", bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200" },
+      "Delivered": { icon: FiCheckCircle, color: "accent", bg: "bg-accent-50", text: "text-accent-700", border: "border-accent-200" },
+      "Cancelled": { icon: FiAlertCircle, color: "red", bg: "bg-red-50", text: "text-red-700", border: "border-red-200" },
+    };
+    return configs[status] || configs["New"];
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8">
+        <div className="card text-center py-12">
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-500"></div>
+            <p className="text-neutral-600 font-medium">Loading dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8">
+        <div className="card border-2 border-red-200 bg-red-50">
+          <div className="flex items-center gap-3 text-red-700">
+            <FiAlertCircle className="w-5 h-5 flex-shrink-0" />
+            <p className="font-medium">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Calculate statistics
   const totalOrders = orders.length;
@@ -80,88 +117,153 @@ function DashboardContent() {
     .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
     .slice(0, 5);
 
+  const stats = [
+    { icon: FiPackage, label: "Total Orders", value: totalOrders, color: "primary" },
+    { icon: FiDollarSign, label: "Total Revenue", value: `₹${totalRevenue.toFixed(2)}`, color: "accent" },
+    { icon: FiClock, label: "Pending Orders", value: pendingOrders, color: "secondary" },
+    { icon: FiCheckCircle, label: "Completed Orders", value: completedOrders, color: "accent" },
+  ];
+
   return (
-    <div className="p-10">
+    <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8 animate-fade-in">
       {/* Hero Welcome */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-extrabold text-[#16213e] mb-2">
-            Welcome back{restaurant?.name ? `, ${restaurant.name}` : ''}!
-          </h2>
-          <div className="text-gray-500 text-lg">Here's your restaurant's performance today.</div>
-        </div>
-        <div className="flex gap-3 mt-4 md:mt-0">
-          <button 
-            className="bg-blue-600 text-white px-6 py-3 rounded-full font-bold shadow hover:bg-blue-700 transition-all duration-200 text-lg" 
-            onClick={() => navigate('/restaurant/orders')}
-          >
-            View Orders
-          </button>
-          <button 
-            className="bg-orange-500 text-white px-6 py-3 rounded-full font-bold shadow hover:bg-orange-600 transition-all duration-200 text-lg" 
-            onClick={() => navigate('/restaurant/menu')}
-          >
-            Manage Menu
-          </button>
-          <button 
-            className="bg-green-600 text-white px-6 py-3 rounded-full font-bold shadow hover:bg-green-700 transition-all duration-200 text-lg" 
-            onClick={() => navigate('/restaurant/reviews')}
-          >
-            See Reviews
-          </button>
-          <button 
-            className="bg-gray-600 text-white px-6 py-3 rounded-full font-bold shadow hover:bg-gray-700 transition-all duration-200 text-lg" 
-            onClick={() => navigate('/restaurant/profile')}
-          >
-            Edit Profile
-          </button>
+      <div className="mb-8">
+        <div className="card bg-gradient-to-br from-primary-50 via-white to-accent-50 border-2 border-primary-100">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 rounded-xl bg-white border-2 border-primary-200">
+                  <FiCoffee className="w-6 h-6 text-primary-600" />
+                </div>
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-extrabold text-dark-primary mb-2">
+                    Welcome back{restaurant?.name ? `, ${restaurant.name}` : ''}!
+                  </h1>
+                  <p className="text-neutral-600 text-base">Here's your restaurant's performance today.</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => navigate('/restaurant/orders')}
+                leftIcon={<FiPackage className="w-4 h-4" />}
+              >
+                View Orders
+              </Button>
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => navigate('/restaurant/menu')}
+                leftIcon={<FiMenu className="w-4 h-4" />}
+              >
+                Manage Menu
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-        <div className="bg-white rounded-2xl shadow p-6 flex flex-col items-center border border-gray-100 hover:scale-105 transition-transform duration-200">
-          <div className="text-3xl mb-2">📦</div>
-          <div className="text-2xl font-bold text-[#16213e]">{totalOrders}</div>
-          <div className="text-gray-500">Total Orders</div>
-        </div>
-        <div className="bg-white rounded-2xl shadow p-6 flex flex-col items-center border border-gray-100 hover:scale-105 transition-transform duration-200">
-          <div className="text-3xl mb-2">💰</div>
-                      <div className="text-2xl font-bold text-[#16213e]">₹{totalRevenue.toFixed(2)}</div>
-          <div className="text-gray-500">Total Revenue</div>
-        </div>
-        <div className="bg-white rounded-2xl shadow p-6 flex flex-col items-center border border-gray-100 hover:scale-105 transition-transform duration-200">
-          <div className="text-3xl mb-2">⏳</div>
-          <div className="text-2xl font-bold text-[#16213e]">{pendingOrders}</div>
-          <div className="text-gray-500">Pending Orders</div>
-        </div>
-        <div className="bg-white rounded-2xl shadow p-6 flex flex-col items-center border border-gray-100 hover:scale-105 transition-transform duration-200">
-          <div className="text-3xl mb-2">✅</div>
-          <div className="text-2xl font-bold text-[#16213e]">{completedOrders}</div>
-          <div className="text-gray-500">Completed Orders</div>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+        {stats.map((stat, idx) => {
+          const Icon = stat.icon;
+          const getColorClasses = (color) => {
+            switch(color) {
+              case 'primary':
+                return {
+                  bg: 'bg-primary-50',
+                  border: 'border-primary-100',
+                  text: 'text-primary-600'
+                };
+              case 'secondary':
+                return {
+                  bg: 'bg-secondary-50',
+                  border: 'border-secondary-100',
+                  text: 'text-secondary-600'
+                };
+              case 'accent':
+                return {
+                  bg: 'bg-accent-50',
+                  border: 'border-accent-100',
+                  text: 'text-accent-600'
+                };
+              default:
+                return {
+                  bg: 'bg-primary-50',
+                  border: 'border-primary-100',
+                  text: 'text-primary-600'
+                };
+            }
+          };
+          const colors = getColorClasses(stat.color);
+          return (
+            <div key={idx} className="card-hover text-center">
+              <div className={`mb-4 inline-flex p-3 rounded-xl border-2 ${colors.bg} ${colors.border}`}>
+                <Icon className={`w-6 h-6 ${colors.text}`} />
+              </div>
+              <div className="text-3xl md:text-4xl font-extrabold text-dark-primary mb-2">{stat.value}</div>
+              <div className={`${colors.text} text-sm font-semibold`}>{stat.label}</div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Recent Orders */}
-      <div className="bg-white rounded-2xl shadow p-8 border border-gray-100 mb-8">
-        <h3 className="text-lg font-bold mb-4">Recent Orders</h3>
+      <div className="card">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-dark-primary flex items-center gap-2">
+            <FiPackage className="w-5 h-5 text-primary-500" />
+            Recent Orders
+          </h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/restaurant/orders')}
+            rightIcon={<FiArrowRight className="w-4 h-4" />}
+          >
+            View All
+          </Button>
+        </div>
         {recentOrders.length === 0 ? (
-          <div className="text-gray-500">No orders available.</div>
+          <div className="text-center py-12 text-neutral-500">
+            <FiPackage className="w-16 h-16 mx-auto mb-4 text-neutral-300" />
+            <p className="text-lg font-medium">No orders yet.</p>
+            <p className="text-sm mt-2">Orders will appear here once customers start ordering.</p>
+          </div>
         ) : (
-          <ul className="divide-y">
-            {recentOrders.map((o, idx) => (
-              <li key={o.id} className="py-3 flex flex-col md:flex-row md:justify-between md:items-center gap-2">
-                <span className="font-semibold text-[#16213e]">Order #{o.id}</span>
-                <span className={
-                  o.status === "Delivered" ? "bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold" :
-                  o.status === "Preparing" ? "bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-semibold" :
-                  o.status === "New" ? "bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold" :
-                  "bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold"
-                }>{o.status}</span>
-                <span className="text-[#16213e] font-bold">₹{o.total || 0}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="space-y-3">
+            {recentOrders.map((o) => {
+              const statusConfig = getStatusConfig(o.status);
+              const StatusIcon = statusConfig.icon;
+              return (
+                <div
+                  key={o.id}
+                  className="flex items-center justify-between p-4 bg-neutral-50 rounded-xl hover:bg-neutral-100 transition-colors border-2 border-neutral-200"
+                >
+                  <div className="flex-1">
+                    <div className="font-bold text-lg text-dark-primary mb-1">Order #{o.id}</div>
+                    <div className="text-sm text-neutral-600">
+                      {new Date(o.date || o.createdAt).toLocaleString()}
+                    </div>
+                    {o.customerName && (
+                      <div className="text-sm text-neutral-600">Customer: {o.customerName}</div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <div className="font-bold text-lg text-dark-primary mb-2">₹{o.total?.toFixed ? o.total.toFixed(2) : o.total || 0}</div>
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border-2 ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}`}>
+                        <StatusIcon className="w-3.5 h-3.5" />
+                        {o.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
@@ -215,9 +317,9 @@ export default function RestaurantLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-neutral-50 flex">
       <Sidebar current={current} open={sidebarOpen} setOpen={setSidebarOpen} />
-      <div className="flex-1 flex flex-col md:ml-72">
+      <div className="flex-1 flex flex-col ml-0 md:ml-72">
         <Header setCurrent={() => {}} />
         <main className="flex-1">
           <Routes>

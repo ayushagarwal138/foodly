@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { FiMenu, FiUser, FiLogOut, FiCoffee, FiSettings } from "react-icons/fi";
 import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function Header({ setCurrent }) {
@@ -9,6 +10,10 @@ export default function Header({ setCurrent }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+
+  const handleSidebarToggle = () => {
+    window.dispatchEvent(new CustomEvent('openSidebar'));
+  };
 
   useEffect(() => {
     const restaurantId = localStorage.getItem("restaurantId");
@@ -68,46 +73,73 @@ export default function Header({ setCurrent }) {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between px-4 md:px-12 py-5 bg-white shadow-lg border-b border-gray-100">
+    <header className="sticky top-0 z-30 flex items-center justify-between px-4 md:px-8 lg:px-12 py-4 bg-white shadow-soft border-b border-neutral-200 backdrop-blur-sm bg-white/95">
       {/* Brand + Hamburger */}
-      <div className="flex items-center gap-4">
-        <button className="md:hidden bg-white rounded-full shadow p-2 border border-gray-200 mr-2" onClick={() => window.dispatchEvent(new CustomEvent('openSidebar'))} aria-label="Open sidebar">
-          <svg className="w-7 h-7 text-[#16213e]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+      <div className="flex items-center gap-3 md:gap-4">
+        <button
+          className="md:hidden p-2 rounded-xl hover:bg-neutral-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+          onClick={handleSidebarToggle}
+          aria-label="Open sidebar"
+        >
+          <FiMenu className="w-6 h-6 text-dark-primary" />
         </button>
-        <span className="bg-white rounded-full p-2 shadow-lg">
-          <svg className="w-8 h-8 text-[#16213e]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M8 12h8M12 8v8" /></svg>
-        </span>
-        <span className="text-xl md:text-2xl font-extrabold text-[#16213e] tracking-tight">Foodly</span>
+        <button
+          onClick={() => navigate('/restaurant')}
+          className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-xl p-1"
+          aria-label="Go to dashboard"
+        >
+          <img
+            src="/logo.jpeg"
+            alt="Foodly Logo"
+            className="w-10 h-10 md:w-12 md:h-12 rounded-full shadow-md border-2 border-neutral-200 transition-transform hover:scale-105"
+          />
+          <span className="hidden sm:block text-xl font-bold text-dark-primary">Foodly</span>
+        </button>
       </div>
+
       {/* Restaurant Name Centered */}
-      <div className="hidden md:block flex-1 text-center">
+      <div className="hidden md:flex flex-1 items-center justify-center">
         {restaurantName && (
-          <span className="text-lg font-semibold text-blue-700">{restaurantName}</span>
+          <div className="flex items-center gap-2 px-4 py-2 bg-accent-50 rounded-xl border-2 border-accent-200">
+            <FiCoffee className="w-5 h-5 text-accent-600" />
+            <span className="text-lg font-semibold text-accent-700">{restaurantName}</span>
+          </div>
         )}
       </div>
+
       {/* User Dropdown */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4">
         <div className="relative" ref={dropdownRef}>
           <button
-            className="w-12 h-12 rounded-full bg-[#16213e] flex items-center justify-center text-white font-bold text-xl shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-dark-primary flex items-center justify-center text-white font-bold text-lg shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 hover:scale-105"
             onClick={() => setOpen((v) => !v)}
+            aria-label="User menu"
+            aria-expanded={open}
           >
-            {initial ? initial : (
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            {initial ? (
+              <span className="text-lg">{initial}</span>
+            ) : (
+              <FiUser className="w-6 h-6" />
             )}
           </button>
           {open && (
-            <div className="absolute right-0 mt-3 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-50 animate-fade-in">
+            <div className="absolute right-0 mt-2 w-48 bg-white border-2 border-neutral-200 rounded-xl shadow-large z-50 animate-scale-in overflow-hidden">
               <button
-                className="block w-full text-left px-5 py-3 hover:bg-gray-100 rounded-t-xl text-[#16213e] font-medium"
-                onClick={() => { setOpen(false); setCurrent && setCurrent("Profile"); }}
+                className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-neutral-50 text-neutral-700 font-medium transition-colors focus:outline-none focus:bg-neutral-50"
+                onClick={() => {
+                  setOpen(false);
+                  navigate('/restaurant/profile');
+                }}
               >
+                <FiSettings className="w-5 h-5 text-neutral-500" />
                 My Profile
               </button>
+              <div className="border-t border-neutral-200" />
               <button
-                className="block w-full text-left px-5 py-3 hover:bg-gray-100 rounded-b-xl text-red-600 font-medium"
+                className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-red-50 text-red-600 font-medium transition-colors focus:outline-none focus:bg-red-50"
                 onClick={handleLogout}
               >
+                <FiLogOut className="w-5 h-5" />
                 Logout
               </button>
             </div>
