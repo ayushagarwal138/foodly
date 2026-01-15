@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { FiHeart, FiShoppingCart, FiPlus, FiMinus, FiTrash2, FiStar, FiClock, FiCoffee, FiAlertCircle, FiCheck } from "react-icons/fi";
 import { useCart } from "./CartContext";
+import Button from "../ui/Button";
 import { api, publicApi, API_ENDPOINTS } from "../../config/api";
 
 export default function RestaurantPage() {
@@ -212,102 +214,258 @@ export default function RestaurantPage() {
     }
   }
 
-  if (loading) return <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100 text-center">Loading...</div>;
-  if (error || !info) return <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100 text-center text-red-600">{error || "Restaurant not found."}</div>;
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8">
+        <div className="card text-center py-12">
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-500"></div>
+            <p className="text-neutral-600 font-medium">Loading restaurant...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !info) {
+    return (
+      <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8">
+        <div className="card border-2 border-red-200 bg-red-50">
+          <div className="flex items-center gap-3 text-red-700">
+            <FiAlertCircle className="w-5 h-5 flex-shrink-0" />
+            <p className="font-medium">{error || "Restaurant not found."}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
+    <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8 animate-fade-in">
       {/* Restaurant Info */}
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold mb-2 text-[#16213e]">{info.name}</h2>
-        <div className="flex gap-4 text-gray-500 mb-1">
-          <span>{info.cuisine}</span>
-          <span>·</span>
-          <span>{info.rating}★</span>
-          <span>·</span>
-          <span>{info.eta} min delivery</span>
+      <div className="card mb-8">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 rounded-xl bg-primary-50 border-2 border-primary-100">
+                <FiCoffee className="w-6 h-6 text-primary-600" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-extrabold text-dark-primary mb-2">{info.name}</h1>
+                <div className="flex flex-wrap items-center gap-3 text-neutral-600 mb-3">
+                  {info.cuisine && (
+                    <>
+                      <span className="font-medium">{info.cuisine}</span>
+                      <span>·</span>
+                    </>
+                  )}
+                  {info.rating && (
+                    <div className="flex items-center gap-1">
+                      <FiStar className="w-4 h-4 text-yellow-500 fill-current" />
+                      <span className="font-semibold">{info.rating}</span>
+                    </div>
+                  )}
+                  {info.eta && (
+                    <>
+                      <span>·</span>
+                      <div className="flex items-center gap-1">
+                        <FiClock className="w-4 h-4" />
+                        <span>{info.eta} min delivery</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+                {info.desc && (
+                  <p className="text-neutral-600 mb-4">{info.desc}</p>
+                )}
+              </div>
+            </div>
+          </div>
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={handleFavoriteRestaurant}
+            disabled={favLoading}
+            leftIcon={<FiHeart className={`w-4 h-4 ${favSuccess ? 'fill-current' : ''}`} />}
+          >
+            {favLoading ? "Adding..." : favSuccess ? "Added!" : "Favorite"}
+          </Button>
         </div>
-        <div className="text-gray-600 mb-2">{info.desc}</div>
-        <button className="mt-2 bg-pink-500 text-white px-4 py-2 rounded-xl font-bold shadow hover:bg-pink-600 transition text-xs" onClick={handleFavoriteRestaurant} disabled={favLoading}>
-          {favLoading ? "Adding..." : favSuccess ? "Added!" : "❤ Favorite"}
-        </button>
-        {favError && <div className="text-xs text-red-600 mt-1">{favError}</div>}
+        {favError && (
+          <div className="mt-4 p-3 bg-red-50 border-2 border-red-200 rounded-xl text-red-700 text-sm flex items-center gap-2">
+            <FiAlertCircle className="w-4 h-4" />
+            {favError}
+          </div>
+        )}
       </div>
       {/* Menu */}
-      <div className="mb-10">
+      <div className="mb-8">
         {Object.entries(menu).map(([cat, items]) => (
-          <div key={cat} className="mb-6">
-            <h3 className="text-xl font-bold mb-3 text-[#16213e]">{cat}</h3>
-            <ul className="divide-y">
-              {(Array.isArray(items) ? items : []).map((item, idx) => (
-                <li key={item.id ? `menu-${item.id}` : `menu-${cat}-${item.name}-${idx}`} className="flex items-center justify-between py-3">
-                  <div>
-                    <span className="font-medium text-gray-800">{item.name}</span>
-                    <span className="ml-2 text-gray-500">₹{item.price.toFixed(2)}</span>
-                    <span className={`ml-2 text-xs px-2 py-1 rounded ${item.veg ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{item.veg ? 'Veg' : 'Non-Veg'}</span>
-                    {!item.isAvailable && (
-                      <span className="ml-2 text-xs px-2 py-1 rounded bg-red-100 text-red-700">Out of Stock</span>
-                    )}
-                    {item.isAvailable && item.showQuantity && item.quantityAvailable !== null && (
-                      <span className="ml-2 text-xs px-2 py-1 rounded bg-blue-100 text-blue-700">
-                        {item.quantityAvailable > 0 ? `${item.quantityAvailable} left` : 'Out of Stock'}
-                      </span>
+          <div key={cat} className="card mb-6">
+            <h2 className="text-xl font-bold mb-6 text-dark-primary flex items-center gap-2">
+              <span className="w-1 h-6 bg-primary-500 rounded-full"></span>
+              {cat}
+            </h2>
+            <div className="space-y-4">
+              {(Array.isArray(items) ? items : []).map((item, idx) => {
+                const isAvailable = item.isAvailable && (!item.showQuantity || item.quantityAvailable > 0);
+                return (
+                  <div
+                    key={item.id ? `menu-${item.id}` : `menu-${cat}-${item.name}-${idx}`}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-neutral-50 rounded-xl border-2 border-neutral-200 hover:border-primary-200 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="font-semibold text-dark-primary text-lg">{item.name}</span>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold border-2 ${
+                          item.veg
+                            ? 'bg-accent-50 text-accent-700 border-accent-200'
+                            : 'bg-red-50 text-red-700 border-red-200'
+                        }`}>
+                          {item.veg ? 'Veg' : 'Non-Veg'}
+                        </span>
+                        {!isAvailable && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-700 border-2 border-red-200">
+                            Out of Stock
+                          </span>
+                        )}
+                        {item.isAvailable && item.showQuantity && item.quantityAvailable !== null && item.quantityAvailable > 0 && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-secondary-50 text-secondary-700 border-2 border-secondary-200">
+                            {item.quantityAvailable} left
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-primary-600">₹{item.price?.toFixed ? item.price.toFixed(2) : item.price}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => addToCart(item)}
+                        disabled={!isAvailable}
+                        leftIcon={<FiShoppingCart className="w-4 h-4" />}
+                      >
+                        {isAvailable ? 'Add to Cart' : 'Unavailable'}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleFavoriteDish(item)}
+                        disabled={favDishLoading === item.id}
+                        className={favDishSuccess === item.id ? 'text-accent-600' : ''}
+                        leftIcon={
+                          favDishLoading === item.id ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                          ) : favDishSuccess === item.id ? (
+                            <FiCheck className="w-4 h-4" />
+                          ) : (
+                            <FiHeart className="w-4 h-4" />
+                          )
+                        }
+                      >
+                        {favDishLoading === item.id ? "Adding..." : favDishSuccess === item.id ? "Added!" : ""}
+                      </Button>
+                    </div>
+                    {favDishError && favDishLoading === item.id && (
+                      <div className="col-span-full text-xs text-red-600 flex items-center gap-1">
+                        <FiAlertCircle className="w-3 h-3" />
+                        {favDishError}
+                      </div>
                     )}
                   </div>
-                  <div className="flex gap-2 items-center">
-                    <button 
-                      className={`px-4 py-2 rounded-xl font-bold shadow transition text-xs ${
-                        item.isAvailable && (!item.showQuantity || item.quantityAvailable > 0) 
-                          ? 'bg-orange-500 text-white hover:bg-orange-600' 
-                          : 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                      }`} 
-                      onClick={() => addToCart(item)}
-                      disabled={!item.isAvailable || (item.showQuantity && item.quantityAvailable <= 0)}
-                    >
-                      {!item.isAvailable || (item.showQuantity && item.quantityAvailable <= 0) ? 'Unavailable' : 'Add to Cart'}
-                    </button>
-                    <button className="bg-pink-500 text-white px-3 py-2 rounded-xl font-bold shadow hover:bg-pink-600 transition text-xs" onClick={() => handleFavoriteDish(item)} disabled={favDishLoading === item.id}>
-                      {favDishLoading === item.id ? "Adding..." : favDishSuccess === item.id ? "Added!" : "❤"}
-                    </button>
-                  </div>
-                  {favDishError && favDishLoading === item.id && <div className="text-xs text-red-600 mt-1">{favDishError}</div>}
-                </li>
-              ))}
-            </ul>
+                );
+              })}
+            </div>
           </div>
         ))}
       </div>
       {/* Cart Summary */}
-      <div className="bg-gray-50 rounded-xl p-6 shadow border border-gray-100">
-        <h3 className="text-lg font-bold mb-3 text-[#16213e]">Cart</h3>
+      <div className="card sticky top-4">
+        <div className="flex items-center gap-2 mb-6">
+          <FiShoppingCart className="w-5 h-5 text-primary-500" />
+          <h3 className="text-lg font-bold text-dark-primary">Cart</h3>
+          {(cart.items || []).length > 0 && (
+            <span className="ml-auto bg-primary-500 text-white text-xs font-bold rounded-full px-2.5 py-1">
+              {(cart.items || []).length}
+            </span>
+          )}
+        </div>
         {(cart.items || []).length === 0 ? (
-          <div className="text-gray-500">Your cart is empty.</div>
+          <div className="text-center py-8 text-neutral-500">
+            <FiShoppingCart className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
+            <p>Your cart is empty.</p>
+          </div>
         ) : (
           <>
-          <ul className="mb-3">
-            {(cart.items || []).map((item, idx) => (
-              <li key={item.menu_item_id ? `cart-${item.menu_item_id}` : `cart-${item.name}-${idx}`} className="flex items-center justify-between mb-2">
-                <div>
-                  <span className="font-medium text-gray-800">{item.name}</span>
-                  <span className="ml-2 text-gray-500">₹{item.price.toFixed(2)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button className="px-2 py-1 bg-gray-200 rounded" onClick={() => updateQty(item, Math.max(1, item.qty - 1))}>-</button>
-                  <span>{item.qty}</span>
-                  <button className="px-2 py-1 bg-gray-200 rounded" onClick={() => updateQty(item, item.qty + 1)}>+</button>
-                  <button className="ml-2 text-red-500 hover:underline text-xs" onClick={() => removeFromCart(item)}>Remove</button>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <button className="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-xl font-bold shadow hover:bg-gray-300 transition text-xs mb-2" onClick={clearCart}>Empty Cart</button>
+            <ul className="space-y-3 mb-4">
+              {(cart.items || []).map((item, idx) => (
+                <li
+                  key={item.menu_item_id ? `cart-${item.menu_item_id}` : `cart-${item.name}-${idx}`}
+                  className="flex items-center justify-between p-3 bg-neutral-50 rounded-xl border border-neutral-200"
+                >
+                  <div className="flex-1">
+                    <div className="font-semibold text-dark-primary mb-1">{item.name}</div>
+                    <div className="text-sm text-neutral-600">₹{item.price?.toFixed ? item.price.toFixed(2) : item.price} each</div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center bg-white rounded-lg border-2 border-neutral-200">
+                      <button
+                        className="p-1.5 hover:bg-neutral-100 rounded-l-lg transition-colors"
+                        onClick={() => updateQty(item, Math.max(1, item.qty - 1))}
+                        aria-label="Decrease quantity"
+                      >
+                        <FiMinus className="w-4 h-4 text-neutral-600" />
+                      </button>
+                      <span className="px-3 py-1 font-semibold text-dark-primary min-w-[2rem] text-center">{item.qty}</span>
+                      <button
+                        className="p-1.5 hover:bg-neutral-100 rounded-r-lg transition-colors"
+                        onClick={() => updateQty(item, item.qty + 1)}
+                        aria-label="Increase quantity"
+                      >
+                        <FiPlus className="w-4 h-4 text-neutral-600" />
+                      </button>
+                    </div>
+                    <button
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      onClick={() => removeFromCart(item)}
+                      aria-label="Remove item"
+                    >
+                      <FiTrash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <Button
+              variant="tertiary"
+              size="sm"
+              fullWidth
+              onClick={clearCart}
+              leftIcon={<FiTrash2 className="w-4 h-4" />}
+              className="mb-4"
+            >
+              Empty Cart
+            </Button>
           </>
         )}
-        <div className="flex justify-between items-center mt-2">
-          <span className="font-bold text-[#16213e]">Total:</span>
-          <span className="font-bold text-lg text-[#16213e]">₹{total.toFixed(2)}</span>
+        <div className="border-t-2 border-neutral-200 pt-4 mt-4">
+          <div className="flex justify-between items-center mb-4">
+            <span className="font-bold text-lg text-dark-primary">Total:</span>
+            <span className="font-extrabold text-2xl text-primary-600">₹{total?.toFixed ? total.toFixed(2) : total}</span>
+          </div>
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
+            disabled={(cart.items || []).length === 0}
+            onClick={() => navigate('/customer/cart')}
+            leftIcon={<FiShoppingCart className="w-5 h-5" />}
+          >
+            Go to Cart
+          </Button>
         </div>
-        <button className="mt-4 w-full bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow hover:bg-blue-700 transition disabled:opacity-50" disabled={(cart.items || []).length === 0} onClick={() => window.location.href = '/customer/cart'}>Go to Cart</button>
       </div>
     </div>
   );
