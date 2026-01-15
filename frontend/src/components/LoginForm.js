@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { FiShoppingCart, FiCoffee, FiSettings, FiUser, FiEye, FiEyeOff, FiAlertCircle } from "react-icons/fi";
 import Toast from "./Toast";
+import Button from "./ui/Button";
 import { api, API_ENDPOINTS } from "../config/api";
 
 const ROLES = [
-  { label: "Customer", value: "Customer", icon: "🛒" },
-  { label: "Restaurant", value: "Restaurant", icon: "🍽️" },
-  { label: "Admin", value: "Admin", icon: "⚙️" },
+  { label: "Customer", value: "Customer", icon: FiShoppingCart, color: "primary" },
+  { label: "Restaurant", value: "Restaurant", icon: FiCoffee, color: "accent" },
+  { label: "Admin", value: "Admin", icon: FiSettings, color: "secondary" },
 ];
 
 export default function LoginForm({ role: initialRole = "Customer" }) {
@@ -118,132 +120,147 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
     }
   };
 
-  const getRoleIcon = () => {
-    const found = ROLES.find(r => r.value === role);
-    return found ? found.icon : "👤";
+  const getRoleConfig = () => {
+    return ROLES.find(r => r.value === role) || ROLES[0];
   };
+
+  const roleConfig = getRoleConfig();
+  const RoleIcon = roleConfig.icon;
 
   return (
     <>
       <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: "", type: "info" })} />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="max-w-md w-full space-y-8">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center p-4 py-12">
+        <div className="max-w-md w-full animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-large border border-neutral-100 p-8 md:p-10">
             {/* Role Switcher */}
-            <div className="flex justify-center mb-6">
-              {ROLES.map(r => (
-                <button
-                  key={r.value}
-                  type="button"
-                  className={`flex items-center px-4 py-2 mx-1 rounded-full border transition-colors duration-200 text-sm font-medium focus:outline-none ${role === r.value ? "bg-blue-600 text-white border-blue-600" : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-blue-100"}`}
-                  onClick={() => setRole(r.value)}
-                >
-                  <span className="mr-2">{r.icon}</span> {r.label}
-                </button>
-              ))}
+            <div className="flex justify-center gap-2 mb-8 flex-wrap">
+              {ROLES.map(r => {
+                const Icon = r.icon;
+                const isActive = role === r.value;
+                return (
+                  <button
+                    key={r.value}
+                    type="button"
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 transition-all duration-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                      isActive
+                        ? `bg-${r.color}-500 text-white border-${r.color}-500 shadow-md scale-105`
+                        : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50"
+                    }`}
+                    onClick={() => setRole(r.value)}
+                    aria-pressed={isActive}
+                    aria-label={`Switch to ${r.label} login`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{r.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Header */}
             <div className="text-center mb-8">
-              <div className="text-4xl mb-4">{getRoleIcon()}</div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-100 to-secondary-100 mb-6 animate-scale-in">
+                <RoleIcon className="w-10 h-10 text-primary-600" />
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-3">
                 Welcome Back
-              </h2>
-              <p className="text-gray-600">
+              </h1>
+              <p className="text-neutral-600 text-base">
                 Sign in to your {role.toLowerCase()} account
               </p>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {/* Username/Email Field */}
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="username" className="block text-sm font-semibold text-neutral-700 mb-2">
                   Username or Email
                 </label>
                 <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <FiUser className="w-5 h-5 text-neutral-400" />
+                  </div>
                   <input
                     id="username"
                     name="username"
                     type="text"
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                    className="input pl-12 pr-4"
                     placeholder="Enter your username or email"
                     value={formData.username}
                     onChange={handleChange}
+                    aria-label="Username or email"
+                    aria-required="true"
                   />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <span className="text-gray-400">👤</span>
-                  </div>
                 </div>
               </div>
 
               {/* Password Field */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-semibold text-neutral-700 mb-2">
                   Password
                 </label>
                 <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
                   <input
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                    className="input pl-12 pr-12"
                     placeholder="Enter your password"
                     value={formData.password}
                     onChange={handleChange}
+                    aria-label="Password"
+                    aria-required="true"
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-neutral-400 hover:text-neutral-600 transition-colors focus:outline-none focus:text-primary-500"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
-                    <span className="text-gray-400">
-                      {showPassword ? "🙈" : "👁️"}
-                    </span>
+                    {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
 
               {/* Error Message */}
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <span className="text-red-400">⚠️</span>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-red-800">{error}</p>
-                    </div>
+                <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 animate-slide-in" role="alert">
+                  <div className="flex items-start gap-3">
+                    <FiAlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm font-medium text-red-800">{error}</p>
                   </div>
                 </div>
               )}
 
               {/* Submit Button */}
-              <button
+              <Button
                 type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
+                variant="primary"
+                size="lg"
+                fullWidth
+                isLoading={loading}
+                className="mt-6"
               >
-                {loading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Signing in...
-                  </div>
-                ) : (
-                  "Sign In"
-                )}
-              </button>
+                Sign In
+              </Button>
             </form>
 
             {/* Footer */}
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+            <div className="mt-8 text-center pt-6 border-t border-neutral-200">
+              <p className="text-sm text-neutral-600">
                 Don't have an account?{" "}
                 <Link 
                   to="/signup" 
-                  className="font-medium text-blue-600 hover:text-blue-500 transition duration-200"
+                  className="font-semibold text-primary-600 hover:text-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded"
                 >
                   Create one here
                 </Link>

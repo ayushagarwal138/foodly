@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { FiMenu, FiSearch, FiShoppingCart, FiUser, FiX, FiLogOut,  } from "react-icons/fi";
 import { useCart } from "./CartContext";
 import { api, API_ENDPOINTS } from "../../config/api";
 
@@ -76,78 +77,138 @@ export default function Header({ setCurrent }) {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-white shadow-lg border-b border-gray-100 px-4 md:px-12 py-3 flex items-center justify-between w-full">
+    <header className="sticky top-0 z-30 bg-white shadow-soft border-b border-neutral-200 px-4 md:px-8 lg:px-12 py-3 flex items-center justify-between w-full backdrop-blur-sm bg-white/95">
       {/* Logo and Hamburger */}
-      <div className="flex items-center gap-4">
-        <button className="md:hidden p-2 rounded-lg hover:bg-gray-100" onClick={() => setMobileMenu(v => !v)}>
-          <svg className="w-7 h-7 text-[#16213e]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+      <div className="flex items-center gap-3 md:gap-4">
+        <button
+          className="md:hidden p-2 rounded-xl hover:bg-neutral-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+          onClick={() => setMobileMenu(v => !v)}
+          aria-label="Toggle mobile menu"
+        >
+          <FiMenu className="w-6 h-6 text-dark-primary" />
         </button>
-        <img src="/logo.jpeg" alt="Foodly Logo" className="w-10 h-10 rounded-full shadow border border-gray-200" onClick={() => navigate('/customer')} style={{cursor:'pointer'}} />
+        <button
+          onClick={() => navigate('/customer')}
+          className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-xl p-1"
+          aria-label="Go to dashboard"
+        >
+          <img
+            src="/logo.jpeg"
+            alt="Foodly Logo"
+            className="w-10 h-10 md:w-12 md:h-12 rounded-full shadow-md border-2 border-neutral-200 transition-transform hover:scale-105"
+          />
+          <span className="hidden sm:block text-xl font-bold text-dark-primary">Foodly</span>
+        </button>
       </div>
+
       {/* Search Bar */}
-      <form className="flex-1 max-w-xl mx-4 hidden md:flex" onSubmit={e => { e.preventDefault(); }}>
-        <input
-          className="w-full px-5 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400 text-lg bg-gray-50 shadow-sm"
-          placeholder="Search for food, restaurants, or cuisines..."
-        />
-        <button type="submit" className="-ml-10 z-10 text-orange-500 hover:text-orange-700">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35" /></svg>
-        </button>
+      <form
+        className="flex-1 max-w-xl mx-4 hidden md:flex"
+        onSubmit={e => {
+          e.preventDefault();
+        }}
+      >
+        <div className="relative w-full">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <FiSearch className="w-5 h-5 text-neutral-400" />
+          </div>
+          <input
+            className="w-full pl-12 pr-4 py-2.5 rounded-full border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base bg-neutral-50 shadow-sm transition-all"
+            placeholder="Search for food, restaurants, or cuisines..."
+            aria-label="Search"
+          />
+        </div>
       </form>
+
       {/* Actions */}
-      <div className="flex items-center gap-4 md:gap-6">
+      <div className="flex items-center gap-3 md:gap-4">
         {/* Cart Icon */}
         <button
-          className="relative w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-[#16213e] text-2xl shadow hover:bg-orange-100 transition"
+          className="relative p-2.5 rounded-xl bg-neutral-100 hover:bg-primary-100 text-dark-primary transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 group"
           onClick={() => navigate('/customer/cart')}
           title="Go to Cart"
+          aria-label={`Cart with ${cartCount} items`}
         >
-          <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A1 1 0 007 17h10a1 1 0 00.95-.68L21 13M7 13V6a1 1 0 011-1h5a1 1 0 011 1v7" /></svg>
+          <FiShoppingCart className="w-6 h-6 group-hover:scale-110 transition-transform" />
           {cartCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-bold rounded-full px-2 py-0.5">{cartCount}</span>
+            <span className="absolute -top-1 -right-1 bg-primary-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md animate-bounce-subtle">
+              {cartCount}
+            </span>
           )}
         </button>
+
         {/* User Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
-            className="w-12 h-12 rounded-full bg-[#16213e] flex items-center justify-center text-white font-bold text-xl shadow focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-dark-primary flex items-center justify-center text-white font-bold text-lg shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 hover:scale-105"
             onClick={() => setOpen((v) => !v)}
+            aria-label="User menu"
+            aria-expanded={open}
           >
-            {initial ? initial : (
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            {initial ? (
+              <span className="text-lg">{initial}</span>
+            ) : (
+              <FiUser className="w-6 h-6" />
             )}
           </button>
           {open && (
-            <div className="absolute right-0 mt-3 w-44 bg-white border border-gray-200 rounded-xl shadow-lg z-50 animate-fade-in">
+            <div className="absolute right-0 mt-2 w-48 bg-white border-2 border-neutral-200 rounded-xl shadow-large z-50 animate-scale-in overflow-hidden">
               <button
-                className="block w-full text-left px-5 py-3 hover:bg-gray-100 rounded-t-xl text-[#16213e] font-medium"
-                onClick={() => { setOpen(false); navigate('/customer/account'); }}
+                className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-neutral-50 text-neutral-700 font-medium transition-colors focus:outline-none focus:bg-neutral-50"
+                onClick={() => {
+                  setOpen(false);
+                  navigate('/customer/account');
+                }}
               >
+                <FiUser className="w-5 h-5 text-neutral-500" />
                 My Profile
               </button>
+              <div className="border-t border-neutral-200" />
               <button
-                className="block w-full text-left px-5 py-3 hover:bg-gray-100 rounded-b-xl text-red-600 font-medium"
+                className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-red-50 text-red-600 font-medium transition-colors focus:outline-none focus:bg-red-50"
                 onClick={handleLogout}
               >
+                <FiLogOut className="w-5 h-5" />
                 Logout
               </button>
             </div>
           )}
         </div>
       </div>
+
       {/* Mobile Search Bar */}
       {mobileMenu && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 z-40 flex flex-col">
-          <div className="bg-white shadow-lg p-4 flex items-center gap-4">
-            <img src="/logo.jpeg" alt="Foodly Logo" className="w-10 h-10 rounded-full shadow border border-gray-200" />
-            <form className="flex-1" onSubmit={e => { e.preventDefault(); setMobileMenu(false); }}>
-              <input
-                className="w-full px-5 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400 text-lg bg-gray-50 shadow-sm"
-                placeholder="Search for food, restaurants, or cuisines..."
-              />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex flex-col animate-fade-in">
+          <div className="bg-white shadow-large p-4 flex items-center gap-3">
+            <img
+              src="/logo.jpeg"
+              alt="Foodly Logo"
+              className="w-10 h-10 rounded-full shadow-md border-2 border-neutral-200"
+            />
+            <form
+              className="flex-1"
+              onSubmit={e => {
+                e.preventDefault();
+                setMobileMenu(false);
+              }}
+            >
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiSearch className="w-5 h-5 text-neutral-400" />
+                </div>
+                <input
+                  className="w-full pl-10 pr-4 py-2.5 rounded-full border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base bg-neutral-50"
+                  placeholder="Search for food, restaurants..."
+                  aria-label="Search"
+                />
+              </div>
             </form>
-            <button className="ml-2 p-2 rounded-lg hover:bg-gray-100" onClick={() => setMobileMenu(false)}>
-              <svg className="w-7 h-7 text-[#16213e]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            <button
+              className="ml-2 p-2 rounded-xl hover:bg-neutral-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+              onClick={() => setMobileMenu(false)}
+              aria-label="Close menu"
+            >
+              <FiX className="w-6 h-6 text-dark-primary" />
             </button>
           </div>
         </div>

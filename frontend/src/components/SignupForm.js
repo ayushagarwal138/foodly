@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { FiShoppingCart, FiCoffee, FiUser, FiMail, FiEye, FiEyeOff, FiAlertCircle, FiCheck, FiX } from "react-icons/fi";
 import Toast from "./Toast";
+import Button from "./ui/Button";
 import { api, API_ENDPOINTS } from "../config/api";
 
 export default function SignupForm() {
@@ -136,204 +138,239 @@ export default function SignupForm() {
 
   const getRoleIcon = () => {
     switch (formData.role) {
-      case "CUSTOMER": return "🛒";
-      case "RESTAURANT": return "🍽️";
-      default: return "👤";
+      case "CUSTOMER": return FiShoppingCart;
+      case "RESTAURANT": return FiCoffee;
+      default: return FiUser;
     }
   };
 
   const passwordStrength = getPasswordStrength(formData.password);
+  const RoleIcon = getRoleIcon();
 
   return (
     <>
       <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: "", type: "info" })} />
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 flex items-center justify-center p-4">
-        <div className="max-w-md w-full space-y-8">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+      <div className="min-h-screen bg-gradient-to-br from-accent-50 via-white to-primary-50 flex items-center justify-center p-4 py-12">
+        <div className="max-w-2xl w-full animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-large border border-neutral-100 p-8 md:p-10">
             {/* Header */}
             <div className="text-center mb-8">
-              <div className="text-4xl mb-4">{getRoleIcon()}</div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-accent-100 to-primary-100 mb-6 animate-scale-in">
+                <RoleIcon className="w-10 h-10 text-accent-600" />
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-3">
                 Create Account
-              </h2>
-              <p className="text-gray-600">
+              </h1>
+              <p className="text-neutral-600 text-base">
                 Join us as a {formData.role.toLowerCase()}
               </p>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {/* Username Field */}
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="username" className="block text-sm font-semibold text-neutral-700 mb-2">
                   Username
                 </label>
                 <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <FiUser className="w-5 h-5 text-neutral-400" />
+                  </div>
                   <input
                     id="username"
                     name="username"
                     type="text"
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                    className="input pl-12 pr-4"
                     placeholder="Choose a username"
                     value={formData.username}
                     onChange={handleChange}
+                    aria-label="Username"
+                    aria-required="true"
                   />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <span className="text-gray-400">👤</span>
-                  </div>
                 </div>
               </div>
 
               {/* Email Field */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-semibold text-neutral-700 mb-2">
                   Email Address
                 </label>
                 <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <FiMail className="w-5 h-5 text-neutral-400" />
+                  </div>
                   <input
                     id="email"
                     name="email"
                     type="email"
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                    className="input pl-12 pr-4"
                     placeholder="Enter your email"
                     value={formData.email}
                     onChange={handleChange}
+                    aria-label="Email address"
+                    aria-required="true"
                   />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <span className="text-gray-400">📧</span>
-                  </div>
                 </div>
               </div>
 
               {/* Role Selection */}
               <div>
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="role" className="block text-sm font-semibold text-neutral-700 mb-2">
                   Account Type
                 </label>
-                <select
-                  id="role"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                >
-                  <option value="CUSTOMER">Customer</option>
-                  <option value="RESTAURANT">Restaurant</option>
-                </select>
+                <div className="relative">
+                  <select
+                    id="role"
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    className="input appearance-none pr-10 cursor-pointer"
+                    aria-label="Account type"
+                  >
+                    <option value="CUSTOMER">Customer</option>
+                    <option value="RESTAURANT">Restaurant</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
 
               {/* Restaurant-specific fields */}
               {formData.role === "RESTAURANT" && (
-                <div className="space-y-4 border-t pt-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Restaurant Information</h3>
+                <div className="space-y-5 border-t border-neutral-200 pt-6 mt-6 animate-slide-in">
+                  <h3 className="text-lg font-bold text-neutral-900 flex items-center gap-2">
+                    <FiCoffee className="w-5 h-5 text-accent-500" />
+                    Restaurant Information
+                  </h3>
                   
                   {/* Restaurant Name */}
                   <div>
-                    <label htmlFor="restaurantName" className="block text-sm font-medium text-gray-700 mb-2">
-                      Restaurant Name *
+                    <label htmlFor="restaurantName" className="block text-sm font-semibold text-neutral-700 mb-2">
+                      Restaurant Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       id="restaurantName"
                       name="restaurantName"
                       type="text"
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                      className="input"
                       placeholder="Enter restaurant name"
                       value={formData.restaurantName}
                       onChange={handleChange}
+                      aria-label="Restaurant name"
+                      aria-required="true"
                     />
                   </div>
 
                   {/* Restaurant Address */}
                   <div>
-                    <label htmlFor="restaurantAddress" className="block text-sm font-medium text-gray-700 mb-2">
-                      Restaurant Address *
+                    <label htmlFor="restaurantAddress" className="block text-sm font-semibold text-neutral-700 mb-2">
+                      Restaurant Address <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       id="restaurantAddress"
                       name="restaurantAddress"
                       required
-                      rows="2"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                      rows="3"
+                      className="input resize-none"
                       placeholder="Enter restaurant address"
                       value={formData.restaurantAddress}
                       onChange={handleChange}
+                      aria-label="Restaurant address"
+                      aria-required="true"
                     />
                   </div>
 
                   {/* Restaurant Phone */}
                   <div>
-                    <label htmlFor="restaurantPhone" className="block text-sm font-medium text-gray-700 mb-2">
-                      Restaurant Phone *
+                    <label htmlFor="restaurantPhone" className="block text-sm font-semibold text-neutral-700 mb-2">
+                      Restaurant Phone <span className="text-red-500">*</span>
                     </label>
                     <input
                       id="restaurantPhone"
                       name="restaurantPhone"
                       type="tel"
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                      className="input"
                       placeholder="Enter restaurant phone"
                       value={formData.restaurantPhone}
                       onChange={handleChange}
+                      aria-label="Restaurant phone"
+                      aria-required="true"
                     />
                   </div>
 
                   {/* Cuisine Type */}
                   <div>
-                    <label htmlFor="cuisineType" className="block text-sm font-medium text-gray-700 mb-2">
-                      Cuisine Type *
+                    <label htmlFor="cuisineType" className="block text-sm font-semibold text-neutral-700 mb-2">
+                      Cuisine Type <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      id="cuisineType"
-                      name="cuisineType"
-                      value={formData.cuisineType}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                    >
-                      <option value="">Select cuisine type</option>
-                      <option value="Italian">Italian</option>
-                      <option value="Chinese">Chinese</option>
-                      <option value="Japanese">Japanese</option>
-                      <option value="Indian">Indian</option>
-                      <option value="Mexican">Mexican</option>
-                      <option value="American">American</option>
-                      <option value="Thai">Thai</option>
-                      <option value="Mediterranean">Mediterranean</option>
-                      <option value="Other">Other</option>
-                    </select>
+                    <div className="relative">
+                      <select
+                        id="cuisineType"
+                        name="cuisineType"
+                        value={formData.cuisineType}
+                        onChange={handleChange}
+                        className="input appearance-none pr-10 cursor-pointer"
+                        aria-label="Cuisine type"
+                        aria-required="true"
+                      >
+                        <option value="">Select cuisine type</option>
+                        <option value="Italian">Italian</option>
+                        <option value="Chinese">Chinese</option>
+                        <option value="Japanese">Japanese</option>
+                        <option value="Indian">Indian</option>
+                        <option value="Mexican">Mexican</option>
+                        <option value="American">American</option>
+                        <option value="Thai">Thai</option>
+                        <option value="Mediterranean">Mediterranean</option>
+                        <option value="Other">Other</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Description */}
                   <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="description" className="block text-sm font-semibold text-neutral-700 mb-2">
                       Restaurant Description
                     </label>
                     <textarea
                       id="description"
                       name="description"
                       rows="3"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                      className="input resize-none"
                       placeholder="Describe your restaurant"
                       value={formData.description}
                       onChange={handleChange}
+                      aria-label="Restaurant description"
                     />
                   </div>
 
                   {/* Opening Hours */}
                   <div>
-                    <label htmlFor="openingHours" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="openingHours" className="block text-sm font-semibold text-neutral-700 mb-2">
                       Opening Hours
                     </label>
                     <input
                       id="openingHours"
                       name="openingHours"
                       type="text"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                      className="input"
                       placeholder="e.g., 10:00 AM - 10:00 PM"
                       value={formData.openingHours}
                       onChange={handleChange}
+                      aria-label="Opening hours"
                     />
                   </div>
                 </div>
@@ -341,54 +378,82 @@ export default function SignupForm() {
 
               {/* Password Field */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-semibold text-neutral-700 mb-2">
                   Password
                 </label>
                 <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
                   <input
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                    className="input pl-12 pr-12"
                     placeholder="Create a strong password"
                     value={formData.password}
                     onChange={handleChange}
+                    aria-label="Password"
+                    aria-required="true"
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-neutral-400 hover:text-neutral-600 transition-colors focus:outline-none focus:text-primary-500"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
-                    <span className="text-gray-400">
-                      {showPassword ? "🙈" : "👁️"}
-                    </span>
+                    {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
                   </button>
                 </div>
                 
                 {/* Password Strength Indicator */}
                 {formData.password && (
-                  <div className="mt-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 bg-neutral-200 rounded-full h-2 overflow-hidden">
                         <div
                           className={`h-2 rounded-full transition-all duration-300 ${
                             passwordStrength.color === "red" ? "bg-red-500" :
                             passwordStrength.color === "orange" ? "bg-orange-500" :
                             passwordStrength.color === "yellow" ? "bg-yellow-500" :
-                            "bg-green-500"
+                            "bg-accent-500"
                           }`}
                           style={{ width: `${(passwordStrength.strength / 4) * 100}%` }}
-                        ></div>
+                        />
                       </div>
-                      <span className={`text-xs font-medium ${
+                      <span className={`text-xs font-semibold ${
                         passwordStrength.color === "red" ? "text-red-600" :
                         passwordStrength.color === "orange" ? "text-orange-600" :
                         passwordStrength.color === "yellow" ? "text-yellow-600" :
-                        "text-green-600"
+                        "text-accent-600"
                       }`}>
                         {passwordStrength.text}
                       </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {[
+                        { key: 'minLength', label: '8+ characters' },
+                        { key: 'hasUpperCase', label: 'Uppercase' },
+                        { key: 'hasLowerCase', label: 'Lowercase' },
+                        { key: 'hasNumbers', label: 'Number' },
+                        { key: 'hasSpecialChar', label: 'Special char' },
+                      ].map(({ key, label }) => {
+                        const validation = validatePassword(formData.password);
+                        const isValid = validation[key];
+                        return (
+                          <div key={key} className="flex items-center gap-1.5">
+                            {isValid ? (
+                              <FiCheck className="w-3.5 h-3.5 text-accent-500" />
+                            ) : (
+                              <FiX className="w-3.5 h-3.5 text-neutral-400" />
+                            )}
+                            <span className={isValid ? "text-accent-600" : "text-neutral-500"}>{label}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -396,81 +461,85 @@ export default function SignupForm() {
 
               {/* Confirm Password Field */}
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-neutral-700 mb-2">
                   Confirm Password
                 </label>
                 <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
                   <input
                     id="confirmPassword"
                     name="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                    className="input pl-12 pr-12"
                     placeholder="Confirm your password"
                     value={formData.confirmPassword}
                     onChange={handleChange}
+                    aria-label="Confirm password"
+                    aria-required="true"
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-neutral-400 hover:text-neutral-600 transition-colors focus:outline-none focus:text-primary-500"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                   >
-                    <span className="text-gray-400">
-                      {showConfirmPassword ? "🙈" : "👁️"}
-                    </span>
+                    {showConfirmPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
                   </button>
                 </div>
                 
                 {/* Password Match Indicator */}
                 {formData.confirmPassword && (
-                  <div className="mt-1">
-                    <span className={`text-xs ${
-                      formData.password === formData.confirmPassword ? "text-green-600" : "text-red-600"
-                    }`}>
-                      {formData.password === formData.confirmPassword ? "✓ Passwords match" : "✗ Passwords don't match"}
-                    </span>
+                  <div className="mt-2 flex items-center gap-2">
+                    {formData.password === formData.confirmPassword ? (
+                      <>
+                        <FiCheck className="w-4 h-4 text-accent-500" />
+                        <span className="text-xs font-medium text-accent-600">Passwords match</span>
+                      </>
+                    ) : (
+                      <>
+                        <FiX className="w-4 h-4 text-red-500" />
+                        <span className="text-xs font-medium text-red-600">Passwords don't match</span>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
 
               {/* Error Message */}
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <span className="text-red-400">⚠️</span>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-red-800">{error}</p>
-                    </div>
+                <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 animate-slide-in" role="alert">
+                  <div className="flex items-start gap-3">
+                    <FiAlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm font-medium text-red-800">{error}</p>
                   </div>
                 </div>
               )}
 
               {/* Submit Button */}
-              <button
+              <Button
                 type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
+                variant="success"
+                size="lg"
+                fullWidth
+                isLoading={loading}
+                className="mt-6"
               >
-                {loading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Creating account...
-                  </div>
-                ) : (
-                  "Create Account"
-                )}
-              </button>
+                Create Account
+              </Button>
             </form>
 
             {/* Footer */}
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+            <div className="mt-8 text-center pt-6 border-t border-neutral-200">
+              <p className="text-sm text-neutral-600">
                 Already have an account?{" "}
                 <Link 
                   to="/customer/login" 
-                  className="font-medium text-blue-600 hover:text-blue-500 transition duration-200"
+                  className="font-semibold text-primary-600 hover:text-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded"
                 >
                   Sign in here
                 </Link>
