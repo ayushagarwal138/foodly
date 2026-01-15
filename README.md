@@ -16,13 +16,13 @@ The architecture ensures data consistency using **ACID-compliant transactions** 
 ---
 
 ## 📸 Application Previews
-| Customer Ordering | Restaurant Browsing |
+| Admin Dashboard | Restaurant Dashboard |
 |:---:|:---:|
-| <img src="docs/customer-home.png" alt="Customer View" width="400"/> | <img src="https://drive.google.com/uc?export=view&id=1tC-KVQ81I4L6XB2AYR7P9ZvTbdpzIZDP" alt="Restaurant Dashboard" width="400"/> |
+| <img src="https://drive.google.com/uc?id=1QYj-Au2320jvtfMimyWpQbmuZyqnTBKx" alt="Customer View" width="400"/> | <img src="https://drive.google.com/uc?id=1NKMaEqjgeSpb_CBvG4laRpzxUo8NsXM9" alt="Restaurant Dashboard" width="400"/> |
 
-| Real-time Tracking | Admin Analytics |
+| Real-time Order Monitoring | User Orders |
 |:---:|:---:|
-| <img src="docs/tracking.png" alt="Tracking" width="400"/> | <img src="https://drive.google.com/uc?export=view&id=16LgY16AohM-rf3SzDyb8K7gnJHxnSoSc" alt="Mobile View" width="400"/> |
+| <img src="https://drive.google.com/uc?id=13kkn0IksU7J1f5pUMmA5oIF6V0tUvo5Z" alt="Tracking" width="400"/> | <img src="https://drive.google.com/uc?id=18BlqIdAahM52l2CW1qiMB9FHPBgP50xF" alt="Mobile View" width="400"/> |
 
 ---
 
