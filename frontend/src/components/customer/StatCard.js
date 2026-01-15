@@ -1,12 +1,16 @@
 import React from "react";
 
-export default function StatCard({ icon, label, value, sublabel }) {
+export default function StatCard({ icon, label, value, sublabel, color = "primary" }) {
   return (
-    <div className="flex flex-col items-center justify-center bg-white rounded-2xl shadow-lg p-7 min-w-[140px] border border-gray-100 hover:shadow-2xl transition">
-      <div className="text-3xl mb-2">{icon}</div>
-      <div className="text-2xl font-extrabold text-[#16213e]">{value}</div>
-      <div className="text-gray-500 text-sm font-medium">{label}</div>
-      {sublabel && <div className="text-xs text-gray-400 mt-1">{sublabel}</div>}
+    <div className="card-hover flex flex-col items-center justify-center p-6 md:p-8 text-center group">
+      <div className={`mb-4 p-3 rounded-xl bg-${color}-50 border-2 border-${color}-100 group-hover:scale-110 transition-transform duration-200`}>
+        {icon}
+      </div>
+      <div className="text-3xl md:text-4xl font-extrabold text-dark-primary mb-2">{value}</div>
+      <div className={`text-${color}-600 text-sm font-semibold mb-1`}>{label}</div>
+      {sublabel && (
+        <div className="text-xs text-neutral-500 mt-1">{sublabel}</div>
+      )}
     </div>
   );
 } 
