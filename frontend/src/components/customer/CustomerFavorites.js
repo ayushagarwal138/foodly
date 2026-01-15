@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FiHeart, FiCoffee, FiUtensils, FiStar, FiTrash2, FiEye, FiAlertCircle, FiX } from "react-icons/fi";
+import { FiHeart, FiCoffee, FiStar, FiTrash2, FiEye, FiAlertCircle, FiX } from "react-icons/fi";
+import { FaUtensils } from "react-icons/fa";
 import Button from "../ui/Button";
 import { api, API_ENDPOINTS } from "../../config/api";
 
@@ -141,7 +142,7 @@ export default function CustomerFavorites() {
             }`}
           >
             <div className="flex items-center gap-2">
-              <FiUtensils className="w-4 h-4" />
+              <FaUtensils className="w-4 h-4" />
               Dishes ({favorites.dishes.length})
             </div>
           </button>
@@ -211,7 +212,7 @@ export default function CustomerFavorites() {
                     className="card-hover overflow-hidden"
                   >
                     <div className="h-48 bg-gradient-to-br from-accent-100 to-primary-100 flex items-center justify-center">
-                      <FiUtensils className="w-16 h-16 text-accent-400" />
+                      <FaUtensils className="w-16 h-16 text-accent-400" />
                     </div>
                     <div className="p-5">
                       <h3 className="text-lg font-bold text-dark-primary mb-1">{dish.name}</h3>
