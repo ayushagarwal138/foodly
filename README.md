@@ -18,11 +18,11 @@ The architecture ensures data consistency using **ACID-compliant transactions** 
 ## 📸 Application Previews
 | Admin Dashboard | Restaurant Dashboard |
 |:---:|:---:|
-| <img src="https://drive.google.com/uc?id=1QYj-Au2320jvtfMimyWpQbmuZyqnTBKx" alt="Customer View" width="400"/> | <img src="https://drive.google.com/uc?id=1NKMaEqjgeSpb_CBvG4laRpzxUo8NsXM9" alt="Restaurant Dashboard" width="400"/> |
+| <img src="https://drive.google.com/uc?id=1QYj-Au2320jvtfMimyWpQbmuZyqnTBKx" alt="Customer View" width="400"/> | <img src="https://drive.google.com/uc?export=view&id=1rdTgVAn49H2mS_a_ITmxvgSAIL5HVwrK" alt="Restaurant Dashboard" width="400"/> |
 
-| Real-time Order Monitoring | User Orders |
+| Customer Dashboard | Cart View |
 |:---:|:---:|
-| <img src="https://drive.google.com/uc?id=13kkn0IksU7J1f5pUMmA5oIF6V0tUvo5Z" alt="Tracking" width="400"/> | <img src="https://drive.google.com/uc?id=18BlqIdAahM52l2CW1qiMB9FHPBgP50xF" alt="Mobile View" width="400"/> |
+| <img src="https://drive.google.com/uc?export=view&id=18gxkI9Ev--pWZ6ZijKzUK_fhEz6rgs2N" alt="Tracking" width="400"/> | <img src="https://drive.google.com/uc?export=view&id=1ribZSTf8ro59BeNjDvNZUxipPGS6O9HX" alt="Mobile View" width="400"/> |
 
 ---
 
