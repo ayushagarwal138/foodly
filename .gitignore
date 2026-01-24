@@ -44,3 +44,6 @@ node_modules/
 *.key
 *.crt
 ssl/ 
+
+# Extra documentation files (keep only main README.md)
+*_README.md
