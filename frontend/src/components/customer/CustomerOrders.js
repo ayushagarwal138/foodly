@@ -10,7 +10,6 @@ export default function CustomerOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reviewOrder, setReviewOrder] = useState(null);
-  const token = localStorage.getItem("token");
 
   const fetchOrders = useCallback(async () => {
     setError("");
@@ -31,21 +30,21 @@ export default function CustomerOrders() {
       await fetchOrders();
       setLoading(false);
     }
-    if (token) {
+    if (localStorage.getItem("userId")) {
       initialFetch();
     }
-  }, [token, fetchOrders]);
+  }, [fetchOrders]);
 
   // Polling for new orders
   useEffect(() => {
-    if (!token) return;
+    if (!localStorage.getItem("userId")) return;
 
     const pollInterval = setInterval(() => {
       fetchOrders();
     }, 5000); // Poll every 5 seconds
 
     return () => clearInterval(pollInterval);
-  }, [token, fetchOrders]);
+  }, [fetchOrders]);
 
   // Check for newly delivered orders that need reviews
   useEffect(() => {

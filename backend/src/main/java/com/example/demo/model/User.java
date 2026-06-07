@@ -1,6 +1,7 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -14,6 +15,11 @@ public class User {
     private String email;
     private String role; // CUSTOMER, RESTAURANT, ADMIN
     private Boolean isBlocked = false; // Track if user is blocked
+    private String provider;
+    private String providerSubject;
+    private Boolean emailVerified = false;
+    private LocalDateTime lastLoginAt;
+    private LocalDateTime disabledAt;
 
     // Getters and setters
     public Long getId() { return id; }
@@ -29,4 +35,19 @@ public class User {
     
     public Boolean getIsBlocked() { return isBlocked; }
     public void setIsBlocked(Boolean isBlocked) { this.isBlocked = isBlocked; }
+
+    public String getProvider() { return provider; }
+    public void setProvider(String provider) { this.provider = provider; }
+
+    public String getProviderSubject() { return providerSubject; }
+    public void setProviderSubject(String providerSubject) { this.providerSubject = providerSubject; }
+
+    public Boolean getEmailVerified() { return emailVerified; }
+    public void setEmailVerified(Boolean emailVerified) { this.emailVerified = emailVerified; }
+
+    public LocalDateTime getLastLoginAt() { return lastLoginAt; }
+    public void setLastLoginAt(LocalDateTime lastLoginAt) { this.lastLoginAt = lastLoginAt; }
+
+    public LocalDateTime getDisabledAt() { return disabledAt; }
+    public void setDisabledAt(LocalDateTime disabledAt) { this.disabledAt = disabledAt; }
 } 

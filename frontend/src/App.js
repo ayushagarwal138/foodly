@@ -12,6 +12,7 @@ import CustomerDashboard from "./components/customer/CustomerDashboard";
 import RestaurantLayout from "./components/restaurant/RestaurantLayout";
 import AdminLayout from "./components/admin/AdminLayout";
 import { CartProvider } from "./components/customer/CartContext";
+import { AuthProvider, RequireRole } from "./features/auth/AuthContext";
 
 function UserPage() {
   return <div>User Page</div>;
@@ -33,16 +34,19 @@ function SignupPage() {
 function App() {
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <Routes>
-        <Route path="/" element={<Navigate to="/customer/login" />} />
-        <Route path="/customer/login" element={<LoginForm role="Customer" />} />
-        <Route path="/signup" element={<SignupForm />} />
-        <Route path="/restaurant/login" element={<LoginForm role="Restaurant" />} />
-        <Route path="/admin/login" element={<LoginForm role="Admin" />} />
-        <Route path="/customer/*" element={<CartProvider><CustomerDashboard /></CartProvider>} />
-        <Route path="/restaurant/*" element={<RestaurantLayout />} />
-        <Route path="/admin/*" element={<AdminLayout />} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Navigate to="/customer/login" />} />
+          <Route path="/auth/callback" element={<Navigate to="/customer" replace />} />
+          <Route path="/customer/login" element={<LoginForm role="Customer" />} />
+          <Route path="/signup" element={<SignupForm />} />
+          <Route path="/restaurant/login" element={<LoginForm role="Restaurant" />} />
+          <Route path="/admin/login" element={<LoginForm role="Admin" />} />
+          <Route path="/customer/*" element={<RequireRole role="CUSTOMER" loginPath="/customer/login"><CartProvider><CustomerDashboard /></CartProvider></RequireRole>} />
+          <Route path="/restaurant/*" element={<RequireRole role="RESTAURANT" loginPath="/restaurant/login"><RestaurantLayout /></RequireRole>} />
+          <Route path="/admin/*" element={<RequireRole role="ADMIN" loginPath="/admin/login"><AdminLayout /></RequireRole>} />
+        </Routes>
+      </AuthProvider>
     </Router>
   );
 }

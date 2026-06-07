@@ -11,7 +11,6 @@ export default function CustomerFavorites() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("restaurants");
   const userId = localStorage.getItem("userId");
-  const token = localStorage.getItem("token");
 
   const fetchFavorites = async () => {
     setError("");
@@ -52,7 +51,7 @@ export default function CustomerFavorites() {
   useEffect(() => {
     async function initialFetch() {
       setLoading(true);
-      if (userId && token) {
+      if (userId) {
         await fetchFavorites();
       } else {
         setError("Please log in to view your favorites.");
@@ -61,12 +60,12 @@ export default function CustomerFavorites() {
       setLoading(false);
     }
     initialFetch();
-  }, [userId, token]);
+  }, [userId]);
 
   const navigate = useNavigate();
 
   // Show login message if not authenticated
-  if (!userId || !token) {
+  if (!userId) {
     return (
       <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8">
         <div className="card text-center py-12">

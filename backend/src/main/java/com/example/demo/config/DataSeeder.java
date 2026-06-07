@@ -9,6 +9,8 @@ import com.example.demo.repository.RestaurantRepository;
 import com.example.demo.repository.CustomerRepository;
 import com.example.demo.repository.WishlistRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,7 +18,14 @@ import java.text.Normalizer;
 import java.util.regex.Pattern;
 
 @Configuration
+@ConditionalOnProperty(name = "app.seed.enabled", havingValue = "true")
 public class DataSeeder {
+    @Value("${app.seed.admin-password}")
+    private String adminPassword;
+
+    @Value("${app.seed.restaurant-password}")
+    private String restaurantPassword;
+
     @Bean
     public CommandLineRunner seedData(
             RestaurantRepository restaurantRepo, 
@@ -25,25 +34,27 @@ public class DataSeeder {
             WishlistRepository wishlistRepo,
             PasswordEncoder passwordEncoder) {
         return args -> {
+            if (adminPassword == null || adminPassword.isBlank() || restaurantPassword == null || restaurantPassword.isBlank()) {
+                throw new IllegalStateException("Seed passwords must be provided when app.seed.enabled=true");
+            }
+
             // Create default admin user
             if (customerRepo.findByUsername("admin").isEmpty()) {
                 User admin = new User();
                 admin.setUsername("admin");
-                admin.setPassword(passwordEncoder.encode("admin123"));
+                admin.setPassword(passwordEncoder.encode(adminPassword));
                 admin.setEmail("admin@foodly.com");
                 admin.setRole("ADMIN");
                 customerRepo.save(admin);
-                System.out.println("Default admin user created: username=admin, password=admin123");
             }
             // Create default restaurant user
             if (customerRepo.findByUsername("restaurant").isEmpty()) {
                 User restaurantUser = new User();
                 restaurantUser.setUsername("restaurant");
-                restaurantUser.setPassword(passwordEncoder.encode("restaurant123"));
+                restaurantUser.setPassword(passwordEncoder.encode(restaurantPassword));
                 restaurantUser.setEmail("restaurant@foodly.com");
                 restaurantUser.setRole("RESTAURANT");
                 customerRepo.save(restaurantUser);
-                System.out.println("Default restaurant user created: username=restaurant, password=restaurant123");
             }
 
             // Create sample restaurants for testing
@@ -102,7 +113,6 @@ public class DataSeeder {
                 if (restaurant.getSlug() == null || restaurant.getSlug().isEmpty()) {
                     restaurant.setSlug(slugify(restaurant.getName()));
                     restaurantRepo.save(restaurant);
-                    System.out.println("Updated restaurant '" + restaurant.getName() + "' with slug: " + restaurant.getSlug());
                 }
             });
 

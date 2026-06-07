@@ -1,22 +1,18 @@
 import React, { useState, useEffect } from "react";
+import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function WishlistPage() {
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const userId = localStorage.getItem("userId");
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
     async function fetchWishlist() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch(`/api/customers/${userId}/wishlist`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error("Failed to fetch wishlist");
-        const data = await res.json();
+        const data = await api.get(API_ENDPOINTS.CUSTOMER_WISHLIST(userId));
         setWishlist(data);
       } catch (err) {
         setError(err.message);
@@ -24,19 +20,12 @@ export default function WishlistPage() {
         setLoading(false);
       }
     }
-    if (userId && token) fetchWishlist();
-  }, [userId, token]);
+    if (userId) fetchWishlist();
+  }, [userId]);
 
   async function remove(item) {
     try {
-      await fetch(`/api/customers/${userId}/wishlist`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(item)
-      });
+      await apiRequestDeleteWithBody(API_ENDPOINTS.CUSTOMER_REMOVE_FROM_WISHLIST(userId), item);
       setWishlist(prev => prev.filter(f => f !== item));
     } catch (err) {
       setError("Failed to remove item");
@@ -91,4 +80,8 @@ export default function WishlistPage() {
       )}
     </div>
   );
-} 
+}
+
+async function apiRequestDeleteWithBody(endpoint, data) {
+  return api.delete(endpoint, data);
+}

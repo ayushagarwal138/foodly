@@ -30,7 +30,6 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const restaurantId = localStorage.getItem("restaurantId");
-  const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
   async function fetchOrders() {
@@ -58,13 +57,13 @@ function DashboardContent() {
   useEffect(() => {
     async function initialFetch() {
       setLoading(true);
-      if (restaurantId && token) {
+      if (restaurantId) {
         await Promise.all([fetchOrders(), fetchRestaurant()]);
       }
       setLoading(false);
     }
     initialFetch();
-  }, [restaurantId, token]);
+  }, [restaurantId]);
 
   const getStatusConfig = (status) => {
     const configs = {
@@ -274,7 +273,6 @@ export default function RestaurantLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const restaurantId = localStorage.getItem("restaurantId");
-  const token = localStorage.getItem("token");
 
   // Find the current label based on the path (longest match wins)
   const current = pathToLabel.find(({ path }) => location.pathname.startsWith(path))?.label || "Dashboard";
@@ -292,7 +290,7 @@ export default function RestaurantLayout() {
 
   // If restaurantId is not set, try to fetch it from the API
   useEffect(() => {
-    if (!restaurantId && token && userRole === "RESTAURANT") {
+    if (!restaurantId && userRole === "RESTAURANT") {
       const userId = localStorage.getItem("userId");
       if (userId) {
         // Try to get restaurant by owner
@@ -309,12 +307,7 @@ export default function RestaurantLayout() {
           });
       }
     }
-  }, [restaurantId, token, userRole]);
-
-  // Check authentication - allow restaurant users even if restaurantId is not set yet
-  if (!token || userRole !== "RESTAURANT") {
-    return <Navigate to="/restaurant/login" replace />;
-  }
+  }, [restaurantId, userRole]);
 
   return (
     <div className="min-h-screen bg-neutral-50 flex">

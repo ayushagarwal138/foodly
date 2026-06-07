@@ -9,7 +9,6 @@ export default function SupportPage() {
   const [sending, setSending] = useState(false);
   const [restaurantId, setRestaurantId] = useState(null);
   const userId = localStorage.getItem("userId");
-  const token = localStorage.getItem("token");
 
   const fetchRestaurantId = useCallback(async () => {
     try {
@@ -76,10 +75,10 @@ export default function SupportPage() {
       await fetchRestaurantId();
       setLoading(false);
     }
-    if (userId && token) {
+    if (userId) {
       initialFetch();
     }
-  }, [userId, token, fetchRestaurantId]);
+  }, [userId, fetchRestaurantId]);
 
   // Fetch messages when restaurant ID is available
   useEffect(() => {

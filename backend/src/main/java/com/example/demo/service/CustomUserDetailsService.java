@@ -36,11 +36,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         
         // Add ROLE_ prefix for Spring Security and ensure role is uppercase
         String role = customer.getRole() != null ? customer.getRole().toUpperCase() : "CUSTOMER";
-        System.out.println("Loading user: " + customer.getUsername() + " (looked up by: " + username + ") with role: " + role);
         return new org.springframework.security.core.userdetails.User(
                 customer.getUsername(),
-                customer.getPassword(),
+                customer.getPassword() != null ? customer.getPassword() : "",
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
         );
     }
-} 
+}

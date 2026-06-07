@@ -7,7 +7,6 @@ export default function SupportChatPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const userId = localStorage.getItem("userId");
-  const token = localStorage.getItem("token");
   const messagesEndRef = useRef(null);
   const params = new URLSearchParams(window.location.search);
   const orderId = params.get("orderId");
@@ -30,17 +29,17 @@ export default function SupportChatPage() {
       await fetchMessages();
       setLoading(false);
     }
-    if (userId && token && orderId && restaurantId) {
+    if (userId && orderId && restaurantId) {
       initialFetch();
     }
-  }, [userId, token, orderId, restaurantId]);
+  }, [userId, orderId, restaurantId]);
 
   // Polling for new messages
   useEffect(() => {
-    if (!userId || !token || !orderId || !restaurantId) return;
+    if (!userId || !orderId || !restaurantId) return;
     const interval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
     return () => clearInterval(interval); // Cleanup on component unmount
-  }, [userId, token, orderId, restaurantId]);
+  }, [userId, orderId, restaurantId]);
 
   async function sendMessage(e) {
     e.preventDefault();

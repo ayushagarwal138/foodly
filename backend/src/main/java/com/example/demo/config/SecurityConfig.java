@@ -16,6 +16,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.Arrays;
 import com.example.demo.config.JwtRequestFilter;
+import com.example.demo.security.GoogleOAuth2SuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -23,9 +24,14 @@ import com.example.demo.config.JwtRequestFilter;
 public class SecurityConfig implements WebMvcConfigurer {
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
+    @Autowired
+    private GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler;
     
     @Value("${cors.allowed-origins:http://localhost:3000}")
     private String allowedOrigins;
+
+    @Value("${app.oauth2.google.enabled:false}")
+    private boolean googleOAuthEnabled;
     
     @Override
     public void addCorsMappings(CorsRegistry registry) {
@@ -51,32 +57,39 @@ public class SecurityConfig implements WebMvcConfigurer {
             .csrf().disable()
             .authorizeHttpRequests()
                 .requestMatchers("/", "/health", "/actuator/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**").permitAll()
+                .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants/slug/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants/*/menu/customer").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants/*/reviews").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants/*/analytics").hasRole("RESTAURANT")
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants/*/orders").hasRole("RESTAURANT")
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants/*/menu").hasRole("RESTAURANT")
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants/by-owner/**").hasRole("RESTAURANT")
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants/*/analytics").hasAnyRole("RESTAURANT", "RESTAURANT_OWNER")
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants/*/orders").hasAnyRole("RESTAURANT", "RESTAURANT_OWNER")
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants/*/menu").hasAnyRole("RESTAURANT", "RESTAURANT_OWNER")
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants/by-owner/**").hasAnyRole("RESTAURANT", "RESTAURANT_OWNER")
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants/*").permitAll()
-                .requestMatchers("/api/support/**").hasAnyRole("CUSTOMER", "RESTAURANT")
+                .requestMatchers("/api/support/**").hasAnyRole("CUSTOMER", "RESTAURANT", "RESTAURANT_OWNER")
                 .requestMatchers("/api/cart/**").hasRole("CUSTOMER")
                 .requestMatchers("/api/customers/**").hasRole("CUSTOMER")
-                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/restaurants/**").hasRole("RESTAURANT")
-                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/restaurants/**").hasRole("RESTAURANT")
-                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/restaurants/**").hasRole("RESTAURANT")
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/restaurants/**").hasAnyRole("RESTAURANT", "RESTAURANT_OWNER")
+                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/restaurants/**").hasAnyRole("RESTAURANT", "RESTAURANT_OWNER")
+                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/restaurants/**").hasAnyRole("RESTAURANT", "RESTAURANT_OWNER")
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/reviews/**").hasRole("CUSTOMER")
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/reviews/restaurant/**").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/reviews/**").hasAnyRole("CUSTOMER", "RESTAURANT")
-                .requestMatchers("/api/orders/**").hasAnyRole("CUSTOMER", "RESTAURANT")
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/reviews/**").hasAnyRole("CUSTOMER", "RESTAURANT", "RESTAURANT_OWNER")
+                .requestMatchers("/api/orders/**").hasAnyRole("CUSTOMER", "RESTAURANT", "RESTAURANT_OWNER")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/offers/admin/**").hasRole("ADMIN")
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/offers/**").permitAll()
                 .anyRequest().authenticated()
            .and()
            .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+
+        if (googleOAuthEnabled) {
+            http.oauth2Login(oauth -> oauth.successHandler(googleOAuth2SuccessHandler));
+        }
+
         return http.build();
     }
     
@@ -84,16 +97,14 @@ public class SecurityConfig implements WebMvcConfigurer {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Parse allowed origins from property
         String[] origins = allowedOrigins.split(",");
         for (int i = 0; i < origins.length; i++) {
-            origins[i] = origins[i].trim(); // Remove any whitespace
+            origins[i] = origins[i].trim();
+            if ("*".equals(origins[i])) {
+                throw new IllegalStateException("Wildcard CORS origins are not allowed when credentials are enabled");
+            }
         }
-        
-        System.out.println("=== CORS Configuration Debug ===");
-        System.out.println("Raw allowed origins: " + allowedOrigins);
-        System.out.println("Parsed origins: " + Arrays.toString(origins));
-        
+
         configuration.setAllowedOrigins(Arrays.asList(origins));
         
         // Allow all common HTTP methods
@@ -113,8 +124,6 @@ public class SecurityConfig implements WebMvcConfigurer {
         
         // Add exposed headers
         configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        
-        System.out.println("CORS configuration created successfully");
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

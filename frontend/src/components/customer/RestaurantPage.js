@@ -14,7 +14,6 @@ export default function RestaurantPage() {
   const [error, setError] = useState("");
   const { cart, setCart } = useCart();
   const userId = localStorage.getItem("userId");
-  const token = localStorage.getItem("token");
   const [favLoading, setFavLoading] = useState(false);
   const [favError, setFavError] = useState("");
   const [favSuccess, setFavSuccess] = useState(false);
@@ -63,8 +62,7 @@ export default function RestaurantPage() {
       alert("Restaurant info is missing id!");
       return;
     }
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!userId) {
       // Redirect to login instead of showing alert
       navigate("/customer/login");
       return;
@@ -152,7 +150,7 @@ export default function RestaurantPage() {
   const total = (cart.items || []).reduce((sum, i) => sum + i.price * i.qty, 0);
 
   async function handleFavoriteRestaurant() {
-    if (!userId || !token || !info) {
+    if (!userId || !info) {
       navigate("/customer/login");
       return;
     }
@@ -183,7 +181,7 @@ export default function RestaurantPage() {
   }
 
   async function handleFavoriteDish(item) {
-    if (!userId || !token || !info) {
+    if (!userId || !info) {
       navigate("/customer/login");
       return;
     }

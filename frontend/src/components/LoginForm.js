@@ -4,6 +4,7 @@ import { FiShoppingCart, FiCoffee, FiSettings, FiUser, FiEye, FiEyeOff, FiAlertC
 import Toast from "./Toast";
 import Button from "./ui/Button";
 import { api, API_ENDPOINTS } from "../config/api";
+import { useAuth } from "../features/auth/AuthContext";
 
 const ROLES = [
   { label: "Customer", value: "Customer", icon: FiShoppingCart, color: "primary" },
@@ -22,6 +23,7 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState({ message: "", type: "info" });
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
 
   const handleChange = (e) => {
     setFormData({
@@ -63,22 +65,8 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
         return;
       }
       
-      // Check if token exists (required for successful login)
-      if (!data.token) {
-        // Clear any existing authentication data on login failure
-        localStorage.removeItem('token');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('restaurantId');
-        setError("Login failed: No token received");
-        setToast({ message: "Login failed: No token received", type: "error" });
-        setLoading(false);
-        return;
-      }
-      
-      // Store authentication data
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("userRole", role.toUpperCase());
+      // Store non-secret profile hints only. The real session lives in a secure HttpOnly cookie.
+      localStorage.setItem("userRole", data.role || role.toUpperCase());
       if (data.id) localStorage.setItem("userId", data.id);
       
       // Clear previous info
@@ -92,6 +80,8 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
       if (data.restaurantId) {
         localStorage.setItem("restaurantId", data.restaurantId);
       }
+
+      await refreshUser();
       
       setToast({ message: "Login successful!", type: "success" });
       
@@ -251,6 +241,17 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
                 className="mt-6"
               >
                 Sign In
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="lg"
+                fullWidth
+                onClick={() => {
+                  window.location.href = `${process.env.REACT_APP_API_BASE_URL || ""}${API_ENDPOINTS.GOOGLE_LOGIN}`;
+                }}
+              >
+                Continue with Google
               </Button>
             </form>
 

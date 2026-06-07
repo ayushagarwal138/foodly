@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiMenu, FiUser, FiLogOut, FiCoffee, FiSettings } from "react-icons/fi";
-import { api, API_ENDPOINTS } from "../../config/api";
+import { api, API_ENDPOINTS, clearAuth } from "../../config/api";
 
 export default function Header({ setCurrent }) {
   const [username, setUsername] = useState(localStorage.getItem("username") || "");
@@ -17,10 +17,9 @@ export default function Header({ setCurrent }) {
 
   useEffect(() => {
     const restaurantId = localStorage.getItem("restaurantId");
-    const token = localStorage.getItem("token");
     const userRole = localStorage.getItem("userRole");
     
-    if (restaurantId && token && userRole && userRole.toUpperCase() === "RESTAURANT") {
+    if (restaurantId && userRole && userRole.toUpperCase() === "RESTAURANT") {
       // Use the centralized API configuration
       api.get(API_ENDPOINTS.RESTAURANTS + `/${restaurantId}`)
         .then(profile => {
@@ -61,15 +60,14 @@ export default function Header({ setCurrent }) {
     };
   }, [open]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("restaurantName");
-    localStorage.removeItem("restaurantId");
-    localStorage.removeItem("username");
-    localStorage.removeItem("email");
-    window.location.href = "/restaurant/login";
+  const handleLogout = async () => {
+    try {
+      await api.post(API_ENDPOINTS.LOGOUT, {});
+    } finally {
+      clearAuth();
+      localStorage.removeItem("restaurantName");
+      window.location.href = "/restaurant/login";
+    }
   };
 
   return (

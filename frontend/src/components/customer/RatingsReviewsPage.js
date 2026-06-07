@@ -6,7 +6,6 @@ export default function RatingsReviewsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const userId = localStorage.getItem("userId");
-  const token = localStorage.getItem("token");
 
   const fetchReviews = async () => {
     setError("");
@@ -27,21 +26,21 @@ export default function RatingsReviewsPage() {
       await fetchReviews();
       setLoading(false);
     }
-    if (userId && token) {
+    if (userId) {
       initialFetch();
     }
-  }, [userId, token]);
+  }, [userId]);
 
   // Polling for new reviews
   useEffect(() => {
-    if (!userId || !token) return;
+    if (!userId) return;
 
     const pollInterval = setInterval(() => {
       fetchReviews();
     }, 5000); // Poll every 5 seconds
 
     return () => clearInterval(pollInterval);
-  }, [userId, token]);
+  }, [userId]);
 
   if (loading) return <div className="p-10 text-center">Loading...</div>;
   if (error) return <div className="p-10 text-center text-red-600">{error}</div>;

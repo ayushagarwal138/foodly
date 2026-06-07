@@ -4,12 +4,14 @@ import com.example.demo.model.Offer;
 import com.example.demo.repository.OfferRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
 @Component
+@ConditionalOnProperty(name = "app.seed.enabled", havingValue = "true")
 public class DataInitializer implements CommandLineRunner {
 
     @Autowired
@@ -41,7 +43,6 @@ public class DataInitializer implements CommandLineRunner {
         };
         
         offerRepository.saveAll(Arrays.asList(offers));
-        System.out.println("✅ Sample offers initialized successfully!");
     }
     
     private Offer createOffer(String type, String title, String description, String discount, String maxDiscount, 

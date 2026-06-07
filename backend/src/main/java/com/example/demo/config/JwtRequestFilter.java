@@ -2,6 +2,7 @@ package com.example.demo.config;
 
 import com.example.demo.service.CustomUserDetailsService;
 import com.example.demo.service.JwtUtil;
+import com.example.demo.security.JwtCookieService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -10,30 +11,36 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.stream.Collectors;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
+    private static final Logger logger = LoggerFactory.getLogger(JwtRequestFilter.class);
+
     @Autowired
     private CustomUserDetailsService userDetailsService;
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private JwtCookieService jwtCookieService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         String path = request.getRequestURI();
-        System.out.println("JwtRequestFilter path: " + path);
         
         // Skip JWT validation for auth endpoints and health checks
-        if (path.startsWith("/auth/") || path.equals("/") || path.equals("/health") || path.startsWith("/actuator/")) {
-            System.out.println("Skipping JWT validation for path: " + path);
+        if (path.startsWith("/auth/login") || path.startsWith("/auth/signup") || path.startsWith("/auth/google")
+                || path.startsWith("/oauth2/") || path.startsWith("/login/oauth2/")
+                || path.equals("/") || path.equals("/health") || path.startsWith("/actuator/")
+                || path.startsWith("/swagger-ui") || path.startsWith("/api-docs")) {
             chain.doFilter(request, response);
             return;
         }
@@ -43,19 +50,18 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         String jwt = null;
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             jwt = authHeader.substring(7);
-            // Only try to parse if jwt is not null/empty/"null"/"undefined"
-            if (jwt != null && !jwt.trim().isEmpty() && !"null".equals(jwt) && !"undefined".equals(jwt)) {
-                try {
-                    username = jwtUtil.extractUsername(jwt);
-                    System.out.println("Extracted username from token: " + username);
-                    String role = jwtUtil.extractRole(jwt);
-                    System.out.println("Extracted role from token: " + role);
-                } catch (Exception e) {
-                    // Optionally log and ignore, do not throw
-                    System.out.println("Invalid JWT: " + e.getMessage());
-                }
+        } else {
+            jwt = jwtCookieService.readToken(request).orElse(null);
+        }
+
+        if (jwt != null && !jwt.trim().isEmpty() && !"null".equals(jwt) && !"undefined".equals(jwt)) {
+            try {
+                username = jwtUtil.extractUsername(jwt);
+            } catch (Exception e) {
+                logger.debug("Invalid JWT on path {}", path);
             }
         }
+
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
@@ -63,23 +69,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    // Debug log: print username and authorities
-                    System.out.println("Authenticated user: " + userDetails.getUsername());
-                    System.out.println("Authorities: " + userDetails.getAuthorities().stream().map(Object::toString).collect(Collectors.joining(", ")));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                } else {
-                    System.out.println("JWT token validation failed for user: " + username);
                 }
             } catch (UsernameNotFoundException e) {
-                System.out.println("User not found or blocked: " + username + " - " + e.getMessage());
-                // Don't set authentication, let Spring Security handle the 403/401
+                logger.debug("JWT subject no longer maps to an active user");
             } catch (Exception e) {
-                System.out.println("Error loading user details: " + e.getMessage());
-                e.printStackTrace();
+                logger.warn("Unable to authenticate JWT subject");
             }
-        } else if (path.startsWith("/api/admin/") || path.startsWith("/api/offers/admin/")) {
-            // For admin endpoints, log if no authentication is present
-            System.out.println("Admin endpoint accessed without authentication: " + path);
         }
         chain.doFilter(request, response);
     }

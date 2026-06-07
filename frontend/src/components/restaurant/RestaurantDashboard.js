@@ -7,7 +7,6 @@ export default function RestaurantDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const restaurantId = localStorage.getItem("restaurantId");
-  const token = localStorage.getItem("token");
 
   async function fetchOrders() {
     try {
@@ -36,13 +35,13 @@ export default function RestaurantDashboard() {
   useEffect(() => {
     async function initialFetch() {
       setLoading(true);
-      if (restaurantId && token) {
+      if (restaurantId) {
         await Promise.all([fetchOrders(), fetchRestaurant()]);
       }
       setLoading(false);
     }
     initialFetch();
-  }, [restaurantId, token]);
+  }, [restaurantId]);
 
   if (loading) return <div className="p-10 text-center">Loading...</div>;
   if (error) return <div className="p-10 text-center text-red-600">{error}</div>;

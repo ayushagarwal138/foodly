@@ -25,8 +25,6 @@ const pathToLabel = [
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
-  const userRole = localStorage.getItem("userRole");
 
   // Find the current label based on the path (longest match wins)
   const current = pathToLabel.find(({ path }) => location.pathname.startsWith(path))?.label || "Dashboard";
@@ -38,11 +36,6 @@ export default function AdminLayout() {
     window.addEventListener('openSidebar', handleOpenSidebar);
     return () => window.removeEventListener('openSidebar', handleOpenSidebar);
   }, []);
-
-  // Check authentication
-  if (!token || userRole !== "ADMIN") {
-    return <Navigate to="/admin/login" replace />;
-  }
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">

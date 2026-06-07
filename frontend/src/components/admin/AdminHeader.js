@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { api, API_ENDPOINTS, clearAuth } from "../../config/api";
 
 export default function AdminHeader({ setSidebarOpen, sidebarOpen }) {
   const [username, setUsername] = useState(localStorage.getItem("username") || "Admin");
@@ -15,18 +16,15 @@ export default function AdminHeader({ setSidebarOpen, sidebarOpen }) {
   useEffect(() => {
     if (!username) {
       const userId = localStorage.getItem("userId");
-      const token = localStorage.getItem("token");
-      if (userId && token) {
-        fetch(`/api/admin/users/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-          .then(res => res.ok ? res.json() : null)
+      if (userId) {
+        api.get(API_ENDPOINTS.ADMIN_USER_BY_ID(userId))
           .then(profile => {
             if (profile && profile.username) {
               setUsername(profile.username);
               localStorage.setItem("username", profile.username);
             }
-          });
+          })
+          .catch(() => {});
       }
     }
   }, [username]);
@@ -61,9 +59,13 @@ export default function AdminHeader({ setSidebarOpen, sidebarOpen }) {
     setNotificationCount(mockNotifications.length);
   }, []);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await api.post(API_ENDPOINTS.LOGOUT, {});
+    } finally {
+      clearAuth();
+      navigate("/admin/login");
+    }
   };
 
   const handleProfileSettings = () => {

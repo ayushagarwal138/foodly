@@ -15,7 +15,6 @@ export default function DashboardMain() {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const userId = localStorage.getItem("userId");
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
     async function fetchData() {
@@ -37,8 +36,8 @@ export default function DashboardMain() {
         setLoading(false);
       }
     }
-    if (token && userId) fetchData();
-  }, [token, userId]);
+    if (userId) fetchData();
+  }, [userId]);
 
   // Calculate stats
   const totalOrders = orders.length;

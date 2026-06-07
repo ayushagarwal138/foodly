@@ -13,7 +13,7 @@ import java.util.function.Function;
 
 @Service
 public class JwtUtil {
-    @Value("${jwt.secret:your-super-secret-jwt-key-change-this-in-production}")
+    @Value("${jwt.secret}")
     private String SECRET_KEY;
     
     @Value("${jwt.expiration:86400000}")

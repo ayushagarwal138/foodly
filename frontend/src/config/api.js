@@ -1,110 +1,131 @@
 // API Configuration and utility functions
-// Use environment variable for API base URL, fallback to relative URLs for local development
-// Updated to use correct backend URL: https://foodly-backend-uv7m.onrender.com
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://foodly-backend-uv7m.onrender.com';
+// Use REACT_APP_API_BASE_URL in deployed environments. Empty fallback lets CRA proxy work locally.
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '';
+const API_PREFIX = '/api/v1';
+const AUTH_PREFIX = `${API_PREFIX}/auth`;
 
 // API endpoints
 export const API_ENDPOINTS = {
   // Authentication
-  LOGIN: '/auth/login',
-  SIGNUP: '/auth/signup',
+  LOGIN: `${AUTH_PREFIX}/login`,
+  SIGNUP: `${AUTH_PREFIX}/signup`,
+  AUTH_ME: `${AUTH_PREFIX}/me`,
+  LOGOUT: `${AUTH_PREFIX}/logout`,
+  GOOGLE_LOGIN: `${AUTH_PREFIX}/google`,
   
   // Customer endpoints
-  CUSTOMER_PROFILE: (id) => `/api/customers/${id}`,
-  CUSTOMER_FAVORITES: (id) => `/api/customers/${id}/favorites`,
-  CUSTOMER_WISHLIST: (id) => `/api/customers/${id}/wishlist`,
-  CUSTOMER_ADD_TO_WISHLIST: (id) => `/api/customers/${id}/wishlist`,
-  CUSTOMER_REMOVE_FROM_WISHLIST: (id) => `/api/customers/${id}/wishlist`,
-  CUSTOMER_UPDATE_PROFILE: (id) => `/api/customers/${id}`,
-  CUSTOMER_DELETE: (id) => `/api/customers/${id}`,
+  CUSTOMER_PROFILE: (id) => `${API_PREFIX}/customers/${id}`,
+  CUSTOMER_FAVORITES: (id) => `${API_PREFIX}/customers/${id}/favorites`,
+  CUSTOMER_WISHLIST: (id) => `${API_PREFIX}/customers/${id}/wishlist`,
+  CUSTOMER_ADD_TO_WISHLIST: (id) => `${API_PREFIX}/customers/${id}/wishlist`,
+  CUSTOMER_REMOVE_FROM_WISHLIST: (id) => `${API_PREFIX}/customers/${id}/wishlist`,
+  CUSTOMER_UPDATE_PROFILE: (id) => `${API_PREFIX}/customers/${id}`,
+  CUSTOMER_DELETE: (id) => `${API_PREFIX}/customers/${id}`,
   
   // Restaurant endpoints
-  RESTAURANTS: '/api/restaurants',
-  RESTAURANT_BY_SLUG: (slug) => `/api/restaurants/slug/${slug}`,
-  RESTAURANT_BY_OWNER: (id) => `/api/restaurants/by-owner/${id}`,
-  RESTAURANT_MENU: (id) => `/api/restaurants/${id}/menu`,
-  RESTAURANT_MENU_CUSTOMER: (id) => `/api/restaurants/${id}/menu/customer`,
-  RESTAURANT_ORDERS: (id) => `/api/restaurants/${id}/orders`,
-  RESTAURANT_ANALYTICS: (id) => `/api/restaurants/${id}/analytics`,
-  RESTAURANT_REVIEWS: (id) => `/api/reviews/restaurant/${id}`,
+  RESTAURANTS: `${API_PREFIX}/restaurants`,
+  RESTAURANT_BY_SLUG: (slug) => `${API_PREFIX}/restaurants/slug/${slug}`,
+  RESTAURANT_BY_OWNER: (id) => `${API_PREFIX}/restaurants/by-owner/${id}`,
+  RESTAURANT_MENU: (id) => `${API_PREFIX}/restaurants/${id}/menu`,
+  RESTAURANT_MENU_CUSTOMER: (id) => `${API_PREFIX}/restaurants/${id}/menu/customer`,
+  RESTAURANT_ORDERS: (id) => `${API_PREFIX}/restaurants/${id}/orders`,
+  RESTAURANT_ANALYTICS: (id) => `${API_PREFIX}/restaurants/${id}/analytics`,
+  RESTAURANT_REVIEWS: (id) => `${API_PREFIX}/reviews/restaurant/${id}`,
   
   // Menu items
-  MENU_ITEM_AVAILABILITY: (restaurantId, itemId) => `/api/restaurants/${restaurantId}/menu/${itemId}/availability`,
-  MENU_ITEM_UPDATE: (restaurantId, itemId) => `/api/restaurants/${restaurantId}/menu/${itemId}`,
-  MENU_ITEM_CAN_DELETE: (restaurantId, itemId) => `/api/restaurants/${restaurantId}/menu/${itemId}/can-delete`,
-  MENU_ITEM_DELETE: (restaurantId, itemId) => `/api/restaurants/${restaurantId}/menu/${itemId}`,
+  MENU_ITEM_AVAILABILITY: (restaurantId, itemId) => `${API_PREFIX}/restaurants/${restaurantId}/menu/${itemId}/availability`,
+  MENU_ITEM_UPDATE: (restaurantId, itemId) => `${API_PREFIX}/restaurants/${restaurantId}/menu/${itemId}`,
+  MENU_ITEM_CAN_DELETE: (restaurantId, itemId) => `${API_PREFIX}/restaurants/${restaurantId}/menu/${itemId}/can-delete`,
+  MENU_ITEM_DELETE: (restaurantId, itemId) => `${API_PREFIX}/restaurants/${restaurantId}/menu/${itemId}`,
   
   // Orders
-  ORDERS: '/api/orders',
-  MY_ORDERS: '/api/orders/my',
-  ORDERS_BY_RESTAURANT: (restaurantId) => `/api/orders/restaurant/${restaurantId}`,
-  ORDER_BY_ID: (id) => `/api/orders/${id}`,
-  ORDER_STATUS: (id) => `/api/orders/${id}/status`,
+  ORDERS: `${API_PREFIX}/orders`,
+  MY_ORDERS: `${API_PREFIX}/orders/my`,
+  ORDERS_BY_RESTAURANT: (restaurantId) => `${API_PREFIX}/orders/restaurant/${restaurantId}`,
+  ORDER_BY_ID: (id) => `${API_PREFIX}/orders/${id}`,
+  ORDER_STATUS: (id) => `${API_PREFIX}/orders/${id}/status`,
   
   // Cart
-  CART: '/api/cart',
+  CART: `${API_PREFIX}/cart`,
   
   // Reviews
-  REVIEWS: '/api/reviews',
-  MY_REVIEWS: '/api/reviews/my',
-  REVIEWS_BY_RESTAURANT: (restaurantId) => `/api/reviews/restaurant/${restaurantId}`,
+  REVIEWS: `${API_PREFIX}/reviews`,
+  MY_REVIEWS: `${API_PREFIX}/reviews/my`,
+  REVIEWS_BY_RESTAURANT: (restaurantId) => `${API_PREFIX}/reviews/restaurant/${restaurantId}`,
   
   // Offers
-  OFFERS: '/api/offers',
-  OFFERS_ADMIN_ALL: '/api/offers/admin/all',
-  OFFERS_BY_TYPE: (type) => `/api/offers/type/${type}`,
-  OFFERS_BY_RESTAURANT: (restaurantId) => `/api/offers/restaurant/${restaurantId}`,
-  OFFERS_BY_CATEGORY: (category) => `/api/offers/category/${category}`,
-  OFFERS_EXPIRING_SOON: '/api/offers/expiring-soon',
-  OFFER_VALIDATE_COUPON: '/api/offers/validate-coupon',
-  OFFER_TOGGLE: (id) => `/api/offers/${id}/toggle`,
-  OFFER_DELETE: (id) => `/api/offers/${id}`,
+  OFFERS: `${API_PREFIX}/offers`,
+  OFFERS_ADMIN_ALL: `${API_PREFIX}/offers/admin/all`,
+  OFFERS_BY_TYPE: (type) => `${API_PREFIX}/offers/type/${type}`,
+  OFFERS_BY_RESTAURANT: (restaurantId) => `${API_PREFIX}/offers/restaurant/${restaurantId}`,
+  OFFERS_BY_CATEGORY: (category) => `${API_PREFIX}/offers/category/${category}`,
+  OFFERS_EXPIRING_SOON: `${API_PREFIX}/offers/expiring-soon`,
+  OFFER_VALIDATE_COUPON: `${API_PREFIX}/offers/validate-coupon`,
+  OFFER_TOGGLE: (id) => `${API_PREFIX}/offers/${id}/toggle`,
+  OFFER_DELETE: (id) => `${API_PREFIX}/offers/${id}`,
   
   // Support
-  SUPPORT_MESSAGES: '/api/support/messages',
-  SUPPORT_MESSAGES_BY_RESTAURANT: (restaurantId) => `/api/support/messages/restaurant/${restaurantId}`,
+  SUPPORT_MESSAGES: `${API_PREFIX}/support/messages`,
+  SUPPORT_MESSAGES_BY_RESTAURANT: (restaurantId) => `${API_PREFIX}/support/messages/restaurant/${restaurantId}`,
   SUPPORT_MESSAGES_BY_ORDER: (orderId, customerId, restaurantId) => 
-    `/api/support/messages?orderId=${orderId}&customerId=${customerId}&restaurantId=${restaurantId}`,
-  SUPPORT_UNREAD_COUNT: '/api/support/messages/unread-count',
-  SUPPORT_MARK_READ: (messageId) => `/api/support/messages/${messageId}/mark-read`,
-  SUPPORT_MARK_ALL_READ: '/api/support/messages/mark-all-read',
+    `${API_PREFIX}/support/messages?orderId=${orderId}&customerId=${customerId}&restaurantId=${restaurantId}`,
+  SUPPORT_UNREAD_COUNT: `${API_PREFIX}/support/messages/unread-count`,
+  SUPPORT_MARK_READ: (messageId) => `${API_PREFIX}/support/messages/${messageId}/mark-read`,
+  SUPPORT_MARK_ALL_READ: `${API_PREFIX}/support/messages/mark-all-read`,
   
   // Admin endpoints
-  ADMIN_USERS: '/api/admin/users',
-  ADMIN_USER_BY_ID: (id) => `/api/admin/users/${id}`,
-  ADMIN_USER_BLOCK: (id) => `/api/admin/users/${id}/block`,
-  ADMIN_USER_UNBLOCK: (id) => `/api/admin/users/${id}/unblock`,
-  ADMIN_USER_DELETE: (id) => `/api/admin/users/${id}`,
+  ADMIN_USERS: `${API_PREFIX}/admin/users`,
+  ADMIN_USER_BY_ID: (id) => `${API_PREFIX}/admin/users/${id}`,
+  ADMIN_USER_BLOCK: (id) => `${API_PREFIX}/admin/users/${id}/block`,
+  ADMIN_USER_UNBLOCK: (id) => `${API_PREFIX}/admin/users/${id}/unblock`,
+  ADMIN_USER_DELETE: (id) => `${API_PREFIX}/admin/users/${id}`,
   
-  ADMIN_RESTAURANTS: '/api/admin/restaurants',
-  ADMIN_RESTAURANT_APPROVE: (id) => `/api/admin/restaurants/${id}/approve`,
-  ADMIN_RESTAURANT_DEACTIVATE: (id) => `/api/admin/restaurants/${id}/deactivate`,
-  ADMIN_RESTAURANT_DELETE: (id) => `/api/admin/restaurants/${id}`,
+  ADMIN_RESTAURANTS: `${API_PREFIX}/admin/restaurants`,
+  ADMIN_RESTAURANT_APPROVE: (id) => `${API_PREFIX}/admin/restaurants/${id}/approve`,
+  ADMIN_RESTAURANT_DEACTIVATE: (id) => `${API_PREFIX}/admin/restaurants/${id}/deactivate`,
+  ADMIN_RESTAURANT_DELETE: (id) => `${API_PREFIX}/admin/restaurants/${id}`,
   
-  ADMIN_ORDERS: '/api/admin/orders',
-  ADMIN_ORDER_CANCEL: (id) => `/api/admin/orders/${id}/cancel`,
-  ADMIN_ORDER_REFUND: (id) => `/api/admin/orders/${id}/refund`,
-  ADMIN_ORDER_DELETE: (id) => `/api/admin/orders/${id}`,
+  ADMIN_ORDERS: `${API_PREFIX}/admin/orders`,
+  ADMIN_ORDER_CANCEL: (id) => `${API_PREFIX}/admin/orders/${id}/cancel`,
+  ADMIN_ORDER_REFUND: (id) => `${API_PREFIX}/admin/orders/${id}/refund`,
+  ADMIN_ORDER_DELETE: (id) => `${API_PREFIX}/admin/orders/${id}`,
   
-  ADMIN_REVIEWS: '/api/admin/reviews',
-  ADMIN_REVIEW_DELETE: (id) => `/api/admin/reviews/${id}`,
-  ADMIN_REVIEW_FLAG: (id) => `/api/admin/reviews/${id}/flag`,
+  ADMIN_REVIEWS: `${API_PREFIX}/admin/reviews`,
+  ADMIN_REVIEW_DELETE: (id) => `${API_PREFIX}/admin/reviews/${id}`,
+  ADMIN_REVIEW_FLAG: (id) => `${API_PREFIX}/admin/reviews/${id}/flag`,
   
   // Admin offers endpoints
-  ADMIN_OFFERS: '/api/offers/admin/all',
+  ADMIN_OFFERS: `${API_PREFIX}/offers/admin/all`,
   
   // Health check
   HEALTH: '/health',
 };
 
+const createRequestId = () => {
+  if (window.crypto?.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+};
+
+const parseErrorMessage = async (response) => {
+  try {
+    const errorData = await response.json();
+    if (errorData?.error?.message) return errorData.error.message;
+    if (typeof errorData?.error === 'string') return errorData.error;
+    return errorData?.message || `HTTP error! status: ${response.status}`;
+  } catch (e) {
+    return response.statusText || `HTTP error! status: ${response.status}`;
+  }
+};
+
 // Enhanced API utility functions with better error handling
 export const apiRequest = async (endpoint, options = {}) => {
-  const token = localStorage.getItem('token');
-  
   const defaultOptions = {
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
+      'X-Request-Id': createRequestId(),
       ...options.headers,
     },
   };
@@ -121,23 +142,13 @@ export const apiRequest = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
   
   try {
-    console.log(`API Request: ${config.method || 'GET'} ${url}`);
     const response = await fetch(url, config);
     
     if (!response.ok) {
-      let errorMessage = `HTTP error! status: ${response.status}`;
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.error || errorData.message || errorMessage;
-      } catch (e) {
-        // If response is not JSON, use status text
-        errorMessage = response.statusText || errorMessage;
-      }
+      let errorMessage = await parseErrorMessage(response);
       
       // Handle specific error cases
       if (response.status === 401) {
-        // Clear invalid token
-        localStorage.removeItem('token');
         localStorage.removeItem('userId');
         localStorage.removeItem('userRole');
         errorMessage = 'Authentication failed. Please login again.';
@@ -152,9 +163,9 @@ export const apiRequest = async (endpoint, options = {}) => {
       throw new Error(errorMessage);
     }
     
-    const data = await response.json();
-    console.log(`API Response: ${url}`, data);
-    return data;
+    if (response.status === 204) return null;
+    const text = await response.text();
+    return text ? JSON.parse(text) : null;
   } catch (error) {
     console.error('API request failed:', error);
     throw error;
@@ -164,8 +175,10 @@ export const apiRequest = async (endpoint, options = {}) => {
 // Public API request function for endpoints that don't require authentication
 export const publicApiRequest = async (endpoint, options = {}) => {
   const defaultOptions = {
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      'X-Request-Id': createRequestId(),
       ...options.headers,
     },
   };
@@ -182,23 +195,16 @@ export const publicApiRequest = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
   
   try {
-    console.log(`Public API Request: ${config.method || 'GET'} ${url}`);
     const response = await fetch(url, config);
     
     if (!response.ok) {
-      let errorMessage = `HTTP error! status: ${response.status}`;
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.error || errorData.message || errorMessage;
-      } catch (e) {
-        errorMessage = response.statusText || errorMessage;
-      }
+      const errorMessage = await parseErrorMessage(response);
       throw new Error(errorMessage);
     }
     
-    const data = await response.json();
-    console.log(`Public API Response: ${url}`, data);
-    return data;
+    if (response.status === 204) return null;
+    const text = await response.text();
+    return text ? JSON.parse(text) : null;
   } catch (error) {
     console.error('Public API request failed:', error);
     throw error;
@@ -219,8 +225,9 @@ export const api = {
     body: JSON.stringify(data),
   }),
   
-  delete: (endpoint) => apiRequest(endpoint, {
+  delete: (endpoint, data) => apiRequest(endpoint, {
     method: 'DELETE',
+    ...(data !== undefined && { body: JSON.stringify(data) }),
   }),
   
   patch: (endpoint, data) => apiRequest(endpoint, {
@@ -243,8 +250,9 @@ export const publicApi = {
     body: JSON.stringify(data),
   }),
   
-  delete: (endpoint) => publicApiRequest(endpoint, {
+  delete: (endpoint, data) => publicApiRequest(endpoint, {
     method: 'DELETE',
+    ...(data !== undefined && { body: JSON.stringify(data) }),
   }),
   
   patch: (endpoint, data) => publicApiRequest(endpoint, {
@@ -255,8 +263,7 @@ export const publicApi = {
 
 // Utility function to check if user is authenticated
 export const isAuthenticated = () => {
-  const token = localStorage.getItem('token');
-  return token && token !== 'null' && token !== 'undefined';
+  return Boolean(localStorage.getItem('userId'));
 };
 
 // Utility function to get user role
@@ -271,11 +278,11 @@ export const getUserId = () => {
 
 // Utility function to clear authentication data
 export const clearAuth = () => {
-  localStorage.removeItem('token');
   localStorage.removeItem('userId');
   localStorage.removeItem('userRole');
   localStorage.removeItem('username');
   localStorage.removeItem('email');
+  localStorage.removeItem('restaurantId');
 };
 
 export default api; 

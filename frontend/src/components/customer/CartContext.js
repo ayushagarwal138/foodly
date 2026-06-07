@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { api, API_ENDPOINTS } from "../../config/api";
 
 const CartContext = createContext();
 
@@ -9,12 +10,9 @@ export const CartProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      fetch("/api/cart", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => res.json())
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      api.get(API_ENDPOINTS.CART)
         .then((data) => setCart(data))
         .catch(() => setCart({ items: [], address: "" }))
         .finally(() => setLoading(false));

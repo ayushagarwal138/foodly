@@ -12,7 +12,6 @@ export default function OrdersPage() {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [restaurantId, setRestaurantId] = useState(null);
-  const token = localStorage.getItem("token");
   const userId = localStorage.getItem("userId");
 
   const fetchRestaurantId = useCallback(async () => {
@@ -63,8 +62,6 @@ export default function OrdersPage() {
       console.log("New Status:", newStatus);
       console.log("Restaurant ID:", restaurantId);
       console.log("User ID:", userId);
-      console.log("Token:", token ? "Present" : "Missing");
-      
       const requestData = { status: newStatus };
       console.log("Request Data:", requestData);
       
@@ -160,28 +157,28 @@ export default function OrdersPage() {
       await fetchRestaurantId();
       setLoading(false);
     }
-    if (userId && token) {
+    if (userId) {
       initialFetch();
     }
-  }, [userId, token, fetchRestaurantId]);
+  }, [userId, fetchRestaurantId]);
 
   // Fetch orders when restaurant ID is available
   useEffect(() => {
-    if (restaurantId && token) {
+    if (restaurantId) {
       fetchOrders();
     }
-  }, [restaurantId, token, fetchOrders]);
+  }, [restaurantId, fetchOrders]);
 
   // Polling for new orders
   useEffect(() => {
-    if (!restaurantId || !token) return;
+    if (!restaurantId) return;
 
     const pollInterval = setInterval(() => {
       fetchOrders();
     }, 5000); // Poll every 5 seconds
 
     return () => clearInterval(pollInterval);
-  }, [restaurantId, token, fetchOrders]);
+  }, [restaurantId, fetchOrders]);
 
   // Polling for new chat messages when chat modal is open
   useEffect(() => {

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiMenu, FiSearch, FiShoppingCart, FiUser, FiX, FiLogOut,  } from "react-icons/fi";
 import { useCart } from "./CartContext";
-import { api, API_ENDPOINTS } from "../../config/api";
+import { api, API_ENDPOINTS, clearAuth } from "../../config/api";
 
 export default function Header({ setCurrent }) {
   const [username, setUsername] = useState(localStorage.getItem("username") || "");
@@ -16,9 +16,8 @@ export default function Header({ setCurrent }) {
   useEffect(() => {
     if (!username) {
       const userId = localStorage.getItem("userId");
-      const token = localStorage.getItem("token");
       const userRole = localStorage.getItem("userRole");
-      if (userId && token && userRole) {
+      if (userId && userRole) {
         try {
           if (userRole.toUpperCase() === "CUSTOMER") {
             api.get(API_ENDPOINTS.CUSTOMER_PROFILE(userId))
@@ -69,11 +68,13 @@ export default function Header({ setCurrent }) {
     };
   }, [open]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userId");
-    window.location.href = "/customer/login";
+  const handleLogout = async () => {
+    try {
+      await api.post(API_ENDPOINTS.LOGOUT, {});
+    } finally {
+      clearAuth();
+      window.location.href = "/customer/login";
+    }
   };
 
   return (

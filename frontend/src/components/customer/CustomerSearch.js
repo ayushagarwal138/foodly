@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiSearch, FiHeart, FiShoppingCart, FiStar, FiClock, FiCoffee, FiFilter, FiAlertCircle } from "react-icons/fi";
 import Button from "../ui/Button";
+import { api, API_ENDPOINTS } from "../../config/api";
 
 const CUISINES = ["All", "Italian", "Japanese", "American"];
 const RATINGS = ["All", 4, 3, 2, 1];
@@ -22,7 +23,6 @@ export default function CustomerSearch({ restaurants, query: parentQuery, setQue
   const [veg, setVeg] = useState("All");
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId");
-  const token = localStorage.getItem("token");
   const [favLoading, setFavLoading] = useState(""); // holds id or name
   const [favSuccess, setFavSuccess] = useState("");
   const [favError, setFavError] = useState("");
@@ -31,71 +31,43 @@ export default function CustomerSearch({ restaurants, query: parentQuery, setQue
   const safeRestaurants = Array.isArray(restaurants) ? restaurants : [];
 
   async function handleFavoriteRestaurant(r) {
-    if (!userId || !token) return;
+    if (!userId) return;
     setFavLoading(r.name);
     setFavError("");
     setFavSuccess("");
     try {
-      const res = await fetch(`/api/customers/${userId}/wishlist`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
+      await api.post(API_ENDPOINTS.CUSTOMER_ADD_TO_WISHLIST(userId), {
           type: "RESTAURANT",
           name: r.name,
           restaurant: r.name,
           restaurantId: r.id
-        })
-      });
-      if (res.status === 409) {
-        setFavError("Restaurant is already in your favorites");
-        setTimeout(() => setFavError(""), 3000);
-      } else if (!res.ok) {
-        throw new Error("Failed to add favorite");
-      } else {
-        setFavSuccess(r.name);
-        setTimeout(() => setFavSuccess("") , 2000);
-      }
+        });
+      setFavSuccess(r.name);
+      setTimeout(() => setFavSuccess("") , 2000);
     } catch (err) {
-      setFavError("Could not add to favorites");
+      setFavError(err.message || "Could not add to favorites");
     } finally {
       setFavLoading("");
     }
   }
 
   async function handleFavoriteDish(r, d) {
-    if (!userId || !token) return;
+    if (!userId) return;
     setFavLoading(d.name + r.name);
     setFavError("");
     setFavSuccess("");
     try {
-      const res = await fetch(`/api/customers/${userId}/wishlist`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
+      await api.post(API_ENDPOINTS.CUSTOMER_ADD_TO_WISHLIST(userId), {
           type: "DISH",
           name: d.name,
           restaurant: r.name,
           restaurantId: r.id,
           menuItemId: d.id
-        })
-      });
-      if (res.status === 409) {
-        setFavError("Dish is already in your favorites");
-        setTimeout(() => setFavError(""), 3000);
-      } else if (!res.ok) {
-        throw new Error("Failed to add favorite");
-      } else {
-        setFavSuccess(d.name + r.name);
-        setTimeout(() => setFavSuccess("") , 2000);
-      }
+        });
+      setFavSuccess(d.name + r.name);
+      setTimeout(() => setFavSuccess("") , 2000);
     } catch (err) {
-      setFavError("Could not add to favorites");
+      setFavError(err.message || "Could not add to favorites");
     } finally {
       setFavLoading("");
     }

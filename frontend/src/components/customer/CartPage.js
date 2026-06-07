@@ -21,22 +21,19 @@ export default function CartPage() {
   const [placingOrder, setPlacingOrder] = useState(false);
   const [error, setError] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
-  const token = localStorage.getItem("token");
   const userRole = localStorage.getItem("userRole");
 
   // Check authentication
   useEffect(() => {
-    if (!token || userRole !== "CUSTOMER") {
+    if (userRole !== "CUSTOMER") {
       navigate("/customer/login");
       return;
     }
-  }, [token, userRole, navigate]);
+  }, [userRole, navigate]);
 
   // Load cart from backend
   useEffect(() => {
     async function fetchCart() {
-      if (!token) return;
-      
       setLoading(true);
       setError("");
       try {
@@ -55,12 +52,10 @@ export default function CartPage() {
       }
     }
     fetchCart();
-  }, [token, setCart, navigate]);
+  }, [setCart, navigate]);
 
   // Update cart in backend
   async function updateCart(newItems) {
-    if (!token) return;
-    
     try {
       const sanitized = (newItems || []).map(i => ({
         ...i,
@@ -101,8 +96,6 @@ export default function CartPage() {
   }
 
   async function clearCart() {
-    if (!token) return;
-    
     try {
       await api.delete(API_ENDPOINTS.CART);
       setCart({ items: [], address: "" });
@@ -126,7 +119,7 @@ export default function CartPage() {
   }
 
   async function placeOrder() {
-    if (!token) {
+    if (!localStorage.getItem("userId")) {
       navigate("/customer/login");
       return;
     }

@@ -26,7 +26,6 @@ export default function OrderTrackingPage() {
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
-  const token = localStorage.getItem("token");
   const userId = localStorage.getItem("userId");
 
   const fetchOrder = async () => {
@@ -128,21 +127,21 @@ export default function OrderTrackingPage() {
   };
 
   useEffect(() => {
-    if (orderId && token) {
+    if (orderId) {
       fetchOrder();
     }
-  }, [orderId, token]);
+  }, [orderId]);
 
   // Polling for order updates
   useEffect(() => {
-    if (!orderId || !token) return;
+    if (!orderId) return;
 
     const pollInterval = setInterval(() => {
       fetchOrder();
     }, 5000); // Poll every 5 seconds
 
     return () => clearInterval(pollInterval);
-  }, [orderId, token]);
+  }, [orderId]);
 
   // Polling for chat messages when chat modal is open
   useEffect(() => {
