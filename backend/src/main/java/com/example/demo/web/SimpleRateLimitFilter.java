@@ -37,12 +37,14 @@ public class SimpleRateLimitFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        if (!enabled || "GET".equalsIgnoreCase(request.getMethod()) || !isSensitivePath(request)) {
+        if (!enabled || "GET".equalsIgnoreCase(request.getMethod())
+                || "OPTIONS".equalsIgnoreCase(request.getMethod())
+                || !isSensitivePath(request)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        int limit = request.getRequestURI().startsWith("/auth/") ? authLimit : mutationLimit;
+        int limit = isAuthPath(request.getRequestURI()) ? authLimit : mutationLimit;
         String key = clientKey(request) + ":" + request.getRequestURI();
         Window window = windows.compute(key, (ignored, existing) -> {
             long now = Instant.now().getEpochSecond();
@@ -67,11 +69,20 @@ public class SimpleRateLimitFilter extends OncePerRequestFilter {
     private boolean isSensitivePath(HttpServletRequest request) {
         String path = request.getRequestURI();
         return path.startsWith("/auth/")
+                || path.startsWith("/api/v1/auth/")
                 || path.startsWith("/api/orders")
+                || path.startsWith("/api/v1/orders")
                 || path.startsWith("/api/reviews")
+                || path.startsWith("/api/v1/reviews")
                 || path.startsWith("/api/support")
+                || path.startsWith("/api/v1/support")
                 || path.startsWith("/api/offers/validate")
+                || path.startsWith("/api/v1/offers/validate")
                 || path.startsWith("/api/admin");
+    }
+
+    private boolean isAuthPath(String path) {
+        return path.startsWith("/auth/") || path.startsWith("/api/v1/auth/");
     }
 
     private String clientKey(HttpServletRequest request) {

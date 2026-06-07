@@ -36,8 +36,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String path = request.getRequestURI();
         
-        // Skip JWT validation for auth endpoints and health checks
-        if (path.startsWith("/auth/login") || path.startsWith("/auth/signup") || path.startsWith("/auth/google")
+        // Skip JWT validation for public auth endpoints and health checks.
+        // Keep /auth/me protected so the cookie can populate AuthenticationPrincipal.
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())
+                || isPublicAuthPath(path)
                 || path.startsWith("/oauth2/") || path.startsWith("/login/oauth2/")
                 || path.equals("/") || path.equals("/health") || path.startsWith("/actuator/")
                 || path.startsWith("/swagger-ui") || path.startsWith("/api-docs")) {
@@ -78,5 +80,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             }
         }
         chain.doFilter(request, response);
+    }
+
+    private boolean isPublicAuthPath(String path) {
+        return path.startsWith("/auth/login")
+                || path.startsWith("/auth/signup")
+                || path.startsWith("/auth/google")
+                || path.startsWith("/api/v1/auth/login")
+                || path.startsWith("/api/v1/auth/signup")
+                || path.startsWith("/api/v1/auth/google");
     }
 } 

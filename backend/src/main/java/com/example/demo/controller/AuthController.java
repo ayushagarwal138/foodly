@@ -1,15 +1,26 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.AuthUserResponse;
+import com.example.demo.dto.LoginRequest;
+import com.example.demo.dto.SignupRequest;
 import com.example.demo.model.User;
 import com.example.demo.model.Restaurant;
+import com.example.demo.exception.ApiException;
 import com.example.demo.repository.CustomerRepository;
 import com.example.demo.repository.RestaurantRepository;
+import com.example.demo.security.JwtCookieService;
 import com.example.demo.service.JwtUtil;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.Map;
 import java.util.Optional;
@@ -25,34 +36,40 @@ public class AuthController {
     private JwtUtil jwtUtil;
     @Autowired
     private RestaurantRepository restaurantRepository;
+    @Autowired
+    private JwtCookieService jwtCookieService;
 
     @PostMapping("/signup")
-    public Map<String, Object> signup(@RequestBody Map<String, String> req) {
-        String username = req.get("username");
-        String password = req.get("password");
-        String email = req.get("email");
-        String role = req.get("role");
+    public Map<String, Object> signup(@Valid @RequestBody SignupRequest req) {
+        String username = req.getUsername().trim();
+        String email = req.getEmail().trim().toLowerCase();
+        String role = normalizeRole(req.getRole());
         
         if (customerRepository.findByUsername(username).isPresent()) {
-            return Map.of("error", "Username already exists");
+            throw new ApiException("USERNAME_EXISTS", "Username already exists", HttpStatus.CONFLICT);
+        }
+        if (customerRepository.findByEmail(email).isPresent()) {
+            throw new ApiException("EMAIL_EXISTS", "Email already exists", HttpStatus.CONFLICT);
         }
         
         User customer = new User();
         customer.setUsername(username);
-        customer.setPassword(passwordEncoder.encode(password));
+        customer.setPassword(passwordEncoder.encode(req.getPassword()));
         customer.setEmail(email);
-        customer.setRole(role.toUpperCase());
+        customer.setRole(role);
+        customer.setProvider("LOCAL");
+        customer.setEmailVerified(false);
         customer = customerRepository.save(customer);
         
         // If registering as restaurant, create restaurant entity
-        if ("RESTAURANT".equals(role.toUpperCase())) {
+        if ("RESTAURANT".equals(role) || "RESTAURANT_OWNER".equals(role)) {
             Restaurant restaurant = new Restaurant();
-            restaurant.setName(req.get("restaurantName"));
-            restaurant.setAddress(req.get("restaurantAddress"));
-            restaurant.setPhone(req.get("restaurantPhone"));
-            restaurant.setCuisineType(req.get("cuisineType"));
-            restaurant.setDescription(req.get("description"));
-            restaurant.setOpeningHours(req.get("openingHours"));
+            restaurant.setName(req.getRestaurantName());
+            restaurant.setAddress(req.getRestaurantAddress());
+            restaurant.setPhone(req.getRestaurantPhone());
+            restaurant.setCuisineType(req.getCuisineType());
+            restaurant.setDescription(req.getDescription());
+            restaurant.setOpeningHours(req.getOpeningHours());
             restaurant.setIsActive(true);
             restaurant.setOwner(customer);
             restaurantRepository.save(restaurant);
@@ -61,74 +78,100 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> req) {
-        String username = req.get("username");
-        String password = req.get("password");
-        String role = req.get("role");
-        
-        System.out.println("=== Login Attempt ===");
-        System.out.println("Username/Email: " + username);
-        System.out.println("Requested Role: " + role);
+    public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest req) {
+        String username = req.getUsername().trim();
+        String password = req.getPassword();
+        String role = normalizeRole(req.getRole());
         
         // Try to find user by username first, then by email
         Optional<User> customerOpt = customerRepository.findByUsername(username);
         if (customerOpt.isEmpty()) {
             // Try email if username lookup fails
-            customerOpt = customerRepository.findByEmail(username);
-            System.out.println("Username lookup failed, trying email lookup");
+            customerOpt = customerRepository.findByEmail(username.toLowerCase());
         }
         
         if (customerOpt.isEmpty()) {
-            System.out.println("User not found: " + username);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "Invalid credentials"));
+            throw new ApiException("INVALID_CREDENTIALS", "Invalid credentials", HttpStatus.UNAUTHORIZED);
         }
         
         User customer = customerOpt.get();
-        System.out.println("User found: " + customer.getUsername() + " (ID: " + customer.getId() + ")");
-        System.out.println("User role in DB: " + customer.getRole());
-        System.out.println("Requested role: " + role);
         
         // Check if user is blocked
         if (customer.getIsBlocked() != null && customer.getIsBlocked()) {
-            System.out.println("User is blocked");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(Map.of("error", "Your account has been blocked. Please contact support."));
+            throw new ApiException("ACCOUNT_BLOCKED", "Your account has been blocked. Please contact support.", HttpStatus.FORBIDDEN);
         }
         
         // Check role match (case-insensitive)
-        if (customer.getRole() == null || !customer.getRole().equalsIgnoreCase(role)) {
-            System.out.println("Role mismatch - DB: " + customer.getRole() + ", Requested: " + role);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "Role mismatch. Please select the correct role."));
+        if (!rolesMatch(customer.getRole(), role)) {
+            throw new ApiException("ROLE_MISMATCH", "Role mismatch. Please select the correct role.", HttpStatus.UNAUTHORIZED);
         }
         
         // Check password
+        if (customer.getPassword() == null || customer.getPassword().isBlank()) {
+            throw new ApiException("OAUTH_ACCOUNT", "Please sign in with Google for this account.", HttpStatus.UNAUTHORIZED);
+        }
         boolean passwordMatches = passwordEncoder.matches(password, customer.getPassword());
-        System.out.println("Password match: " + passwordMatches);
         if (!passwordMatches) {
-            System.out.println("Invalid password");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "Invalid credentials"));
+            throw new ApiException("INVALID_CREDENTIALS", "Invalid credentials", HttpStatus.UNAUTHORIZED);
         }
         // Ensure role is uppercase for JWT token
         String customerRole = customer.getRole() != null ? customer.getRole().toUpperCase() : "CUSTOMER";
+        String responseRole = frontendRole(customerRole);
         String token = jwtUtil.generateToken(customer.getUsername(), customerRole);
         
-        if ("RESTAURANT".equalsIgnoreCase(customerRole)) {
+        ResponseEntity.BodyBuilder response = ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, jwtCookieService.createTokenCookie(token).toString());
+
+        if ("RESTAURANT".equalsIgnoreCase(responseRole)) {
             Optional<Restaurant> restaurant = restaurantRepository.findByOwner_Id(customer.getId());
             if (restaurant.isPresent()) {
-                return ResponseEntity.ok(Map.of(
-                    "token", token,
+                return response.body(Map.of(
                     "id", customer.getId(),
+                    "role", responseRole,
                     "restaurantId", restaurant.get().getId()
                 ));
             } else {
-                // Still return token even if restaurant not found, but log a warning
-                System.out.println("Warning: Restaurant user " + customer.getUsername() + " has no associated restaurant");
-                return ResponseEntity.ok(Map.of("token", token, "id", customer.getId()));
+                return response.body(Map.of("id", customer.getId(), "role", responseRole));
             }
         }
-        return ResponseEntity.ok(Map.of("token", token, "id", customer.getId()));
+        return response.body(Map.of("id", customer.getId(), "role", responseRole));
     }
-} 
+
+    @GetMapping("/google")
+    public RedirectView googleLogin() {
+        return new RedirectView("/oauth2/authorization/google");
+    }
+
+    @GetMapping("/me")
+    public AuthUserResponse me(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            throw new ApiException("UNAUTHENTICATED", "Authentication required", HttpStatus.UNAUTHORIZED);
+        }
+        User user = customerRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ApiException("USER_NOT_FOUND", "User not found", HttpStatus.NOT_FOUND));
+        Long restaurantId = restaurantRepository.findByOwner_Id(user.getId()).map(Restaurant::getId).orElse(null);
+        return new AuthUserResponse(user.getId(), user.getUsername(), user.getEmail(), frontendRole(user.getRole()), restaurantId);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, Object>> logout(HttpServletResponse response) {
+        response.addHeader(HttpHeaders.SET_COOKIE, jwtCookieService.clearTokenCookie().toString());
+        return ResponseEntity.ok(Map.of("message", "Logged out"));
+    }
+
+    private String normalizeRole(String rawRole) {
+        String role = rawRole == null ? "CUSTOMER" : rawRole.trim().toUpperCase();
+        if ("RESTAURANT_OWNER".equals(role)) {
+            return "RESTAURANT";
+        }
+        return role;
+    }
+
+    private boolean rolesMatch(String storedRole, String requestedRole) {
+        return normalizeRole(storedRole).equals(normalizeRole(requestedRole));
+    }
+
+    private String frontendRole(String storedRole) {
+        return normalizeRole(storedRole);
+    }
+}

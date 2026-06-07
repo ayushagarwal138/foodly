@@ -43,8 +43,8 @@ public class SecurityConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
             .allowedOrigins(origins)
             .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-            .allowedHeaders("Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", 
-                          "Access-Control-Request-Method", "Access-Control-Request-Headers")
+            .allowedHeaders("Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With",
+                          "X-Request-Id", "Access-Control-Request-Method", "Access-Control-Request-Headers")
             .allowCredentials(true)
             .maxAge(3600);
     }
@@ -60,6 +60,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**").permitAll()
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants/slug/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/restaurants/*/menu/customer").permitAll()
@@ -112,8 +113,8 @@ public class SecurityConfig implements WebMvcConfigurer {
         
         // Allow specific headers instead of wildcard
         configuration.setAllowedHeaders(Arrays.asList(
-            "Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", 
-            "Access-Control-Request-Method", "Access-Control-Request-Headers"
+            "Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With",
+            "X-Request-Id", "Access-Control-Request-Method", "Access-Control-Request-Headers"
         ));
         
         // Allow credentials
