@@ -96,9 +96,8 @@ export default function Header({ setCurrent }) {
           <img
             src="/logo.jpeg"
             alt="Foodly Logo"
-            className="h-9 w-9 rounded-md object-cover ring-1 ring-neutral-200 md:h-10 md:w-10"
+            className="h-9 w-28 rounded-md bg-white object-contain md:h-10 md:w-32"
           />
-          <span className="hidden text-lg font-extrabold tracking-normal text-neutral-950 sm:block">Foodly</span>
         </button>
       </div>
 

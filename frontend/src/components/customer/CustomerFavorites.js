@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiHeart, FiCoffee, FiStar, FiTrash2, FiEye, FiAlertCircle } from "react-icons/fi";
+import { FiHeart, FiStar, FiTrash2, FiEye, FiAlertCircle } from "react-icons/fi";
 import { FaUtensils } from "react-icons/fa";
 import Button from "../ui/Button";
 import { api, API_ENDPOINTS } from "../../config/api";
@@ -127,7 +127,7 @@ export default function CustomerFavorites() {
             }`}
           >
             <div className="flex items-center gap-2">
-              <FiCoffee className="h-4 w-4" />
+              <FaUtensils className="h-4 w-4" />
               Restaurants ({favorites.restaurants.length})
             </div>
           </button>
@@ -167,7 +167,7 @@ export default function CustomerFavorites() {
                     className="card-hover overflow-hidden p-0"
                   >
                     <div className="flex h-44 items-center justify-center bg-neutral-100">
-                      <FiCoffee className="h-14 w-14 text-primary-400" />
+                      <FaUtensils className="h-14 w-14 text-primary-400" />
                     </div>
                     <div className="p-5">
                       <h3 className="mb-3 text-lg font-bold text-neutral-950">{restaurant.name}</h3>

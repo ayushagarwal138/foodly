@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FiShoppingCart, FiCoffee, FiSettings, FiUser, FiEye, FiEyeOff, FiAlertCircle, FiMapPin, FiClock } from "react-icons/fi";
+import { FiShoppingCart, FiSettings, FiUser, FiEye, FiEyeOff, FiAlertCircle, FiMapPin, FiClock, FiLock } from "react-icons/fi";
+import { FaUtensils } from "react-icons/fa";
 import Toast from "./Toast";
 import Button from "./ui/Button";
 import { api, API_ENDPOINTS } from "../config/api";
@@ -8,7 +9,7 @@ import { useAuth } from "../features/auth/AuthContext";
 
 const ROLES = [
   { label: "Customer", value: "Customer", icon: FiShoppingCart, color: "primary" },
-  { label: "Restaurant", value: "Restaurant", icon: FiCoffee, color: "accent" },
+  { label: "Restaurant", value: "Restaurant", icon: FaUtensils, color: "accent" },
   { label: "Admin", value: "Admin", icon: FiSettings, color: "secondary" },
 ];
 
@@ -140,9 +141,8 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
             <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/45 to-neutral-950/15" />
             <div className="relative flex h-full flex-col justify-between p-10 text-white">
               <div className="flex items-center gap-3">
-                <img src="/logo.jpeg" alt="Foodly" className="h-11 w-11 rounded-md object-cover ring-1 ring-white/30" />
+                <img src="/logo.jpeg" alt="Foodly" className="h-12 w-36 rounded-md bg-white/95 object-contain p-1 ring-1 ring-white/30" />
                 <div>
-                  <p className="text-xl font-bold">Foodly</p>
                   <p className="text-sm text-white/70">Fresh meals, faster decisions</p>
                 </div>
               </div>
@@ -175,9 +175,8 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
             <div className="w-full max-w-md animate-fade-in">
               <div className="mb-8 flex items-center justify-between lg:hidden">
                 <div className="flex items-center gap-3">
-                  <img src="/logo.jpeg" alt="Foodly" className="h-10 w-10 rounded-md object-cover" />
+                  <img src="/logo.jpeg" alt="Foodly" className="h-10 w-28 rounded-md bg-white object-contain" />
                   <div>
-                    <p className="text-lg font-bold text-neutral-950">Foodly</p>
                     <p className="text-xs text-neutral-500">Food delivery platform</p>
                   </div>
                 </div>
@@ -248,9 +247,7 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
+                    <FiLock className="w-5 h-5 text-neutral-400" />
                   </div>
                   <input
                     id="password"

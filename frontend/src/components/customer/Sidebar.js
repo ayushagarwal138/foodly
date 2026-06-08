@@ -5,20 +5,20 @@ import {
   FiPackage,
   FiHeart,
   FiTag,
-  FiCoffee,
   FiUser,
   FiSettings,
   FiStar,
   FiHelpCircle,
   FiX,
 } from "react-icons/fi";
+import { FaUtensils } from "react-icons/fa";
 
 const sidebarLinks = [
   { label: "Dashboard", icon: FiHome, path: "/customer" },
   { label: "Orders", icon: FiPackage, path: "/customer/orders" },
   { label: "Favorites", icon: FiHeart, path: "/customer/favorites" },
   { label: "Offers", icon: FiTag, path: "/customer/offers" },
-  { label: "Restaurants", icon: FiCoffee, path: "/customer/restaurants" },
+  { label: "Restaurants", icon: FaUtensils, path: "/customer/restaurants" },
   { label: "Account", icon: FiUser, path: "/customer/account" },
   { label: "Settings", icon: FiSettings, path: "/customer/settings" },
   { label: "Ratings & Reviews", icon: FiStar, path: "/customer/reviews" },
@@ -48,11 +48,11 @@ export default function Sidebar({ current, open, setOpen }) {
         <img
           src="/logo.jpeg"
           alt="Foodly Logo"
-          className="h-11 w-11 rounded-md object-cover ring-1 ring-neutral-200"
+          className="h-10 w-28 rounded-md bg-white object-contain"
         />
         <div>
-          <span className="block text-xl font-extrabold tracking-normal text-neutral-950">Foodly</span>
-          <span className="text-xs font-medium text-neutral-500">Customer</span>
+          <span className="block text-sm font-bold tracking-normal text-neutral-950">Customer</span>
+          <span className="text-xs font-medium text-neutral-500">Dashboard</span>
         </div>
       </div>
       <nav className="flex w-full flex-col gap-1 px-3" aria-label="Main navigation">

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { FiAlertTriangle, FiCheckCircle, FiShield } from "react-icons/fi";
 import Toast from "../Toast";
 
 export default function AdminSettingsPage() {
@@ -167,9 +168,7 @@ export default function AdminSettingsPage() {
           <div className="space-y-6">
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
+                <FiAlertTriangle className="w-5 h-5 text-yellow-600" />
                 <div>
                   <h4 className="text-sm font-medium text-yellow-800">Password Policy</h4>
                   <p className="text-sm text-yellow-700">Minimum 8 characters, must include uppercase, lowercase, and number</p>
@@ -179,9 +178,7 @@ export default function AdminSettingsPage() {
 
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
+                <FiShield className="w-5 h-5 text-blue-600" />
                 <div>
                   <h4 className="text-sm font-medium text-blue-800">Two-Factor Authentication</h4>
                   <p className="text-sm text-blue-700">Enabled for all admin accounts</p>
@@ -191,9 +188,7 @@ export default function AdminSettingsPage() {
 
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <FiCheckCircle className="w-5 h-5 text-green-600" />
                 <div>
                   <h4 className="text-sm font-medium text-green-800">SSL Certificate</h4>
                   <p className="text-sm text-green-700">Valid until December 2025</p>

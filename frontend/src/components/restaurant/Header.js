@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiMenu, FiUser, FiLogOut, FiCoffee, FiSettings } from "react-icons/fi";
+import { FiMenu, FiUser, FiLogOut, FiSettings } from "react-icons/fi";
+import { FaUtensils } from "react-icons/fa";
 import { api, API_ENDPOINTS, clearAuth } from "../../config/api";
 
 export default function Header({ setCurrent }) {
@@ -89,9 +90,8 @@ export default function Header({ setCurrent }) {
           <img
             src="/logo.jpeg"
             alt="Foodly Logo"
-            className="h-9 w-9 rounded-md border border-neutral-200 object-cover"
+            className="h-9 w-28 rounded-md bg-white object-contain"
           />
-          <span className="hidden text-lg font-bold text-neutral-950 sm:block">Foodly</span>
         </button>
       </div>
 
@@ -99,7 +99,7 @@ export default function Header({ setCurrent }) {
       <div className="hidden min-w-0 flex-1 items-center justify-center md:flex">
         {restaurantName && (
           <div className="flex max-w-md items-center gap-2 rounded-md border border-accent-200 bg-accent-50 px-3 py-1.5">
-            <FiCoffee className="h-4 w-4 flex-shrink-0 text-accent-600" />
+            <FaUtensils className="h-4 w-4 flex-shrink-0 text-accent-600" />
             <span className="truncate text-sm font-semibold text-accent-800">{restaurantName}</span>
           </div>
         )}

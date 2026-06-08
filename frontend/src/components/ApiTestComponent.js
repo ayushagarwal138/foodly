@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FiCheckCircle } from 'react-icons/fi';
 import { runApiTests } from '../utils/apiTest';
 
 export default function ApiTestComponent() {
@@ -89,7 +90,10 @@ export default function ApiTestComponent() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {results.passed.map((test, index) => (
                   <div key={index} className="bg-white p-2 rounded border border-green-200">
-                    <div className="text-sm text-green-800">✅ {test.name}</div>
+                    <div className="flex items-center gap-2 text-sm text-green-800">
+                      <FiCheckCircle className="h-4 w-4 flex-shrink-0" />
+                      <span>{test.name}</span>
+                    </div>
                   </div>
                 ))}
               </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { FiCheckCircle, FiClock, FiMessageCircle, FiPackage, FiSend, FiTruck, FiX, FiXCircle } from "react-icons/fi";
 import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function OrdersPage() {
@@ -252,13 +253,13 @@ export default function OrdersPage() {
     const normalizedStatus = status?.toLowerCase();
     
     switch (normalizedStatus) {
-      case "new": return "🆕";
-      case "accepted": return "✅";
-      case "preparing": return "👨‍🍳";
-      case "out for delivery": return "🚚";
-      case "delivered": return "🎉";
-      case "cancelled": return "❌";
-      default: return "📋";
+      case "new": return FiPackage;
+      case "accepted": return FiCheckCircle;
+      case "preparing": return FiClock;
+      case "out for delivery": return FiTruck;
+      case "delivered": return FiCheckCircle;
+      case "cancelled": return FiXCircle;
+      default: return FiPackage;
     }
   };
 
@@ -308,9 +309,11 @@ export default function OrdersPage() {
         <div className="space-y-4">
           {sortedOrders.map((order) => (
             <div key={order.id} className="bg-gray-50 rounded-xl p-6 border border-gray-200 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start mb-4">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{getStatusIcon(order.status)}</span>
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-primary-50 text-primary-700 ring-1 ring-primary-100">
+                    {React.createElement(getStatusIcon(order.status), { className: "h-5 w-5" })}
+                  </div>
                   <div>
                     <h3 className="text-lg font-semibold text-[#16213e]">Order #{order.id}</h3>
                     <p className="text-gray-600 text-sm">
@@ -335,16 +338,17 @@ export default function OrdersPage() {
                 </ul>
               </div>
 
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div className="text-lg font-semibold text-[#16213e]">
                   Total: ₹{order.total || order.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <button
                     onClick={() => openChatModal(order)}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
+                    className="btn btn-secondary min-h-[36px] px-3 py-2 text-sm"
                   >
-                    💬 Chat
+                    <FiMessageCircle className="h-4 w-4" />
+                    Chat
                   </button>
                   {getNextStatus(order.status) && (
                     <button
@@ -371,10 +375,10 @@ export default function OrdersPage() {
 
       {/* Chat Modal */}
       {showChatModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/50 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-lg border border-neutral-200 bg-white shadow-xl">
             {/* Modal Header */}
-            <div className="flex justify-between items-center p-6 border-b">
+            <div className="flex items-center justify-between border-b border-neutral-200 p-6">
               <div>
                 <h3 className="text-lg font-semibold text-[#16213e]">
                   Chat - Order #{selectedOrder.id}
@@ -385,14 +389,14 @@ export default function OrdersPage() {
               </div>
               <button
                 onClick={closeChatModal}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="rounded-md p-2 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"
               >
-                ×
+                <FiX className="h-5 w-5" />
               </button>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 max-h-96">
+            <div className="max-h-96 flex-1 space-y-4 overflow-y-auto bg-neutral-50 p-6">
               {chatMessages.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
                   No messages yet. Start the conversation!
@@ -404,15 +408,15 @@ export default function OrdersPage() {
                     className={`flex ${message.sender === "restaurant" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-xs px-4 py-2 rounded-xl ${
+                      className={`max-w-xs rounded-md px-4 py-2 ${
                         message.sender === "restaurant"
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-200 text-gray-800"
+                          ? "bg-primary-600 text-white"
+                          : "border border-neutral-200 bg-white text-neutral-800"
                       }`}
                     >
                       <p className="text-sm">{message.message}</p>
                       <p className={`text-xs mt-1 ${
-                        message.sender === "restaurant" ? "text-blue-100" : "text-gray-500"
+                        message.sender === "restaurant" ? "text-primary-100" : "text-neutral-500"
                       }`}>
                         {new Date(message.timestamp).toLocaleTimeString()}
                       </p>
@@ -423,14 +427,14 @@ export default function OrdersPage() {
             </div>
 
             {/* Message Input */}
-            <div className="p-6 border-t">
+            <div className="border-t border-neutral-200 p-6">
               <div className="flex gap-3">
                 <input
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type your message..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input flex-1"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter' && !sendingMessage) {
                       sendChatMessage();
@@ -440,9 +444,10 @@ export default function OrdersPage() {
                 <button
                   onClick={sendChatMessage}
                   disabled={sendingMessage || !newMessage.trim()}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="btn btn-primary px-4 disabled:bg-neutral-300 disabled:text-neutral-500"
                 >
-                  {sendingMessage ? "Sending..." : "Send"}
+                  <FiSend className="h-4 w-4" />
+                  <span className="hidden sm:inline">{sendingMessage ? "Sending..." : "Send"}</span>
                 </button>
               </div>
             </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiSearch, FiCoffee, FiStar, FiAlertCircle, FiFilter } from "react-icons/fi";
+import { FiSearch, FiStar, FiAlertCircle, FiFilter, FiChevronDown } from "react-icons/fi";
+import { FaUtensils } from "react-icons/fa";
 import Button from "../ui/Button";
 import { publicApi, API_ENDPOINTS } from "../../config/api";
 
@@ -79,7 +80,7 @@ export default function AllRestaurants() {
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div className="flex items-center gap-3">
             <div className="icon-tile bg-primary-50 text-primary-600">
-              <FiCoffee className="h-5 w-5" />
+              <FaUtensils className="h-5 w-5" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-neutral-950 md:text-3xl">All Restaurants</h1>
@@ -122,9 +123,7 @@ export default function AllRestaurants() {
               ))}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-              <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              <FiChevronDown className="h-5 w-5 text-neutral-400" />
             </div>
           </div>
         </div>
@@ -132,7 +131,7 @@ export default function AllRestaurants() {
         {filteredRestaurants.length === 0 ? (
           <div className="surface-panel py-16 text-center">
             <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-md bg-neutral-100">
-              <FiCoffee className="h-8 w-8 text-neutral-400" />
+              <FaUtensils className="h-8 w-8 text-neutral-400" />
             </div>
             <h3 className="mb-2 text-xl font-semibold text-neutral-700">No restaurants found</h3>
             <p className="text-neutral-500">Try adjusting your search or filter criteria.</p>
@@ -161,7 +160,7 @@ export default function AllRestaurants() {
                     className="flex flex-col items-center justify-center px-4 text-center text-lg font-bold text-primary-600"
                     style={{ display: restaurant.image ? 'none' : 'flex' }}
                   >
-                    <FiCoffee className="mb-2 h-14 w-14" />
+                    <FaUtensils className="mb-2 h-14 w-14" />
                     <span className="text-sm">{restaurant.name}</span>
                   </div>
                   {restaurant.cuisine && (

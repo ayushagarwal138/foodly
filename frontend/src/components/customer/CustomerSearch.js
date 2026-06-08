@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiSearch, FiHeart, FiShoppingCart, FiStar, FiClock, FiCoffee, FiFilter, FiAlertCircle } from "react-icons/fi";
+import { FiSearch, FiHeart, FiShoppingCart, FiStar, FiClock, FiFilter, FiAlertCircle } from "react-icons/fi";
+import { FaUtensils } from "react-icons/fa";
 import Button from "../ui/Button";
 import { api, API_ENDPOINTS } from "../../config/api";
 
@@ -173,7 +174,7 @@ export default function CustomerSearch({ restaurants, query: parentQuery, setQue
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.length === 0 ? (
           <div className="col-span-full py-12 text-center">
-            <FiCoffee className="mx-auto mb-4 h-14 w-14 text-neutral-300" />
+            <FaUtensils className="mx-auto mb-4 h-14 w-14 text-neutral-300" />
             <p className="text-neutral-600 font-medium">No restaurants or dishes available.</p>
           </div>
         ) : (
@@ -197,7 +198,7 @@ export default function CustomerSearch({ restaurants, query: parentQuery, setQue
                   />
                 ) : null}
                 <div className="flex flex-col items-center justify-center px-4 text-center text-lg font-bold text-primary-600" style={{ display: r.img ? 'none' : 'flex' }}>
-                  <FiCoffee className="mb-2 h-12 w-12" />
+                  <FaUtensils className="mb-2 h-12 w-12" />
                   <span className="text-xs">{r.name}</span>
                 </div>
                 {r.cuisine && (

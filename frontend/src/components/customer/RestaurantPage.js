@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FiHeart, FiShoppingCart, FiPlus, FiMinus, FiTrash2, FiStar, FiClock, FiCoffee, FiAlertCircle, FiCheck } from "react-icons/fi";
+import { FiHeart, FiShoppingCart, FiPlus, FiMinus, FiTrash2, FiStar, FiClock, FiAlertCircle, FiCheck } from "react-icons/fi";
+import { FaUtensils } from "react-icons/fa";
 import { useCart } from "./CartContext";
 import Button from "../ui/Button";
 import { api, publicApi, API_ENDPOINTS } from "../../config/api";
@@ -246,7 +247,7 @@ export default function RestaurantPage() {
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 rounded-xl bg-primary-50 border-2 border-primary-100">
-                <FiCoffee className="w-6 h-6 text-primary-600" />
+                <FaUtensils className="w-6 h-6 text-primary-600" />
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl font-extrabold text-dark-primary mb-2">{info.name}</h1>

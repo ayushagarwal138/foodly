@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { FiPlus } from "react-icons/fi";
 import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function OffersPage() {
@@ -75,8 +76,9 @@ export default function OffersPage() {
           <h2 className="text-2xl font-bold text-[#16213e]">Offer Management</h2>
           <p className="text-gray-600">Manage promotional offers and coupon codes</p>
         </div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-          + Create New Offer
+        <button className="btn btn-primary">
+          <FiPlus className="h-4 w-4" />
+          Create New Offer
         </button>
       </div>
 

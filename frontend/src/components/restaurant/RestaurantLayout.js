@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { FiPackage, FiDollarSign, FiClock, FiCheckCircle, FiArrowRight, FiCoffee, FiMenu, FiAlertCircle } from "react-icons/fi";
+import { FiPackage, FiDollarSign, FiClock, FiCheckCircle, FiArrowRight, FiMenu, FiAlertCircle } from "react-icons/fi";
+import { FaUtensils } from "react-icons/fa";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import OrdersPage from "./OrdersPage";
@@ -132,7 +133,7 @@ function DashboardContent() {
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-3 rounded-xl bg-white border-2 border-primary-200">
-                  <FiCoffee className="w-6 h-6 text-primary-600" />
+                  <FaUtensils className="w-6 h-6 text-primary-600" />
                 </div>
                 <div>
                   <h1 className="text-3xl md:text-4xl font-extrabold text-dark-primary mb-2">

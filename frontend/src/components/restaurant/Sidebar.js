@@ -41,10 +41,10 @@ export default function Sidebar({ current, open, setOpen }) {
         </button>
       )}
       <div className="flex items-center gap-3 px-5 pb-6">
-        <img src="/logo.jpeg" alt="Foodly Logo" className="h-11 w-11 rounded-md object-cover ring-1 ring-neutral-200" />
+        <img src="/logo.jpeg" alt="Foodly Logo" className="h-10 w-28 rounded-md bg-white object-contain" />
         <div>
-          <span className="block text-xl font-extrabold tracking-normal text-neutral-950">Foodly</span>
-          <span className="text-xs font-medium text-neutral-500">Restaurant</span>
+          <span className="block text-sm font-bold tracking-normal text-neutral-950">Restaurant</span>
+          <span className="text-xs font-medium text-neutral-500">Workspace</span>
         </div>
       </div>
       <nav className="flex w-full flex-col gap-1 px-3" aria-label="Main navigation">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FiPackage, FiCalendar, FiCoffee, FiCheckCircle, FiXCircle, FiClock, FiTruck, FiMessageCircle, FiStar, FiEye, FiDollarSign, FiAlertCircle } from "react-icons/fi";
+import { FiPackage, FiCalendar, FiCheckCircle, FiXCircle, FiClock, FiTruck, FiMessageCircle, FiStar, FiEye, FiDollarSign, FiAlertCircle } from "react-icons/fi";
+import { FaUtensils } from "react-icons/fa";
 import ReviewModal from "./ReviewModal";
 import Button from "../ui/Button";
 import { api, API_ENDPOINTS } from "../../config/api";
@@ -179,7 +180,7 @@ export default function CustomerOrders() {
                           <span>{new Date(o.date || o.createdAt).toLocaleDateString()}</span>
                         </div>
                         <div className="flex items-center gap-2 text-neutral-600">
-                          <FiCoffee className="w-4 h-4 text-neutral-400" />
+                          <FaUtensils className="w-4 h-4 text-neutral-400" />
                           <span>{o.restaurant || 'Restaurant'}</span>
                         </div>
                         <div className="flex items-center gap-2 text-neutral-600">

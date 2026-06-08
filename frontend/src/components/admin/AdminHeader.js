@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { FiBell, FiChevronDown, FiMenu, FiSearch } from "react-icons/fi";
 import { api, API_ENDPOINTS, clearAuth } from "../../config/api";
 
 export default function AdminHeader({ setSidebarOpen, sidebarOpen }) {
@@ -93,13 +94,11 @@ export default function AdminHeader({ setSidebarOpen, sidebarOpen }) {
             onClick={() => setSidebarOpen(!sidebarOpen)}
             aria-label="Toggle sidebar"
           >
-            <svg className="h-5 w-5 text-neutral-800" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <FiMenu className="h-5 w-5 text-neutral-800" />
           </button>
           
           <div className="flex items-center gap-3">
-            <img src="/logo.jpeg" alt="Foodly Logo" className="h-9 w-9 rounded-md border border-neutral-200 object-cover" />
+            <img src="/logo.jpeg" alt="Foodly Logo" className="h-9 w-28 rounded-md bg-white object-contain" />
             <div>
               <h1 className="text-lg font-bold text-neutral-950">Admin Panel</h1>
               <p className="hidden text-xs font-medium text-neutral-500 sm:block">Platform management</p>
@@ -115,9 +114,7 @@ export default function AdminHeader({ setSidebarOpen, sidebarOpen }) {
               placeholder="Search users, restaurants, orders..."
               className="h-10 w-full rounded-md border border-neutral-200 bg-neutral-50 pl-10 pr-4 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             />
-            <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-neutral-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+            <FiSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-neutral-400" />
           </div>
         </div>
 
@@ -128,10 +125,9 @@ export default function AdminHeader({ setSidebarOpen, sidebarOpen }) {
             <button
               className="relative rounded-md p-2 transition-colors hover:bg-neutral-100"
               onClick={() => setNotificationDropdownOpen(!notificationDropdownOpen)}
+              aria-label="Notifications"
             >
-              <svg className="h-5 w-5 text-neutral-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-5 5v-5zM10.5 3.75a6 6 0 00-6 6v3.75a6 6 0 006 6h3a6 6 0 006-6V9.75a6 6 0 00-6-6h-3z" />
-              </svg>
+              <FiBell className="h-5 w-5 text-neutral-700" />
               {notificationCount > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-xs text-white">
                   {notificationCount}
@@ -208,9 +204,7 @@ export default function AdminHeader({ setSidebarOpen, sidebarOpen }) {
                 <p className="text-sm font-semibold text-neutral-900">{username}</p>
                 <p className="text-xs text-neutral-500">{userRole}</p>
               </div>
-              <svg className="h-4 w-4 text-neutral-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
+              <FiChevronDown className="h-4 w-4 text-neutral-500" />
             </button>
 
             {/* User Dropdown */}
