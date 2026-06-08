@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { FiEdit2, FiPackage, FiPower, FiTrash2 } from "react-icons/fi";
 import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function MenuPage() {
@@ -19,6 +20,12 @@ export default function MenuPage() {
   const [editingItem, setEditingItem] = useState(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const restaurantId = localStorage.getItem("restaurantId");
+
+  const formatPrice = (price) => {
+    const amount = Number(price);
+    if (Number.isNaN(amount)) return price;
+    return `₹${amount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+  };
 
   const fetchMenu = async () => {
     setError("");
@@ -253,7 +260,10 @@ export default function MenuPage() {
                     onChange={() => setNewItem(prev => ({ ...prev, veg: true }))}
                     className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
                   />
-                  <span className="ml-2 text-sm text-gray-700">🟢 Vegetarian</span>
+                  <span className="ml-2 inline-flex items-center gap-2 text-sm text-gray-700">
+                    <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
+                    Vegetarian
+                  </span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -264,7 +274,10 @@ export default function MenuPage() {
                     onChange={() => setNewItem(prev => ({ ...prev, veg: false }))}
                     className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
                   />
-                  <span className="ml-2 text-sm text-gray-700">🔴 Non-Vegetarian</span>
+                  <span className="ml-2 inline-flex items-center gap-2 text-sm text-gray-700">
+                    <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
+                    Non-Vegetarian
+                  </span>
                 </label>
               </div>
             </div>
@@ -389,7 +402,10 @@ export default function MenuPage() {
                     onChange={() => setEditingItem(prev => ({ ...prev, veg: true }))}
                     className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
                   />
-                  <span className="ml-2 text-sm text-gray-700">🟢 Vegetarian</span>
+                  <span className="ml-2 inline-flex items-center gap-2 text-sm text-gray-700">
+                    <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
+                    Vegetarian
+                  </span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -400,7 +416,10 @@ export default function MenuPage() {
                     onChange={() => setEditingItem(prev => ({ ...prev, veg: false }))}
                     className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
                   />
-                  <span className="ml-2 text-sm text-gray-700">🔴 Non-Vegetarian</span>
+                  <span className="ml-2 inline-flex items-center gap-2 text-sm text-gray-700">
+                    <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
+                    Non-Vegetarian
+                  </span>
                 </label>
               </div>
             </div>
@@ -483,97 +502,106 @@ export default function MenuPage() {
           <div className="text-sm text-gray-400">Add your first menu item to get started.</div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           {menuItems.map((item) => (
-            <div key={item.id} className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold text-[#16213e]">{item.name}</h3>
-                    <span className={`text-sm px-2 py-1 rounded-full ${
-                      item.veg ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            <article key={item.id} className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+              <div className="mb-4 flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <h3 className="truncate text-xl font-bold text-neutral-950">{item.name}</h3>
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                      item.veg ? "bg-green-50 text-green-700 ring-1 ring-green-100" : "bg-red-50 text-red-700 ring-1 ring-red-100"
                     }`}>
-                      {item.veg ? '🟢 Veg' : '🔴 Non-Veg'}
+                      <span className={`h-2 w-2 rounded-full ${item.veg ? "bg-green-500" : "bg-red-500"}`} />
+                      {item.veg ? "Veg" : "Non-Veg"}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600">{item.category}</p>
+                  <p className="text-sm font-medium text-neutral-500">{item.category || "Uncategorized"}</p>
                 </div>
-                                  <span className="text-lg font-bold text-[#16213e]">₹{item.price}</span>
+                <span className="shrink-0 text-2xl font-extrabold text-neutral-950">{formatPrice(item.price)}</span>
               </div>
-              
-              <p className="text-gray-700 mb-4">{item.description}</p>
-              
+
+              {item.description && (
+                <p className="mb-5 line-clamp-2 text-sm leading-6 text-neutral-600">{item.description}</p>
+              )}
+
               {/* Quantity Display */}
               {item.showQuantity && (
-                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-blue-800">Quantity Available:</span>
-                    <div className="flex items-center gap-2">
+                <div className="mb-4 rounded-md border border-blue-100 bg-blue-50 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <span className="inline-flex items-center gap-2 text-sm font-semibold text-blue-800">
+                      <FiPackage className="h-4 w-4" />
+                      Quantity
+                    </span>
+                    <label className="flex items-center gap-2">
                       <input
                         type="number"
                         value={item.quantityAvailable || 0}
                         onChange={(e) => updateQuantity(item, parseInt(e.target.value) || 0)}
-                        className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="h-9 w-20 rounded-md border border-blue-200 bg-white px-2 text-sm font-semibold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
                         min="0"
                       />
-                      <span className="text-xs text-blue-600">units</span>
-                    </div>
+                      <span className="text-xs font-medium text-blue-700">units</span>
+                    </label>
                   </div>
                 </div>
               )}
-              
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+
+              <div className="flex flex-col gap-4 border-t border-neutral-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                     item.isAvailable 
-                      ? "bg-green-100 text-green-800" 
-                      : "bg-red-100 text-red-800"
+                      ? "bg-green-50 text-green-700 ring-1 ring-green-100" 
+                      : "bg-red-50 text-red-700 ring-1 ring-red-100"
                   }`}>
                     {item.isAvailable ? "Available" : "Out of Stock"}
                   </span>
                   {item.showQuantity && item.quantityAvailable <= 5 && item.quantityAvailable > 0 && (
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    <span className="rounded-full bg-yellow-50 px-2.5 py-1 text-xs font-semibold text-yellow-700 ring-1 ring-yellow-100">
                       Low Stock
                     </span>
                   )}
                 </div>
-                
-                <div className="flex gap-2">
+
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end">
                   <button
                     onClick={() => startEditing(item)}
-                    className="px-3 py-1 rounded text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                    className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-neutral-200 bg-white px-3 text-xs font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
+                    <FiEdit2 className="h-3.5 w-3.5" />
                     Edit
                   </button>
                   <button
                     onClick={() => toggleVegStatus(item)}
-                    className={`px-3 py-1 rounded text-xs font-medium ${
+                    className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                       item.veg
-                        ? "bg-red-600 text-white hover:bg-red-700"
-                        : "bg-green-600 text-white hover:bg-green-700"
-                    } transition-colors`}
+                        ? "border border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+                        : "border border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
+                    }`}
                   >
                     {item.veg ? "Make Non-Veg" : "Make Veg"}
                   </button>
                   <button
                     onClick={() => toggleAvailability(item)}
-                    className={`px-3 py-1 rounded text-xs font-medium ${
+                    className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                       item.isAvailable
-                        ? "bg-red-600 text-white hover:bg-red-700"
-                        : "bg-green-600 text-white hover:bg-green-700"
-                    } transition-colors`}
+                        ? "border border-yellow-200 bg-yellow-50 text-yellow-800 hover:bg-yellow-100"
+                        : "border border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
+                    }`}
                   >
-                    {item.isAvailable ? "Out of Stock" : "In Stock"}
+                    <FiPower className="h-3.5 w-3.5" />
+                    {item.isAvailable ? "Mark Out" : "Restock"}
                   </button>
                   <button
                     onClick={() => deleteMenuItem(item)}
-                    className="px-3 py-1 rounded text-xs font-medium bg-red-600 text-white hover:bg-red-700 transition-colors"
+                    className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-red-200 bg-white px-3 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
+                    <FiTrash2 className="h-3.5 w-3.5" />
                     Delete
                   </button>
                 </div>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       )}

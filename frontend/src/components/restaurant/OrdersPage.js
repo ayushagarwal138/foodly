@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { FiCheckCircle, FiClock, FiMessageCircle, FiPackage, FiSend, FiTruck, FiX, FiXCircle } from "react-icons/fi";
 import { api, API_ENDPOINTS } from "../../config/api";
+import { keepPreviousIfSame } from "../../utils/state";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -33,21 +34,23 @@ export default function OrdersPage() {
     }
   }, [userId]);
 
-  const fetchOrders = useCallback(async () => {
+  const fetchOrders = useCallback(async ({ silent = false } = {}) => {
     if (!restaurantId) {
       console.log("No restaurant ID available, skipping order fetch");
       return;
     }
     
-    setError("");
+    if (!silent) setError("");
     try {
       console.log("Fetching orders for restaurant ID:", restaurantId);
       const data = await api.get(API_ENDPOINTS.RESTAURANT_ORDERS(restaurantId));
       console.log("Fetched orders:", data);
-      setOrders(Array.isArray(data) ? data : []);
+      const nextOrders = Array.isArray(data) ? data : [];
+      setOrders(previous => keepPreviousIfSame(previous, nextOrders));
+      if (!silent) setError("");
     } catch (err) {
       console.error("Error fetching orders:", err);
-      setError(err.message);
+      if (!silent) setError(err.message);
     }
   }, [restaurantId]);
 
@@ -95,10 +98,11 @@ export default function OrdersPage() {
   const fetchChatMessages = async (orderId) => {
     try {
       const data = await api.get(`${API_ENDPOINTS.SUPPORT_MESSAGES}?orderId=${orderId}&restaurantId=${restaurantId}`);
-      setChatMessages(Array.isArray(data) ? data : []);
+      const nextMessages = Array.isArray(data) ? data : [];
+      setChatMessages(previous => keepPreviousIfSame(previous, nextMessages));
     } catch (err) {
       console.error("Error fetching chat messages:", err);
-      setChatMessages([]);
+      setChatMessages(previous => previous.length === 0 ? previous : []);
     }
   };
 
@@ -175,7 +179,7 @@ export default function OrdersPage() {
     if (!restaurantId) return;
 
     const pollInterval = setInterval(() => {
-      fetchOrders();
+      fetchOrders({ silent: true });
     }, 5000); // Poll every 5 seconds
 
     return () => clearInterval(pollInterval);

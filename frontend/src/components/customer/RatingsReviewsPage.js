@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { api, API_ENDPOINTS } from "../../config/api";
+import { keepPreviousIfSame } from "../../utils/state";
 
 export default function RatingsReviewsPage() {
   const [reviews, setReviews] = useState([]);
@@ -7,15 +8,17 @@ export default function RatingsReviewsPage() {
   const [error, setError] = useState("");
   const userId = localStorage.getItem("userId");
 
-  const fetchReviews = async () => {
-    setError("");
+  const fetchReviews = async ({ silent = false } = {}) => {
+    if (!silent) setError("");
     try {
       const data = await api.get(API_ENDPOINTS.MY_REVIEWS);
       console.log("Received reviews:", data);
-      setReviews(data);
+      const nextReviews = Array.isArray(data) ? data : [];
+      setReviews(previous => keepPreviousIfSame(previous, nextReviews));
+      if (!silent) setError("");
     } catch (err) {
       console.error("Error fetching reviews:", err);
-      setError(err.message);
+      if (!silent) setError(err.message);
     }
   };
 
@@ -36,7 +39,7 @@ export default function RatingsReviewsPage() {
     if (!userId) return;
 
     const pollInterval = setInterval(() => {
-      fetchReviews();
+      fetchReviews({ silent: true });
     }, 5000); // Poll every 5 seconds
 
     return () => clearInterval(pollInterval);

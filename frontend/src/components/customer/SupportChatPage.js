@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FiMessageCircle, FiSend } from "react-icons/fi";
 import { api, API_ENDPOINTS } from "../../config/api";
+import { keepPreviousIfSame } from "../../utils/state";
 
 export default function SupportChatPage() {
   const [messages, setMessages] = useState([]);
@@ -17,7 +18,8 @@ export default function SupportChatPage() {
     setError("");
     try {
       const data = await api.get(`${API_ENDPOINTS.SUPPORT_MESSAGES}?orderId=${orderId}&customerId=${userId}&restaurantId=${restaurantId}`);
-      setMessages(Array.isArray(data) ? data : []);
+      const nextMessages = Array.isArray(data) ? data : [];
+      setMessages(previous => keepPreviousIfSame(previous, nextMessages));
     } catch (err) {
       console.error("Error fetching messages:", err);
       setError(err.message);

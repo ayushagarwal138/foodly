@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiCheckCircle, FiClock, FiMapPin, FiMessageCircle, FiPackage, FiRefreshCw, FiStar, FiTruck, FiXCircle } from "react-icons/fi";
 import { api, API_ENDPOINTS } from "../../config/api";
+import { keepPreviousIfSame } from "../../utils/state";
 
 export default function OrderHistoryPage() {
   const navigate = useNavigate();
@@ -9,16 +10,20 @@ export default function OrderHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const fetchOrders = async () => {
-    setLoading(true);
-    setError("");
+  const fetchOrders = async ({ silent = false } = {}) => {
+    if (!silent) {
+      setLoading(true);
+      setError("");
+    }
     try {
       const data = await api.get(API_ENDPOINTS.MY_ORDERS);
-      setOrders(Array.isArray(data) ? data : []);
+      const nextOrders = Array.isArray(data) ? data : [];
+      setOrders(previous => keepPreviousIfSame(previous, nextOrders));
+      if (!silent) setError("");
     } catch (err) {
-      setError(err.message);
+      if (!silent) setError(err.message);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -26,7 +31,7 @@ export default function OrderHistoryPage() {
     fetchOrders();
     
     // Set up real-time updates - refresh orders every 30 seconds
-    const interval = setInterval(fetchOrders, 30000);
+    const interval = setInterval(() => fetchOrders({ silent: true }), 30000);
     
     return () => clearInterval(interval);
   }, []);

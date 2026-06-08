@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { FiPackage, FiCalendar, FiCheckCircle, FiXCircle, FiClock, FiTruck, FiMessageCircle, FiStar, FiEye, FiDollarSign, FiAlertCircle } from "react-icons/fi";
 import { FaUtensils } from "react-icons/fa";
 import ReviewModal from "./ReviewModal";
 import Button from "../ui/Button";
 import { api, API_ENDPOINTS } from "../../config/api";
+import { keepPreviousIfSame } from "../../utils/state";
 
 export default function CustomerOrders() {
   const [orders, setOrders] = useState([]);
@@ -12,15 +13,17 @@ export default function CustomerOrders() {
   const [error, setError] = useState("");
   const [reviewOrder, setReviewOrder] = useState(null);
 
-  const fetchOrders = useCallback(async () => {
-    setError("");
+  const fetchOrders = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setError("");
     try {
       const data = await api.get(API_ENDPOINTS.MY_ORDERS);
       console.log("Fetched orders:", data);
-      setOrders(data);
+      const nextOrders = Array.isArray(data) ? data : [];
+      setOrders(previous => keepPreviousIfSame(previous, nextOrders));
+      if (!silent) setError("");
     } catch (err) {
       console.error("Error fetching orders:", err);
-      setError(err.message);
+      if (!silent) setError(err.message);
     }
   }, []);
 
@@ -41,7 +44,7 @@ export default function CustomerOrders() {
     if (!localStorage.getItem("userId")) return;
 
     const pollInterval = setInterval(() => {
-      fetchOrders();
+      fetchOrders({ silent: true });
     }, 5000); // Poll every 5 seconds
 
     return () => clearInterval(pollInterval);

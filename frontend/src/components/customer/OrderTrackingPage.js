@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiCheck, FiCheckCircle, FiClock, FiMessageCircle, FiPackage, FiSend, FiTruck, FiX } from "react-icons/fi";
 import { api, API_ENDPOINTS } from "../../config/api";
+import { keepPreviousIfSame } from "../../utils/state";
 
 const STATUS_STEPS = [
   { key: "new", label: "Order Placed", icon: FiPackage },
@@ -29,21 +30,24 @@ export default function OrderTrackingPage() {
   const [sendingMessage, setSendingMessage] = useState(false);
   const userId = localStorage.getItem("userId");
 
-  const fetchOrder = async () => {
-    setLoading(true);
-    setError("");
+  const fetchOrder = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
+      setLoading(true);
+      setError("");
+    }
     try {
       const data = await api.get(API_ENDPOINTS.ORDER_BY_ID(orderId));
       console.log("Fetched order data:", data);
-      setOrder(data);
+      setOrder(previous => keepPreviousIfSame(previous, data));
       setCurrentStatus(data.status || "New");
+      if (!silent) setError("");
     } catch (err) {
       console.error("Error fetching order:", err);
-      setError(err.message);
+      if (!silent) setError(err.message);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  };
+  }, [orderId]);
 
   const fetchChatMessages = async () => {
     console.log("Attempting to fetch chat messages with:", { order, orderId, userId, restaurantId: order?.restaurantId });
@@ -61,10 +65,11 @@ export default function OrderTrackingPage() {
     try {
       const data = await api.get(`${API_ENDPOINTS.SUPPORT_MESSAGES}?orderId=${orderId}&customerId=${userId}&restaurantId=${order.restaurantId}`);
       console.log("Fetched chat messages:", data);
-      setChatMessages(Array.isArray(data) ? data : []);
+      const nextMessages = Array.isArray(data) ? data : [];
+      setChatMessages(previous => keepPreviousIfSame(previous, nextMessages));
     } catch (err) {
       console.error("Error fetching chat messages:", err);
-      setChatMessages([]);
+      setChatMessages(previous => previous.length === 0 ? previous : []);
     }
   };
 
@@ -131,18 +136,18 @@ export default function OrderTrackingPage() {
     if (orderId) {
       fetchOrder();
     }
-  }, [orderId]);
+  }, [orderId, fetchOrder]);
 
   // Polling for order updates
   useEffect(() => {
     if (!orderId) return;
 
     const pollInterval = setInterval(() => {
-      fetchOrder();
+      fetchOrder({ silent: true });
     }, 5000); // Poll every 5 seconds
 
     return () => clearInterval(pollInterval);
-  }, [orderId]);
+  }, [orderId, fetchOrder]);
 
   // Polling for chat messages when chat modal is open
   useEffect(() => {

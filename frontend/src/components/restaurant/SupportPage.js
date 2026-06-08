@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { api, API_ENDPOINTS } from "../../config/api";
+import { keepPreviousIfSame } from "../../utils/state";
 
 export default function SupportPage() {
   const [messages, setMessages] = useState([]);
@@ -28,20 +29,22 @@ export default function SupportPage() {
     }
   }, [userId]);
 
-  const fetchMessages = useCallback(async () => {
+  const fetchMessages = useCallback(async ({ silent = false } = {}) => {
     if (!restaurantId) {
       console.log("No restaurant ID available for fetching messages");
       return;
     }
     
-    setError("");
+    if (!silent) setError("");
     try {
       const data = await api.get(API_ENDPOINTS.SUPPORT_MESSAGES_BY_RESTAURANT(restaurantId));
       console.log("Fetched support messages:", data);
-      setMessages(Array.isArray(data) ? data : []);
+      const nextMessages = Array.isArray(data) ? data : [];
+      setMessages(previous => keepPreviousIfSame(previous, nextMessages));
+      if (!silent) setError("");
     } catch (err) {
       console.error("Error fetching support messages:", err);
-      setError(err.message);
+      if (!silent) setError(err.message);
     }
   }, [restaurantId]);
 
@@ -92,7 +95,7 @@ export default function SupportPage() {
     if (!restaurantId) return;
     
     const interval = setInterval(() => {
-      fetchMessages();
+      fetchMessages({ silent: true });
     }, 30000);
 
     return () => clearInterval(interval);

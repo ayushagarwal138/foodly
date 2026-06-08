@@ -21,7 +21,7 @@ export default function UnreadMessageNotification({ userType = 'customer' }) {
         ? data.customerUnread || 0
         : data.restaurantUnread || 0;
       
-      setUnreadCount(count);
+      setUnreadCount(previous => previous === count ? previous : count);
     } catch (err) {
       console.error('Error fetching unread count:', err);
       setUnreadCount(0);
