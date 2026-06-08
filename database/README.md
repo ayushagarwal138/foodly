@@ -1,11 +1,15 @@
 # Foodly Database Setup
 
-This directory contains the database setup scripts for the Foodly application.
+This directory contains database bootstrap scripts for the Foodly application.
+Flyway migrations in `backend/src/main/resources/db/migration` are the
+authoritative schema history for application-managed databases.
 
 ## Files
 
 - `neon-setup.sql` - Neon PostgreSQL specific setup (extensions, functions, etc.)
-- `migration.sql` - Complete database migration script with all tables, triggers, and indexes
+- `migration.sql` - Docker entrypoint bootstrap for brand-new local PostgreSQL volumes, kept in sync with the current Flyway schema
+- `validate-staging.sh` - Current release gate for staging database validation before production
+- `STAGING_VALIDATION.md` - Step-by-step staging validation and production release checklist
 - `README.md` - This documentation file
 
 ## Database Schema
@@ -35,12 +39,13 @@ The Foodly application uses PostgreSQL with the following main entities:
 
 ### Local Development (Docker)
 1. Use the `docker-compose.yml` in the root directory
-2. The database will be automatically initialized with `schema.sql`
+2. The database will be automatically initialized with `database/migration.sql`
+3. The backend still runs Flyway on startup for future additive migrations
 
 ### Production (Neon PostgreSQL)
 1. Create a Neon PostgreSQL database
-2. Run `neon-setup.sql` first for extensions and functions
-3. Run `migration.sql` for complete schema setup
+2. Run the backend with Flyway enabled so migrations apply in order
+3. Use `migration.sql` only for fresh manual bootstraps when Flyway cannot create the schema itself
 
 ### Manual Setup
 ```bash
@@ -59,7 +64,7 @@ Configure these environment variables for database connection:
 SPRING_DATASOURCE_URL=jdbc:postgresql://host:port/database
 SPRING_DATASOURCE_USERNAME=your_username
 SPRING_DATASOURCE_PASSWORD=your_password
-SPRING_JPA_HIBERNATE_DDL_AUTO=update
+SPRING_JPA_HIBERNATE_DDL_AUTO=validate
 ```
 
 ## Performance Considerations
@@ -74,5 +79,5 @@ SPRING_JPA_HIBERNATE_DDL_AUTO=update
 For production deployments:
 1. Always backup existing data before running migrations
 2. Test migrations in a staging environment first
-3. Use `CREATE TABLE IF NOT EXISTS` for safe migrations
-4. Consider using a proper migration tool like Flyway or Liquibase for complex deployments 
+3. Run `./database/validate-staging.sh` against staging after Flyway applies migrations
+4. Use Flyway migrations for schema changes; do not edit applied migration files 

@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -11,11 +12,13 @@ public class User {
     private Long id;
 
     private String username;
+    @JsonIgnore
     private String password;
     private String email;
     private String role; // CUSTOMER, RESTAURANT, ADMIN
     private Boolean isBlocked = false; // Track if user is blocked
     private String provider;
+    @JsonIgnore
     private String providerSubject;
     private Boolean emailVerified = false;
     private LocalDateTime lastLoginAt;

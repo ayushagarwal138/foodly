@@ -17,4 +17,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     long countByRestaurantIdAndSenderAndIsReadFalse(Long restaurantId, String sender);
     List<ChatMessage> findByOrderIdAndCustomerIdAndSenderAndIsReadFalse(Long orderId, Long customerId, String sender);
     List<ChatMessage> findByOrderIdAndRestaurantIdAndSenderAndIsReadFalse(Long orderId, Long restaurantId, String sender);
+    List<ChatMessage> findByOrderIdAndCustomerIdAndRestaurantIdAndSenderAndIsReadFalse(
+        Long orderId, Long customerId, Long restaurantId, String sender
+    );
 } 

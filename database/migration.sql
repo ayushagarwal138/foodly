@@ -1,10 +1,10 @@
--- Foodly Database Migration Script
--- This script sets up the complete database structure with triggers and indexes
+-- Foodly database bootstrap.
+-- Flyway migrations under backend/src/main/resources/db/migration are authoritative
+-- for application-managed databases. This file mirrors the current schema for
+-- Docker entrypoint initialization of brand-new local PostgreSQL volumes.
 
--- Create extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -13,18 +13,24 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- USERS: customers, restaurant owners, admins
 CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,
     username VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
+    password VARCHAR(255),
     email VARCHAR(255) NOT NULL UNIQUE,
-    role VARCHAR(50) NOT NULL, -- 'CUSTOMER', 'RESTAURANT', 'ADMIN'
+    role VARCHAR(50) NOT NULL,
+    is_blocked BOOLEAN DEFAULT FALSE,
+    provider VARCHAR(50) DEFAULT 'LOCAL',
+    provider_subject VARCHAR(255),
+    email_verified BOOLEAN DEFAULT FALSE,
+    last_login_at TIMESTAMP,
+    disabled_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_users_role CHECK (role IN ('CUSTOMER', 'RESTAURANT', 'RESTAURANT_OWNER', 'ADMIN')),
+    CONSTRAINT uq_users_provider_subject UNIQUE (provider, provider_subject)
 );
 
--- RESTAURANTS: owned by a user with role 'RESTAURANT'
 CREATE TABLE IF NOT EXISTS restaurants (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -35,21 +41,20 @@ CREATE TABLE IF NOT EXISTS restaurants (
     opening_hours VARCHAR(100),
     is_active BOOLEAN DEFAULT TRUE,
     slug VARCHAR(255) UNIQUE,
-    owner_id BIGINT NOT NULL,
+    owner_id BIGINT NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- MENU ITEMS: belong to a restaurant
 CREATE TABLE IF NOT EXISTS menu_items (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
+    price DOUBLE PRECISION NOT NULL CHECK (price >= 0),
     category VARCHAR(100),
     veg BOOLEAN DEFAULT TRUE,
     is_available BOOLEAN DEFAULT TRUE,
-    quantity_available INTEGER,
+    quantity_available INTEGER CHECK (quantity_available IS NULL OR quantity_available >= 0),
     show_quantity BOOLEAN DEFAULT FALSE,
     restaurant_id BIGINT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -57,30 +62,29 @@ CREATE TABLE IF NOT EXISTS menu_items (
     FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
 );
 
--- ORDERS: placed by a customer, for a restaurant
 CREATE TABLE IF NOT EXISTS orders (
     id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL, -- customer
+    user_id BIGINT NOT NULL,
     restaurant_id BIGINT NOT NULL,
     status VARCHAR(50) NOT NULL,
-    total DECIMAL(10,2) NOT NULL,
+    total DOUBLE PRECISION NOT NULL CHECK (total >= 0),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE,
+    CONSTRAINT chk_orders_status CHECK (status IN ('New', 'Accepted', 'Preparing', 'Out for Delivery', 'Delivered', 'Cancelled', 'Refunded'))
 );
 
--- ORDER ITEMS: items in an order
 CREATE TABLE IF NOT EXISTS order_items (
     id BIGSERIAL PRIMARY KEY,
     order_id BIGINT NOT NULL,
     menu_item_id BIGINT NOT NULL,
-    quantity INT NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    quantity INT NOT NULL CHECK (quantity > 0),
+    price DOUBLE PRECISION NOT NULL CHECK (price >= 0),
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-    FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE
+    CONSTRAINT fk_order_items_menu_item FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE RESTRICT
 );
 
--- REVIEWS: left by a customer for an order/restaurant
 CREATE TABLE IF NOT EXISTS reviews (
     id BIGSERIAL PRIMARY KEY,
     customer_id BIGINT NOT NULL,
@@ -88,108 +92,101 @@ CREATE TABLE IF NOT EXISTS reviews (
     restaurant_id BIGINT NOT NULL,
     menu_item_id BIGINT NOT NULL,
     menu_item_name VARCHAR(255) NOT NULL,
-    rating INT NOT NULL,
+    rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
     text TEXT,
+    is_flagged BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL,
     FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE,
-    FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE
+    CONSTRAINT fk_reviews_menu_item FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE RESTRICT
 );
 
--- WISHLIST: customer can wishlist restaurants or dishes
 CREATE TABLE IF NOT EXISTS wishlist (
     id BIGSERIAL PRIMARY KEY,
     customer_id BIGINT NOT NULL,
-    type VARCHAR(20) NOT NULL, -- 'RESTAURANT' or 'DISH'
+    type VARCHAR(20) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    restaurant VARCHAR(255),
     restaurant_id BIGINT,
     menu_item_id BIGINT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE,
-    FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE
+    FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE,
+    CONSTRAINT chk_wishlist_type CHECK (type IN ('RESTAURANT', 'DISH'))
 );
 
--- CART: customer cart items
 CREATE TABLE IF NOT EXISTS cart (
     id BIGSERIAL PRIMARY KEY,
     customer_id BIGINT NOT NULL,
     menu_item_id BIGINT NOT NULL,
-    quantity INT NOT NULL,
+    quantity INT NOT NULL CHECK (quantity > 0),
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE
+    FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE,
+    CONSTRAINT uq_cart_customer_menu_item UNIQUE (customer_id, menu_item_id)
 );
 
--- OFFERS: promotional offers and coupons
 CREATE TABLE IF NOT EXISTS offers (
     id BIGSERIAL PRIMARY KEY,
-    type VARCHAR(50) NOT NULL, -- 'discount', 'free-delivery', 'cashback', 'combo', 'free-item'
+    type VARCHAR(50) NOT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    discount VARCHAR(100), -- e.g., '50% OFF', 'FREE DELIVERY'
-    max_discount VARCHAR(50), -- e.g., '₹200'
-    code VARCHAR(100) UNIQUE NOT NULL, -- coupon code
+    discount VARCHAR(100),
+    max_discount VARCHAR(50),
+    code VARCHAR(100) UNIQUE NOT NULL,
     valid_until TIMESTAMP NOT NULL,
-    min_order VARCHAR(50), -- e.g., '₹100'
-    category VARCHAR(100), -- e.g., 'new-user', 'weekday'
-    restaurant VARCHAR(255), -- restaurant name or 'All Restaurants'
-    restaurant_id BIGINT, -- null for all restaurants
+    min_order VARCHAR(50),
+    category VARCHAR(100),
+    restaurant VARCHAR(255),
+    restaurant_id BIGINT,
     image_url TEXT,
-    color VARCHAR(100), -- CSS color class
+    color VARCHAR(100),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE SET NULL
 );
 
--- CHAT MESSAGES: for customer support and order communication
 CREATE TABLE IF NOT EXISTS chat_messages (
     id BIGSERIAL PRIMARY KEY,
     order_id BIGINT,
     customer_id BIGINT NOT NULL,
     restaurant_id BIGINT NOT NULL,
-    sender VARCHAR(20) NOT NULL, -- 'customer' or 'restaurant'
+    sender VARCHAR(20) NOT NULL,
     message TEXT NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_read BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL,
     FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE,
+    CONSTRAINT chk_chat_sender CHECK (sender IN ('customer', 'restaurant'))
 );
 
--- Create triggers for updated_at columns
-DROP TRIGGER IF EXISTS update_users_updated_at ON users;
-CREATE TRIGGER update_users_updated_at 
-    BEFORE UPDATE ON users 
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE UNIQUE INDEX IF NOT EXISTS uq_wishlist_customer_restaurant
+    ON wishlist (customer_id, restaurant_id)
+    WHERE type = 'RESTAURANT' AND restaurant_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_wishlist_customer_dish
+    ON wishlist (customer_id, restaurant_id, menu_item_id)
+    WHERE type = 'DISH' AND restaurant_id IS NOT NULL AND menu_item_id IS NOT NULL;
 
-DROP TRIGGER IF EXISTS update_restaurants_updated_at ON restaurants;
-CREATE TRIGGER update_restaurants_updated_at 
-    BEFORE UPDATE ON restaurants 
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-DROP TRIGGER IF EXISTS update_menu_items_updated_at ON menu_items;
-CREATE TRIGGER update_menu_items_updated_at 
-    BEFORE UPDATE ON menu_items 
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-DROP TRIGGER IF EXISTS update_offers_updated_at ON offers;
-CREATE TRIGGER update_offers_updated_at 
-    BEFORE UPDATE ON offers 
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_provider_subject ON users(provider, provider_subject);
 CREATE INDEX IF NOT EXISTS idx_restaurants_owner_id ON restaurants(owner_id);
 CREATE INDEX IF NOT EXISTS idx_restaurants_slug ON restaurants(slug);
 CREATE INDEX IF NOT EXISTS idx_restaurants_cuisine_type ON restaurants(cuisine_type);
+CREATE INDEX IF NOT EXISTS idx_restaurants_active ON restaurants(is_active);
 CREATE INDEX IF NOT EXISTS idx_menu_items_restaurant_id ON menu_items(restaurant_id);
+CREATE INDEX IF NOT EXISTS idx_menu_items_restaurant_available ON menu_items(restaurant_id, is_available);
 CREATE INDEX IF NOT EXISTS idx_menu_items_category ON menu_items(category);
 CREATE INDEX IF NOT EXISTS idx_menu_items_veg ON menu_items(veg);
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_restaurant_id ON orders(restaurant_id);
+CREATE INDEX IF NOT EXISTS idx_orders_restaurant_status_created ON orders(restaurant_id, status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_user_created ON orders(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
 CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
@@ -209,4 +206,18 @@ CREATE INDEX IF NOT EXISTS idx_offers_is_active ON offers(is_active);
 CREATE INDEX IF NOT EXISTS idx_chat_messages_order_id ON chat_messages(order_id);
 CREATE INDEX IF NOT EXISTS idx_chat_messages_customer_id ON chat_messages(customer_id);
 CREATE INDEX IF NOT EXISTS idx_chat_messages_restaurant_id ON chat_messages(restaurant_id);
-CREATE INDEX IF NOT EXISTS idx_chat_messages_timestamp ON chat_messages(timestamp); 
+CREATE INDEX IF NOT EXISTS idx_chat_messages_unread ON chat_messages(customer_id, restaurant_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_timestamp ON chat_messages(timestamp);
+
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_restaurants_updated_at ON restaurants;
+CREATE TRIGGER update_restaurants_updated_at BEFORE UPDATE ON restaurants
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_menu_items_updated_at ON menu_items;
+CREATE TRIGGER update_menu_items_updated_at BEFORE UPDATE ON menu_items
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_offers_updated_at ON offers;
+CREATE TRIGGER update_offers_updated_at BEFORE UPDATE ON offers
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

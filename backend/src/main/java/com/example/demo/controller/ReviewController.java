@@ -7,10 +7,12 @@ import com.example.demo.repository.CustomerRepository;
 import com.example.demo.repository.RestaurantRepository;
 import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.MenuItemRepository;
+import com.example.demo.repository.OrderItemRepository;
 import com.example.demo.model.Order;
 import com.example.demo.model.Restaurant;
 import com.example.demo.model.MenuItem;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -29,6 +31,8 @@ public class ReviewController {
     private OrderRepository orderRepository;
     @Autowired
     private MenuItemRepository menuItemRepository;
+    @Autowired
+    private OrderItemRepository orderItemRepository;
 
     @GetMapping("/my")
     public List<Map<String, Object>> getMyReviews(@AuthenticationPrincipal UserDetails userDetails) {
@@ -94,17 +98,33 @@ public class ReviewController {
             
             // Verify the order belongs to this customer
             if (!order.getUserId().equals(customer.getId())) {
-                throw new RuntimeException("Order does not belong to this customer");
+                throw new AccessDeniedException("Order does not belong to this customer");
+            }
+            if (!orderItemRepository.existsByOrderIdAndMenuItemId(orderId, menuItemId)) {
+                throw new IllegalArgumentException("Menu item was not part of this order");
+            }
+            if (!order.getRestaurantId().equals(menuItem.getRestaurant().getId())) {
+                throw new IllegalArgumentException("Menu item does not belong to this order's restaurant");
+            }
+            if (reviewRepository.existsByOrderIdAndMenuItemIdAndCustomerId(orderId, menuItemId, customer.getId())) {
+                throw new IllegalArgumentException("Review already exists for this order item");
+            }
+
+            int rating = Integer.valueOf(request.get("rating").toString());
+            if (rating < 1 || rating > 5) {
+                throw new IllegalArgumentException("Rating must be between 1 and 5");
             }
             
             review.setOrderId(orderId);
             review.setRestaurantId(order.getRestaurantId());
             review.setMenuItemId(menuItemId);
             review.setMenuItemName(menuItem.getName());
-            review.setRating(Integer.valueOf(request.get("rating").toString()));
+            review.setRating(rating);
             review.setText((String) request.get("text"));
             
             return reviewRepository.save(review);
+        } catch (AccessDeniedException | IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Failed to create review: " + e.getMessage());
         }

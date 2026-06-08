@@ -1,3 +1,7 @@
+-- Legacy reference schema. Runtime schema management is handled by Flyway
+-- migrations in backend/src/main/resources/db/migration; database/migration.sql
+-- mirrors those migrations for Docker entrypoint bootstrapping.
+
 -- USERS: customers, restaurant owners, admins
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,

@@ -2,17 +2,18 @@ package com.example.demo.controller;
 
 import com.example.demo.model.User;
 import com.example.demo.model.Wishlist;
+import com.example.demo.exception.ApiException;
 import com.example.demo.repository.CustomerRepository;
 import com.example.demo.repository.WishlistRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -26,36 +27,25 @@ public class CustomerController {
     private WishlistRepository wishlistRepository;
 
     @GetMapping
-    public List<User> getAllCustomers() {
-        return customerRepository.findAll();
+    public List<Map<String, Object>> getAllCustomers(@AuthenticationPrincipal UserDetails principal) {
+        User requester = authenticatedUser(principal);
+        if (!"ADMIN".equals(requester.getRole())) {
+            throw new AccessDeniedException("Forbidden");
+        }
+        return customerRepository.findAll().stream()
+            .map(this::toSafeUserDto)
+            .toList();
     }
 
     @GetMapping("/{id}")
-    public User getCustomerById(@PathVariable Long id, @AuthenticationPrincipal org.springframework.security.core.userdetails.User principal) {
-        System.out.println("=== Customer Profile Debug ===");
-        System.out.println("Requested user ID: " + id);
-        System.out.println("Principal: " + (principal != null ? principal.getUsername() : "NULL"));
-        
-        User user = customerRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-        System.out.println("Found user: " + user.getUsername());
-        System.out.println("User ID match: " + user.getUsername().equals(principal.getUsername()));
-        
-        if (!user.getUsername().equals(principal.getUsername())) {
-            System.out.println("ERROR: Username mismatch. User: " + user.getUsername() + ", Principal: " + principal.getUsername());
-            throw new AccessDeniedException("Forbidden");
-        }
-        
-        System.out.println("Profile access granted");
-        return user;
+    public Map<String, Object> getCustomerById(@PathVariable Long id, @AuthenticationPrincipal UserDetails principal) {
+        User user = requireSelf(id, principal);
+        return toSafeUserDto(user);
     }
 
     @GetMapping("/{id}/favorites")
-    public Map<String, Object> getFavorites(@PathVariable Long id, @AuthenticationPrincipal org.springframework.security.core.userdetails.User principal) {
-        User user = customerRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-        if (!user.getUsername().equals(principal.getUsername())) {
-            throw new AccessDeniedException("Forbidden");
-        }
-        
+    public Map<String, Object> getFavorites(@PathVariable Long id, @AuthenticationPrincipal UserDetails principal) {
+        requireSelf(id, principal);
         List<Wishlist> wishlistItems = wishlistRepository.findByCustomerId(id);
         
         // Remove duplicates by using a Map to keep only unique items
@@ -92,20 +82,14 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}/wishlist")
-    public List<Wishlist> getWishlist(@PathVariable Long id, @AuthenticationPrincipal org.springframework.security.core.userdetails.User principal) {
-        User user = customerRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-        if (!user.getUsername().equals(principal.getUsername())) {
-            throw new AccessDeniedException("Forbidden");
-        }
+    public List<Wishlist> getWishlist(@PathVariable Long id, @AuthenticationPrincipal UserDetails principal) {
+        requireSelf(id, principal);
         return wishlistRepository.findByCustomerId(id);
     }
 
     @PostMapping("/{id}/wishlist")
-    public ResponseEntity<?> addToWishlist(@PathVariable Long id, @RequestBody Map<String, Object> request, @AuthenticationPrincipal org.springframework.security.core.userdetails.User principal) {
-        User user = customerRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-        if (!user.getUsername().equals(principal.getUsername())) {
-            throw new AccessDeniedException("Forbidden");
-        }
+    public ResponseEntity<?> addToWishlist(@PathVariable Long id, @RequestBody Map<String, Object> request, @AuthenticationPrincipal UserDetails principal) {
+        User user = requireSelf(id, principal);
         
         String type = (String) request.get("type");
         String name = (String) request.get("name");
@@ -138,11 +122,8 @@ public class CustomerController {
     }
 
     @DeleteMapping("/{id}/wishlist")
-    public ResponseEntity<?> removeFromWishlist(@PathVariable Long id, @RequestBody Map<String, Object> request, @AuthenticationPrincipal org.springframework.security.core.userdetails.User principal) {
-        User user = customerRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-        if (!user.getUsername().equals(principal.getUsername())) {
-            throw new AccessDeniedException("Forbidden");
-        }
+    public ResponseEntity<?> removeFromWishlist(@PathVariable Long id, @RequestBody Map<String, Object> request, @AuthenticationPrincipal UserDetails principal) {
+        requireSelf(id, principal);
         
         String type = (String) request.get("type");
         String name = (String) request.get("name");
@@ -166,22 +147,63 @@ public class CustomerController {
     }
 
     @PostMapping
-    public User createCustomer(@RequestBody User customer) {
-        return customerRepository.save(customer);
+    public void createCustomer() {
+        throw new AccessDeniedException("Customer creation is only available through signup or admin management");
     }
 
     @PutMapping("/{id}")
-    public User updateCustomer(@PathVariable Long id, @RequestBody User customerDetails) {
-        User customer = customerRepository.findById(id).orElseThrow();
-        customer.setUsername(customerDetails.getUsername());
-        customer.setPassword(customerDetails.getPassword());
-        customer.setEmail(customerDetails.getEmail());
-        customer.setRole(customerDetails.getRole());
-        return customerRepository.save(customer);
+    public Map<String, Object> updateCustomer(@PathVariable Long id, @RequestBody Map<String, Object> customerDetails,
+                                              @AuthenticationPrincipal UserDetails principal) {
+        User customer = requireSelf(id, principal);
+        String username = stringValue(customerDetails.get("username"));
+        if (username == null) {
+            username = stringValue(customerDetails.get("name"));
+        }
+        String email = stringValue(customerDetails.get("email"));
+
+        if (username != null && !username.isBlank()) {
+            customer.setUsername(username.trim());
+        }
+        if (email != null && !email.isBlank()) {
+            customer.setEmail(email.trim().toLowerCase());
+        }
+        return toSafeUserDto(customerRepository.save(customer));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteCustomer(@PathVariable Long id) {
-        customerRepository.deleteById(id);
+    public void deleteCustomer(@PathVariable Long id, @AuthenticationPrincipal UserDetails principal) {
+        requireSelf(id, principal);
+        throw new AccessDeniedException("Customer deletion is only available through admin management");
+    }
+
+    private User requireSelf(Long requestedId, UserDetails principal) {
+        User authenticated = authenticatedUser(principal);
+        if (!authenticated.getId().equals(requestedId)) {
+            throw new AccessDeniedException("Forbidden");
+        }
+        return authenticated;
+    }
+
+    private User authenticatedUser(UserDetails principal) {
+        if (principal == null) {
+            throw new ApiException("UNAUTHENTICATED", "Authentication required", HttpStatus.UNAUTHORIZED);
+        }
+        return customerRepository.findByUsername(principal.getUsername())
+            .orElseThrow(() -> new ApiException("USER_NOT_FOUND", "User not found", HttpStatus.NOT_FOUND));
+    }
+
+    private Map<String, Object> toSafeUserDto(User user) {
+        Map<String, Object> dto = new HashMap<>();
+        dto.put("id", user.getId());
+        dto.put("username", user.getUsername());
+        dto.put("name", user.getUsername());
+        dto.put("email", user.getEmail());
+        dto.put("role", user.getRole());
+        dto.put("isBlocked", Boolean.TRUE.equals(user.getIsBlocked()));
+        return dto;
+    }
+
+    private String stringValue(Object value) {
+        return value instanceof String string ? string : null;
     }
 } 

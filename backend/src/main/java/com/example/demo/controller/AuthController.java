@@ -19,11 +19,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.Map;
+import java.text.Normalizer;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/auth")
@@ -40,10 +43,15 @@ public class AuthController {
     private JwtCookieService jwtCookieService;
 
     @PostMapping("/signup")
-    public Map<String, Object> signup(@Valid @RequestBody SignupRequest req) {
+    @Transactional
+    public ResponseEntity<Map<String, Object>> signup(@Valid @RequestBody SignupRequest req) {
         String username = req.getUsername().trim();
         String email = req.getEmail().trim().toLowerCase();
         String role = normalizeRole(req.getRole());
+
+        if ("ADMIN".equals(role)) {
+            throw new ApiException("ROLE_NOT_ALLOWED", "Admin accounts cannot be created through public signup", HttpStatus.FORBIDDEN);
+        }
         
         if (customerRepository.findByUsername(username).isPresent()) {
             throw new ApiException("USERNAME_EXISTS", "Username already exists", HttpStatus.CONFLICT);
@@ -60,6 +68,7 @@ public class AuthController {
         customer.setProvider("LOCAL");
         customer.setEmailVerified(false);
         customer = customerRepository.save(customer);
+        Long restaurantId = null;
         
         // If registering as restaurant, create restaurant entity
         if ("RESTAURANT".equals(role) || "RESTAURANT_OWNER".equals(role)) {
@@ -71,10 +80,26 @@ public class AuthController {
             restaurant.setDescription(req.getDescription());
             restaurant.setOpeningHours(req.getOpeningHours());
             restaurant.setIsActive(true);
+            restaurant.setSlug(generateUniqueSlug(req.getRestaurantName()));
             restaurant.setOwner(customer);
-            restaurantRepository.save(restaurant);
+            restaurantId = restaurantRepository.save(restaurant).getId();
         }
-        return Map.of("message", "Signup successful", "id", customer.getId());
+
+        String responseRole = frontendRole(customer.getRole());
+        String token = jwtUtil.generateToken(customer.getUsername(), customer.getRole());
+        Map<String, Object> body = new java.util.HashMap<>();
+        body.put("message", "Signup successful");
+        body.put("id", customer.getId());
+        body.put("username", customer.getUsername());
+        body.put("email", customer.getEmail());
+        body.put("role", responseRole);
+        if (restaurantId != null) {
+            body.put("restaurantId", restaurantId);
+        }
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, jwtCookieService.createTokenCookie(token).toString())
+                .body(body);
     }
 
     @PostMapping("/login")
@@ -173,5 +198,25 @@ public class AuthController {
 
     private String frontendRole(String storedRole) {
         return normalizeRole(storedRole);
+    }
+
+    private String generateUniqueSlug(String name) {
+        String baseSlug = slugify(name);
+        String uniqueSlug = baseSlug;
+        int count = 1;
+        while (restaurantRepository.findBySlug(uniqueSlug).isPresent()) {
+            uniqueSlug = baseSlug + "-" + count;
+            count++;
+        }
+        return uniqueSlug;
+    }
+
+    private String slugify(String input) {
+        String safeInput = input == null || input.isBlank() ? "restaurant" : input.trim();
+        String nowhitespace = Pattern.compile("\\s+").matcher(safeInput).replaceAll("-");
+        String normalized = Normalizer.normalize(nowhitespace, Normalizer.Form.NFD);
+        String slug = Pattern.compile("[^a-zA-Z0-9-]").matcher(normalized).replaceAll("");
+        slug = slug.toLowerCase();
+        return slug.isBlank() ? "restaurant" : slug;
     }
 }

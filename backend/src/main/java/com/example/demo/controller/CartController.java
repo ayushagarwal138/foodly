@@ -68,25 +68,25 @@ public class CartController {
                 // Check availability and quantity
                 MenuItem menuItem = menuItemRepository.findById(menuItemId).orElseThrow(() -> 
                     new IllegalArgumentException("Menu item not found"));
+                int requestedQty = Integer.valueOf(item.get("qty").toString());
+                if (requestedQty <= 0) {
+                    throw new IllegalArgumentException("Cart item quantity must be greater than zero");
+                }
                 
                 if (!menuItem.getIsAvailable()) {
                     throw new IllegalArgumentException("Menu item '" + menuItem.getName() + "' is not available");
                 }
                 
                 if (menuItem.getShowQuantity() && menuItem.getQuantityAvailable() != null) {
-                    int requestedQty = Integer.valueOf(item.get("qty").toString());
                     if (requestedQty > menuItem.getQuantityAvailable()) {
                         throw new IllegalArgumentException("Insufficient quantity for '" + menuItem.getName() + "'. Available: " + menuItem.getQuantityAvailable());
                     }
-                    // Decrement the available quantity
-                    menuItem.setQuantityAvailable(menuItem.getQuantityAvailable() - requestedQty);
-                    menuItemRepository.save(menuItem);
                 }
                 
                 Cart cartItem = new Cart();
                 cartItem.setCustomer(customer);
                 cartItem.setMenuItem(menuItem);
-                cartItem.setQuantity(Integer.valueOf(item.get("qty").toString()));
+                cartItem.setQuantity(requestedQty);
                 cartRepository.save(cartItem);
             }
         }

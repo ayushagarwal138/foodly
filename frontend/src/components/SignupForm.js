@@ -5,6 +5,7 @@ import { FaUtensils } from "react-icons/fa";
 import Toast from "./Toast";
 import Button from "./ui/Button";
 import { api, API_ENDPOINTS } from "../config/api";
+import { useAuth } from "../features/auth/AuthContext";
 
 export default function SignupForm() {
   const [formData, setFormData] = useState({
@@ -26,6 +27,7 @@ export default function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
   const [toast, setToast] = useState({ message: "", type: "info" });
 
   const handleChange = (e) => {
@@ -122,13 +124,17 @@ export default function SignupForm() {
         openingHours: formData.openingHours
       });
       if (data.id) localStorage.setItem("userId", data.id);
+      if (data.role) localStorage.setItem("userRole", data.role);
       
       // Set basic info from signup response
-      localStorage.setItem("username", formData.username);
-      if (formData.email) localStorage.setItem("email", formData.email);
+      localStorage.setItem("username", data.username || formData.username);
+      if (data.email || formData.email) localStorage.setItem("email", data.email || formData.email);
+      if (data.restaurantId) localStorage.setItem("restaurantId", data.restaurantId);
+      await refreshUser();
       
       setToast({ message: "Registration successful!", type: "success" });
-      setTimeout(() => navigate(`/${formData.role.toLowerCase()}/login`), 1000);
+      const dashboardPath = (data.role || formData.role) === "RESTAURANT" ? "/restaurant" : "/customer";
+      setTimeout(() => navigate(dashboardPath), 1000);
     } catch (err) {
       setError(err.message);
       setToast({ message: err.message, type: "error" });

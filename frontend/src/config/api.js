@@ -1,6 +1,7 @@
 // API Configuration and utility functions
-// Use REACT_APP_API_BASE_URL in deployed environments. Empty fallback lets CRA proxy work locally.
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '';
+// Use REACT_APP_API_BASE_URL in deployed environments. In local development,
+// call the backend directly so secure-cookie auth is not affected by the CRA proxy.
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:8080' : '');
 const API_PREFIX = '/api/v1';
 const AUTH_PREFIX = `${API_PREFIX}/auth`;
 

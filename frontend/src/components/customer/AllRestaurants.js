@@ -47,6 +47,7 @@ export default function AllRestaurants() {
   });
 
   const navigate = useNavigate();
+  const restaurantPath = (restaurant) => `/customer/restaurant/${restaurant.slug || restaurant.id}`;
 
   if (loading) {
     return (
@@ -142,7 +143,7 @@ export default function AllRestaurants() {
               <div
                 key={restaurant.id}
                 className="card-hover cursor-pointer overflow-hidden p-0"
-                onClick={() => navigate(`/customer/restaurant/${restaurant.slug}`)}
+                onClick={() => navigate(restaurantPath(restaurant))}
               >
                 <div className="relative flex h-48 w-full items-center justify-center overflow-hidden bg-neutral-100">
                   {restaurant.image ? (
@@ -199,7 +200,7 @@ export default function AllRestaurants() {
                     fullWidth
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/customer/restaurant/${restaurant.slug}`);
+                      navigate(restaurantPath(restaurant));
                     }}
                   >
                     View Menu

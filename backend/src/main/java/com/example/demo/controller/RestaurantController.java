@@ -6,7 +6,9 @@ import com.example.demo.repository.RestaurantRepository;
 import com.example.demo.model.MenuItem;
 import com.example.demo.repository.MenuItemRepository;
 import com.example.demo.repository.OrderRepository;
+import com.example.demo.repository.OrderItemRepository;
 import com.example.demo.repository.ReviewRepository;
+import com.example.demo.repository.CartRepository;
 import com.example.demo.model.Order;
 import com.example.demo.model.Review;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +34,11 @@ public class RestaurantController {
     @Autowired
     private OrderRepository orderRepository;
     @Autowired
+    private OrderItemRepository orderItemRepository;
+    @Autowired
     private ReviewRepository reviewRepository;
+    @Autowired
+    private CartRepository cartRepository;
     @Autowired
     private CustomerRepository customerRepository;
 
@@ -106,6 +112,14 @@ public class RestaurantController {
     @GetMapping("/slug/{slug}")
     public ResponseEntity<?> getRestaurantBySlug(@PathVariable String slug) {
         Optional<Restaurant> restaurant = restaurantRepository.findBySlug(slug);
+        if (restaurant.isEmpty() && slug.chars().allMatch(Character::isDigit)) {
+            restaurant = restaurantRepository.findById(Long.valueOf(slug));
+        }
+        if (restaurant.isEmpty()) {
+            restaurant = restaurantRepository.findAll().stream()
+                .filter(r -> slug.equals(slugify(r.getName())))
+                .findFirst();
+        }
         if (restaurant.isPresent()) {
             Restaurant r = restaurant.get();
             Map<String, Object> result = new java.util.HashMap<>();
@@ -147,16 +161,8 @@ public class RestaurantController {
         if (!authenticatedUser.getId().equals(ownerId)) {
             throw new RuntimeException("Access denied. You can only view your own restaurant.");
         }
-        System.out.println("=== Restaurant Profile Debug ===");
-        System.out.println("Requested owner ID: " + ownerId);
-        
-        Restaurant restaurant = restaurantRepository.findAll().stream()
-            .filter(r -> r.getOwner() != null && r.getOwner().getId().equals(ownerId))
-            .findFirst()
+        Restaurant restaurant = restaurantRepository.findByOwner_Id(ownerId)
             .orElseThrow(() -> new RuntimeException("Restaurant not found for owner"));
-        
-        System.out.println("Found restaurant: " + restaurant.getName() + " (ID: " + restaurant.getId() + ")");
-        System.out.println("Restaurant owner: " + (restaurant.getOwner() != null ? restaurant.getOwner().getUsername() : "NULL"));
         
         Map<String, Object> result = new java.util.HashMap<>();
         result.put("id", restaurant.getId());
@@ -179,7 +185,6 @@ public class RestaurantController {
             result.put("owner", null);
         }
         
-        System.out.println("Restaurant profile returned successfully");
         return result;
     }
 
@@ -196,44 +201,28 @@ public class RestaurantController {
             throw new RuntimeException("Access denied. You can only view menu for your own restaurant.");
         }
         
-        System.out.println("=== Restaurant Menu Fetch Debug ===");
-        System.out.println("Restaurant ID: " + id);
-        System.out.println("User: " + authenticatedUser.getUsername());
-        
         List<MenuItem> items = menuItemRepository.findByRestaurant_Id(id);
-        System.out.println("Items found: " + items.size());
         
         return items.stream().map(this::convertToMenuItemDTO).collect(java.util.stream.Collectors.toList());
     }
 
     @GetMapping("/{id}/menu/customer")
     public List<Map<String, Object>> getMenuForCustomer(@PathVariable Long id) {
-        // For customers, only show available items
-        System.out.println("=== Menu Fetch Debug ===");
-        System.out.println("Restaurant ID: " + id);
-        
         try {
             List<MenuItem> allItems = menuItemRepository.findByRestaurant_Id(id);
-            System.out.println("Total items found: " + allItems.size());
             
             if (allItems.isEmpty()) {
                 // Try to find the restaurant first
                 var restaurant = restaurantRepository.findById(id);
-                System.out.println("Restaurant exists: " + restaurant.isPresent());
-                if (restaurant.isPresent()) {
-                    System.out.println("Restaurant name: " + restaurant.get().getName());
-                }
+                restaurant.orElseThrow(() -> new RuntimeException("Restaurant not found"));
             }
             
             List<MenuItem> availableItems = allItems.stream()
             .filter(item -> item.getIsAvailable() != null && item.getIsAvailable())
             .collect(java.util.stream.Collectors.toList());
             
-            System.out.println("Available items: " + availableItems.size());
             return availableItems.stream().map(this::convertToMenuItemDTO).collect(java.util.stream.Collectors.toList());
         } catch (Exception e) {
-            System.out.println("Error fetching menu items: " + e.getMessage());
-            e.printStackTrace();
             throw e;
         }
     }
@@ -250,9 +239,7 @@ public class RestaurantController {
         if (!restaurant.getOwner().getId().equals(authenticatedUser.getId())) {
             throw new RuntimeException("Access denied. You can only view orders for your own restaurant.");
         }
-        return orderRepository.findAll().stream()
-            .filter(o -> o.getRestaurantId().equals(id))
-            .sorted((a, b) -> b.getId().compareTo(a.getId())) // Sort by ID descending (latest first)
+        return orderRepository.findByRestaurantIdOrderByCreatedAtDesc(id).stream()
             .map(o -> {
                 Map<String, Object> map = new java.util.HashMap<>();
                 map.put("id", o.getId());
@@ -261,7 +248,8 @@ public class RestaurantController {
                 map.put("status", o.getStatus());
                 map.put("total", o.getTotal());
                 map.put("items", o.getItems());
-                map.put("createdAt", o.getId()); // Add createdAt for consistency
+                map.put("createdAt", o.getCreatedAt());
+                map.put("created_at", o.getCreatedAt());
                 // Add customer name
                 String customerName = "";
                 if (o.getUserId() != null) {
@@ -293,10 +281,7 @@ public class RestaurantController {
         }
         Map<String, Object> analytics = new java.util.HashMap<>();
         // Orders for this restaurant (sorted by latest first)
-        List<Order> orders = orderRepository.findAll().stream()
-            .filter(o -> o.getRestaurantId().equals(id))
-            .sorted((a, b) -> b.getId().compareTo(a.getId())) // Sort by ID descending (latest first)
-            .toList();
+        List<Order> orders = orderRepository.findByRestaurantIdOrderByCreatedAtDesc(id);
         analytics.put("totalOrders", orders.size());
         // Orders by status
         Map<String, Long> ordersByStatus = orders.stream().collect(
@@ -399,6 +384,9 @@ public class RestaurantController {
         // Set owner from authenticated user
         if (restaurant.getOwner() == null && userDetails != null) {
             com.example.demo.model.User owner = customerRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+            if (restaurantRepository.findByOwner_Id(owner.getId()).isPresent()) {
+                throw new RuntimeException("Restaurant already exists for this owner");
+            }
             restaurant.setOwner(owner);
         }
         // Auto-generate slug if not provided
@@ -418,6 +406,9 @@ public class RestaurantController {
     @PutMapping("/{id}")
     public Restaurant updateRestaurant(@PathVariable Long id, @RequestBody Restaurant restaurantDetails, @AuthenticationPrincipal UserDetails userDetails) {
         Restaurant restaurant = restaurantRepository.findById(id).orElseThrow();
+        if (restaurant.getOwner() == null || !restaurant.getOwner().getUsername().equals(userDetails.getUsername())) {
+            throw new RuntimeException("Access denied. You can only update your own restaurant.");
+        }
         // Do not allow owner change, always keep the owner as is
         restaurant.setName(restaurantDetails.getName());
         restaurant.setAddress(restaurantDetails.getAddress());
@@ -480,12 +471,10 @@ public class RestaurantController {
             }
             
             // Check for references in other tables
-            boolean hasOrderItems = orderRepository.findAll().stream()
-                .anyMatch(order -> order.getItems().stream()
-                    .anyMatch(item -> item.getMenuItemId().equals(menuItemId)));
-            boolean hasReviews = reviewRepository.findByMenuItemId(menuItemId).size() > 0;
-            boolean hasWishlist = false; // You might need to add this repository method
-            boolean hasCart = false; // You might need to add this repository method
+            boolean hasOrderItems = orderItemRepository.existsByMenuItemId(menuItemId);
+            boolean hasReviews = reviewRepository.existsByMenuItemId(menuItemId);
+            boolean hasWishlist = false;
+            boolean hasCart = cartRepository.existsByMenuItemId(menuItemId);
             
             Map<String, Object> result = new java.util.HashMap<>();
             result.put("canDelete", !hasOrderItems && !hasReviews && !hasWishlist && !hasCart);
@@ -619,13 +608,12 @@ public class RestaurantController {
             }
             
             // Double-check if it can be deleted before attempting
-            boolean hasOrderItems = orderRepository.findAll().stream()
-                .anyMatch(order -> order.getItems().stream()
-                    .anyMatch(item -> item.getMenuItemId().equals(menuItemId)));
-            boolean hasReviews = reviewRepository.findByMenuItemId(menuItemId).size() > 0;
+            boolean hasOrderItems = orderItemRepository.existsByMenuItemId(menuItemId);
+            boolean hasReviews = reviewRepository.existsByMenuItemId(menuItemId);
+            boolean hasCart = cartRepository.existsByMenuItemId(menuItemId);
             
-            if (hasOrderItems || hasReviews) {
-                return ResponseEntity.status(409).body("Cannot delete menu item: It is referenced by existing orders or reviews. Please remove these references first.");
+            if (hasOrderItems || hasReviews || hasCart) {
+                return ResponseEntity.status(409).body("Cannot delete menu item: It is referenced by existing orders, reviews, or cart items. Please remove these references first.");
             }
             
             menuItemRepository.delete(menuItem);
@@ -640,7 +628,11 @@ public class RestaurantController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteRestaurant(@PathVariable Long id) {
+    public void deleteRestaurant(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        Restaurant restaurant = restaurantRepository.findById(id).orElseThrow();
+        if (restaurant.getOwner() == null || !restaurant.getOwner().getUsername().equals(userDetails.getUsername())) {
+            throw new RuntimeException("Access denied. You can only delete your own restaurant.");
+        }
         restaurantRepository.deleteById(id);
     }
 

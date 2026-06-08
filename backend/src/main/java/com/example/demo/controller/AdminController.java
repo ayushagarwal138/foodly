@@ -140,8 +140,7 @@ public class AdminController {
     }
 
     // Block a user
-    @PatchMapping("/users/{id}/block")
-    @PostMapping("/users/{id}/block")
+    @RequestMapping(value = "/users/{id}/block", method = {RequestMethod.PATCH, RequestMethod.POST})
     public Map<String, Object> blockUser(@PathVariable Long id) {
         User user = customerRepository.findById(id).orElseThrow();
         user.setIsBlocked(true);
@@ -155,8 +154,7 @@ public class AdminController {
         return dto;
     }
     // Unblock a user
-    @PatchMapping("/users/{id}/unblock")
-    @PostMapping("/users/{id}/unblock")
+    @RequestMapping(value = "/users/{id}/unblock", method = {RequestMethod.PATCH, RequestMethod.POST})
     public Map<String, Object> unblockUser(@PathVariable Long id) {
         User user = customerRepository.findById(id).orElseThrow();
         user.setIsBlocked(false);
@@ -176,8 +174,7 @@ public class AdminController {
     }
 
     // Approve a restaurant (set isActive=true)
-    @PatchMapping("/restaurants/{id}/approve")
-    @PostMapping("/restaurants/{id}/approve")
+    @RequestMapping(value = "/restaurants/{id}/approve", method = {RequestMethod.PATCH, RequestMethod.POST})
     public Map<String, Object> approveRestaurant(@PathVariable Long id) {
         Restaurant r = restaurantRepository.findById(id).orElseThrow();
         r.setIsActive(true);
@@ -189,8 +186,7 @@ public class AdminController {
         return dto;
     }
     // Deactivate a restaurant (set isActive=false)
-    @PatchMapping("/restaurants/{id}/deactivate")
-    @PostMapping("/restaurants/{id}/deactivate")
+    @RequestMapping(value = "/restaurants/{id}/deactivate", method = {RequestMethod.PATCH, RequestMethod.POST})
     public Map<String, Object> deactivateRestaurant(@PathVariable Long id) {
         Restaurant r = restaurantRepository.findById(id).orElseThrow();
         r.setIsActive(false);
@@ -208,8 +204,7 @@ public class AdminController {
     }
 
     // Cancel an order (set status="Cancelled")
-    @PatchMapping("/orders/{id}/cancel")
-    @PostMapping("/orders/{id}/cancel")
+    @RequestMapping(value = "/orders/{id}/cancel", method = {RequestMethod.PATCH, RequestMethod.POST})
     public Map<String, Object> cancelOrder(@PathVariable Long id) {
         Order o = orderRepository.findById(id).orElseThrow();
         o.setStatus("Cancelled");
@@ -221,8 +216,7 @@ public class AdminController {
         return dto;
     }
     // Refund an order (set status="Refunded")
-    @PatchMapping("/orders/{id}/refund")
-    @PostMapping("/orders/{id}/refund")
+    @RequestMapping(value = "/orders/{id}/refund", method = {RequestMethod.PATCH, RequestMethod.POST})
     public Map<String, Object> refundOrder(@PathVariable Long id) {
         Order o = orderRepository.findById(id).orElseThrow();
         o.setStatus("Refunded");
@@ -245,8 +239,7 @@ public class AdminController {
         reviewRepository.deleteById(id);
     }
     // Flag a review
-    @PatchMapping("/reviews/{id}/flag")
-    @PostMapping("/reviews/{id}/flag")
+    @RequestMapping(value = "/reviews/{id}/flag", method = {RequestMethod.PATCH, RequestMethod.POST})
     public Map<String, Object> flagReview(@PathVariable Long id) {
         Review r = reviewRepository.findById(id).orElseThrow();
         r.setIsFlagged(true);

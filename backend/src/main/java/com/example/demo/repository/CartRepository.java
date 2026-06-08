@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface CartRepository extends JpaRepository<Cart, Long> {
     List<Cart> findByCustomerId(Long customerId);
+    boolean existsByMenuItemId(Long menuItemId);
 
     @Transactional
     @Modifying
