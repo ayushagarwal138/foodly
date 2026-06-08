@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import AdminHeader from "./AdminHeader";
 import AdminSidebar from "./AdminSidebar";
 import AdminDashboard from "./AdminDashboard";
@@ -11,24 +11,7 @@ import PlatformAnalytics from "./PlatformAnalytics";
 import OffersPage from "./OffersPage";
 import AdminSettingsPage from "./AdminSettingsPage";
 
-const pathToLabel = [
-  { path: "/admin/users", label: "Users" },
-  { path: "/admin/restaurants", label: "Restaurants" },
-  { path: "/admin/orders", label: "Orders" },
-  { path: "/admin/reviews", label: "Reviews" },
-  { path: "/admin/analytics", label: "Analytics" },
-  { path: "/admin/offers", label: "Offers" },
-  { path: "/admin/settings", label: "Settings" },
-  { path: "/admin", label: "Dashboard" }
-];
-
 export default function AdminLayout() {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  // Find the current label based on the path (longest match wins)
-  const current = pathToLabel.find(({ path }) => location.pathname.startsWith(path))?.label || "Dashboard";
-
   // Sidebar open state for mobile
   const [sidebarOpen, setSidebarOpen] = useState(false);
   useEffect(() => {
@@ -38,7 +21,7 @@ export default function AdminLayout() {
   }, []);
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+    <div className="flex h-screen flex-col overflow-hidden bg-[#f7f7f5]">
       {/* Header */}
       <AdminHeader setSidebarOpen={setSidebarOpen} sidebarOpen={sidebarOpen} />
       
@@ -47,7 +30,7 @@ export default function AdminLayout() {
         <AdminSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         
         {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden md:ml-72">
+        <div className="flex-1 flex flex-col overflow-hidden lg:ml-72">
           <main className="flex-1 overflow-y-auto">
             <Routes>
               <Route path="/" element={<AdminDashboard />} />

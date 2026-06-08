@@ -150,19 +150,67 @@ export default function SignupForm() {
   return (
     <>
       <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: "", type: "info" })} />
-      <div className="min-h-screen bg-gradient-to-br from-accent-50 via-white to-primary-50 flex items-center justify-center p-4 py-12">
-        <div className="max-w-2xl w-full animate-fade-in">
-          <div className="bg-white rounded-3xl shadow-large border border-neutral-100 p-8 md:p-10">
-            {/* Header */}
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-accent-100 to-primary-100 mb-6 animate-scale-in">
-                <RoleIcon className="w-10 h-10 text-accent-600" />
+      <div className="min-h-screen bg-[#f7f7f5] px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-6xl overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm lg:grid-cols-[0.85fr_1.15fr]">
+          <aside className="relative hidden overflow-hidden bg-neutral-950 lg:block">
+            <img
+              src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=85"
+              alt="Fresh pizza prepared by a restaurant"
+              className="absolute inset-0 h-full w-full object-cover opacity-75"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/55 to-neutral-950/20" />
+            <div className="relative flex h-full min-h-[720px] flex-col justify-between p-10 text-white">
+              <div className="flex items-center gap-3">
+                <img src="/logo.jpeg" alt="Foodly" className="h-11 w-11 rounded-md object-cover ring-1 ring-white/30" />
+                <div>
+                  <p className="text-xl font-bold">Foodly</p>
+                  <p className="text-sm text-white/70">Build your food network</p>
+                </div>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-3">
-                Create Account
+
+              <div>
+                <p className="mb-4 inline-flex rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-white/90 backdrop-blur">
+                  Customers and restaurants welcome
+                </p>
+                <h1 className="text-5xl font-extrabold leading-tight tracking-normal">
+                  Start with a clean account setup.
+                </h1>
+                <p className="mt-5 text-base leading-7 text-white/75">
+                  Create your Foodly profile, then move straight into ordering, restaurant management, or account setup.
+                </p>
+              </div>
+
+              <div className="grid gap-3">
+                {["Mobile-ready checkout", "Restaurant onboarding", "Secure credentials"].map((item) => (
+                  <div key={item} className="rounded-md border border-white/15 bg-white/10 p-3 backdrop-blur">
+                    <p className="text-sm font-semibold">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
+
+          <main className="flex justify-center px-4 py-8 sm:px-8 lg:px-12">
+          <div className="w-full max-w-2xl animate-fade-in">
+            {/* Header */}
+            <div className="mb-8">
+              <div className="mb-4 flex items-center justify-between lg:hidden">
+                <div className="flex items-center gap-3">
+                  <img src="/logo.jpeg" alt="Foodly" className="h-10 w-10 rounded-md object-cover" />
+                  <div>
+                    <p className="text-lg font-bold text-neutral-950">Foodly</p>
+                    <p className="text-xs text-neutral-500">Create your account</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-md bg-accent-50 text-accent-700 ring-1 ring-accent-100">
+                <RoleIcon className="h-5 w-5" />
+              </div>
+              <h1 className="text-3xl font-extrabold tracking-normal text-neutral-950 md:text-4xl">
+                Create account
               </h1>
-              <p className="text-neutral-600 text-base">
-                Join us as a {formData.role.toLowerCase()}
+              <p className="mt-2 text-sm leading-6 text-neutral-600">
+                Join Foodly as a {formData.role.toLowerCase()} with a secure production-ready account.
               </p>
             </div>
 
@@ -512,7 +560,7 @@ export default function SignupForm() {
 
               {/* Error Message */}
               {error && (
-                <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 animate-slide-in" role="alert">
+                <div className="animate-slide-in rounded-md border border-red-200 bg-red-50 p-4" role="alert">
                   <div className="flex items-start gap-3">
                     <FiAlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                     <p className="text-sm font-medium text-red-800">{error}</p>
@@ -534,7 +582,7 @@ export default function SignupForm() {
             </form>
 
             {/* Footer */}
-            <div className="mt-8 text-center pt-6 border-t border-neutral-200">
+            <div className="mt-7 text-center">
               <p className="text-sm text-neutral-600">
                 Already have an account?{" "}
                 <Link 
@@ -546,6 +594,7 @@ export default function SignupForm() {
               </p>
             </div>
           </div>
+          </main>
         </div>
       </div>
     </>

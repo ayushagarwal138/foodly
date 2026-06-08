@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { FiHeart, FiCoffee, FiStar, FiTrash2, FiEye, FiAlertCircle, FiX } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
+import { FiHeart, FiCoffee, FiStar, FiTrash2, FiEye, FiAlertCircle } from "react-icons/fi";
 import { FaUtensils } from "react-icons/fa";
 import Button from "../ui/Button";
 import { api, API_ENDPOINTS } from "../../config/api";
@@ -67,11 +67,11 @@ export default function CustomerFavorites() {
   // Show login message if not authenticated
   if (!userId) {
     return (
-      <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8">
-        <div className="card text-center py-12">
-          <FiHeart className="w-16 h-16 mx-auto mb-4 text-neutral-300" />
-          <h2 className="text-2xl font-bold mb-4 text-dark-primary">My Favorites</h2>
-          <p className="text-neutral-600 mb-6">Please log in to view your favorite restaurants.</p>
+      <div className="app-page">
+        <div className="surface-panel py-12 text-center">
+          <FiHeart className="mx-auto mb-4 h-14 w-14 text-neutral-300" />
+          <h2 className="mb-4 text-2xl font-bold text-neutral-950">My Favorites</h2>
+          <p className="mb-6 text-neutral-600">Please log in to view your favorite restaurants.</p>
           <Button variant="primary" onClick={() => navigate('/customer/login')}>
             Log In
           </Button>
@@ -82,10 +82,10 @@ export default function CustomerFavorites() {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8">
-        <div className="card text-center py-12">
+      <div className="app-page">
+        <div className="surface-panel py-12 text-center">
           <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-500"></div>
+            <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-primary-500"></div>
             <p className="text-neutral-600 font-medium">Loading favorites...</p>
           </div>
         </div>
@@ -96,64 +96,63 @@ export default function CustomerFavorites() {
   const totalFavorites = favorites.restaurants.length + favorites.dishes.length;
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8 animate-fade-in">
-      <div className="card">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-3 rounded-xl bg-accent-50 border-2 border-accent-100">
-            <FiHeart className="w-6 h-6 text-accent-600" />
+    <div className="app-page animate-fade-in">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="icon-tile bg-accent-50 text-accent-600">
+            <FiHeart className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-dark-primary">My Favorites</h1>
-            <p className="text-neutral-600 text-sm mt-1">
+            <h1 className="section-title">My Favorites</h1>
+            <p className="section-subtitle">
               {totalFavorites} {totalFavorites === 1 ? 'favorite' : 'favorites'} saved
             </p>
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-center gap-3 text-red-700">
-            <FiAlertCircle className="w-5 h-5 flex-shrink-0" />
+          <div className="mb-6 flex items-center gap-3 rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
+            <FiAlertCircle className="h-5 w-5 flex-shrink-0" />
             <p className="font-medium">{error}</p>
           </div>
         )}
 
         {/* Tabs */}
-        <div className="flex gap-3 mb-8 border-b-2 border-neutral-200">
+        <div className="surface-panel mb-6 flex gap-2 overflow-x-auto">
           <button
             onClick={() => setActiveTab("restaurants")}
-            className={`px-6 py-3 font-semibold transition-all duration-200 border-b-2 -mb-0.5 ${
+            className={`rounded-md border px-4 py-2 font-semibold transition-all duration-200 ${
               activeTab === "restaurants"
-                ? "border-primary-500 text-primary-600"
-                : "border-transparent text-neutral-500 hover:text-neutral-700"
+                ? "border-primary-600 bg-primary-600 text-white"
+                : "border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50"
             }`}
           >
             <div className="flex items-center gap-2">
-              <FiCoffee className="w-4 h-4" />
+              <FiCoffee className="h-4 w-4" />
               Restaurants ({favorites.restaurants.length})
             </div>
           </button>
           <button
             onClick={() => setActiveTab("dishes")}
-            className={`px-6 py-3 font-semibold transition-all duration-200 border-b-2 -mb-0.5 ${
+            className={`rounded-md border px-4 py-2 font-semibold transition-all duration-200 ${
               activeTab === "dishes"
-                ? "border-primary-500 text-primary-600"
-                : "border-transparent text-neutral-500 hover:text-neutral-700"
+                ? "border-primary-600 bg-primary-600 text-white"
+                : "border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50"
             }`}
           >
             <div className="flex items-center gap-2">
-              <FaUtensils className="w-4 h-4" />
+              <FaUtensils className="h-4 w-4" />
               Dishes ({favorites.dishes.length})
             </div>
           </button>
         </div>
 
         {totalFavorites === 0 ? (
-          <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-neutral-100 mb-4">
-              <FiHeart className="w-10 h-10 text-neutral-400" />
+          <div className="surface-panel py-16 text-center">
+            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-md bg-neutral-100">
+              <FiHeart className="h-7 w-7 text-neutral-400" />
             </div>
-            <h3 className="text-xl font-semibold text-neutral-700 mb-2">No favorites yet</h3>
-            <p className="text-neutral-500 mb-6">Start adding your favorite restaurants and dishes!</p>
+            <h3 className="mb-2 text-xl font-semibold text-neutral-700">No favorites yet</h3>
+            <p className="mb-6 text-neutral-500">Start adding your favorite restaurants and dishes.</p>
             <Button variant="primary" onClick={() => navigate('/customer/restaurants')}>
               Browse Restaurants
             </Button>
@@ -165,13 +164,13 @@ export default function CustomerFavorites() {
                 {favorites.restaurants.map((restaurant, index) => (
                   <div
                     key={index}
-                    className="card-hover overflow-hidden"
+                    className="card-hover overflow-hidden p-0"
                   >
-                    <div className="h-48 bg-gradient-to-br from-primary-100 to-accent-100 flex items-center justify-center">
-                      <FiCoffee className="w-16 h-16 text-primary-400" />
+                    <div className="flex h-44 items-center justify-center bg-neutral-100">
+                      <FiCoffee className="h-14 w-14 text-primary-400" />
                     </div>
                     <div className="p-5">
-                      <h3 className="text-lg font-bold text-dark-primary mb-3">{restaurant.name}</h3>
+                      <h3 className="mb-3 text-lg font-bold text-neutral-950">{restaurant.name}</h3>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1 text-yellow-500">
                           <FiStar className="w-4 h-4 fill-current" />
@@ -208,13 +207,13 @@ export default function CustomerFavorites() {
                 {favorites.dishes.map((dish, index) => (
                   <div
                     key={index}
-                    className="card-hover overflow-hidden"
+                    className="card-hover overflow-hidden p-0"
                   >
-                    <div className="h-48 bg-gradient-to-br from-accent-100 to-primary-100 flex items-center justify-center">
-                      <FaUtensils className="w-16 h-16 text-accent-400" />
+                    <div className="flex h-44 items-center justify-center bg-neutral-100">
+                      <FaUtensils className="h-14 w-14 text-accent-400" />
                     </div>
                     <div className="p-5">
-                      <h3 className="text-lg font-bold text-dark-primary mb-1">{dish.name}</h3>
+                      <h3 className="mb-1 text-lg font-bold text-neutral-950">{dish.name}</h3>
                       <p className="text-neutral-600 text-sm mb-3">from {dish.restaurant}</p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1 text-yellow-500">
@@ -248,7 +247,6 @@ export default function CustomerFavorites() {
             )}
           </div>
         )}
-      </div>
     </div>
   );
 } 

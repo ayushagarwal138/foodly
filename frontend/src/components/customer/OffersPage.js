@@ -149,20 +149,18 @@ export default function OffersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-300 rounded-lg mb-8 w-1/3"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="bg-white rounded-2xl shadow-lg p-6">
-                  <div className="h-48 bg-gray-300 rounded-xl mb-4"></div>
-                  <div className="h-6 bg-gray-300 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-300 rounded mb-4 w-3/4"></div>
-                  <div className="h-8 bg-gray-300 rounded-lg mb-4"></div>
-                </div>
-              ))}
-            </div>
+      <div className="app-page">
+        <div className="animate-pulse">
+          <div className="mb-8 h-8 w-1/3 rounded-md bg-neutral-200"></div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="surface-panel">
+                <div className="mb-4 h-48 rounded-md bg-neutral-200"></div>
+                <div className="mb-2 h-6 rounded bg-neutral-200"></div>
+                <div className="mb-4 h-4 w-3/4 rounded bg-neutral-200"></div>
+                <div className="mb-4 h-8 rounded-md bg-neutral-200"></div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -170,165 +168,146 @@ export default function OffersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-            🎉 Exclusive Offers
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Discover amazing deals, discounts, and promotions to make your dining experience even better!
+    <div className="app-page">
+      <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div>
+          <h1 className="section-title">Exclusive Offers</h1>
+          <p className="section-subtitle max-w-2xl">
+            Browse active deals, copy coupon codes, and apply them when you check out.
           </p>
         </div>
+        <button
+          onClick={() => navigate('/customer/restaurants')}
+          className="btn btn-primary w-full md:w-auto"
+        >
+          Browse Restaurants
+        </button>
+      </div>
 
-        {/* Tabs */}
-        <div className="flex flex-wrap justify-center gap-2 mb-8">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 ${
-                activeTab === tab.id
-                  ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
-                  : "bg-white text-gray-700 hover:bg-gray-50 shadow-md"
-              }`}
-            >
-              {tab.label}
-              <span className="ml-2 bg-white bg-opacity-20 px-2 py-1 rounded-full text-sm">
-                {tab.count}
-              </span>
-            </button>
-          ))}
+      {/* Tabs */}
+      <div className="surface-panel mb-6 overflow-x-auto">
+        <div className="flex min-w-max gap-2">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-semibold transition-all ${
+              activeTab === tab.id
+                ? "border-primary-600 bg-primary-600 text-white shadow-sm"
+                : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50"
+            }`}
+          >
+            {tab.label}
+            <span className={`rounded-full px-2 py-0.5 text-xs ${activeTab === tab.id ? "bg-white/20 text-white" : "bg-neutral-100 text-neutral-600"}`}>
+              {tab.count}
+            </span>
+          </button>
+        ))}
         </div>
+      </div>
 
-        {/* Offers Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredOffers.map(offer => (
-            <div key={offer.id} className="group">
-              <div className="bg-white rounded-2xl shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-                {/* Offer Image */}
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={offer.image}
-                    alt={offer.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-white font-bold text-sm ${offer.color}`}>
-                    {offer.discount}
-                  </div>
-                  <div className="absolute top-4 right-4 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                    {getDaysUntilExpiry(offer.validUntil)} days left
-                  </div>
+      {/* Offers Grid */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {filteredOffers.map(offer => (
+          <article key={offer.id} className="card-hover overflow-hidden p-0">
+            <div className="relative h-48 overflow-hidden bg-neutral-100">
+              <img
+                src={offer.image}
+                alt={offer.title}
+                className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+              />
+              <div className="absolute left-3 top-3 rounded-md bg-neutral-950/90 px-3 py-1 text-sm font-bold text-white backdrop-blur">
+                {offer.discount}
+              </div>
+              <div className="absolute right-3 top-3 rounded-md bg-white/95 px-2.5 py-1 text-xs font-bold text-primary-700 backdrop-blur">
+                {getDaysUntilExpiry(offer.validUntil)} days left
+              </div>
+            </div>
+
+            <div className="p-5">
+              <h3 className="mb-2 text-xl font-bold text-neutral-950">{offer.title}</h3>
+              <p className="mb-4 text-sm leading-6 text-neutral-600">{offer.description}</p>
+
+              <div className="mb-4 flex items-center text-sm text-neutral-500">
+                <svg className="mr-2 h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                {offer.restaurant}
+              </div>
+
+              <div className="mb-4 space-y-2 rounded-md border border-neutral-200 bg-neutral-50 p-3">
+                <div className="flex justify-between gap-4 text-sm">
+                  <span className="text-neutral-500">Min Order</span>
+                  <span className="font-semibold text-neutral-900">{offer.minOrder}</span>
                 </div>
+                <div className="flex justify-between gap-4 text-sm">
+                  <span className="text-neutral-500">Max Discount</span>
+                  <span className="font-semibold text-accent-700">{offer.maxDiscount}</span>
+                </div>
+                <div className="flex justify-between gap-4 text-sm">
+                  <span className="text-neutral-500">Valid Until</span>
+                  <span className="font-semibold text-neutral-900">{new Date(offer.validUntil).toLocaleDateString()}</span>
+                </div>
+              </div>
 
-                {/* Offer Content */}
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">
-                    {offer.title}
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    {offer.description}
-                  </p>
-
-                  {/* Restaurant */}
-                  <div className="flex items-center mb-4">
-                    <svg className="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                    <span className="text-sm text-gray-500">{offer.restaurant}</span>
+              <div className="mb-4 rounded-md border border-dashed border-primary-300 bg-primary-50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="mb-1 text-sm text-primary-700">Coupon Code</p>
+                    <p className="font-mono text-lg font-bold text-neutral-950">{offer.code}</p>
                   </div>
-
-                  {/* Details */}
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Min Order:</span>
-                      <span className="font-semibold">{offer.minOrder}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Max Discount:</span>
-                      <span className="font-semibold text-green-600">{offer.maxDiscount}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Valid Until:</span>
-                      <span className="font-semibold">{new Date(offer.validUntil).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-
-                  {/* Coupon Code */}
-                  <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Coupon Code</p>
-                        <p className="font-mono font-bold text-lg text-gray-800">{offer.code}</p>
-                      </div>
-                      <button
-                        onClick={() => copyToClipboard(offer.code)}
-                        className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-lg font-semibold hover:from-orange-600 hover:to-red-600 transition-all duration-300 transform hover:scale-105"
-                      >
-                        Copy
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Action Button */}
                   <button
-                    onClick={() => navigate('/customer')}
-                    className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-3 rounded-lg font-semibold hover:from-green-600 hover:to-teal-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                    onClick={() => copyToClipboard(offer.code)}
+                    className="btn btn-secondary min-h-[36px] px-3 py-2"
                   >
-                    Order Now
+                    Copy
                   </button>
                 </div>
               </div>
+
+              <button
+                onClick={() => navigate('/customer/restaurants')}
+                className="btn btn-primary w-full"
+              >
+                Order Now
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {/* Empty State */}
+      {filteredOffers.length === 0 && (
+        <div className="surface-panel py-12 text-center">
+          <h3 className="mb-2 text-2xl font-bold text-neutral-900">No offers available</h3>
+          <p className="mb-6 text-neutral-600">Check back later for new offers.</p>
+          <button
+            onClick={() => setActiveTab("all")}
+            className="btn btn-primary"
+          >
+            View All Offers
+          </button>
+        </div>
+      )}
+
+      <div className="surface-panel mt-10">
+        <h3 className="mb-5 text-xl font-bold text-neutral-950">How to use offers</h3>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {[
+            ["1", "Copy Code", "Copy the coupon code from any available offer."],
+            ["2", "Place Order", "Browse restaurants and add items to your cart."],
+            ["3", "Apply and Save", "Paste the code at checkout to receive the discount."]
+          ].map(([step, title, text]) => (
+            <div key={step} className="rounded-md border border-neutral-200 bg-neutral-50 p-4">
+              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-md bg-neutral-950 text-sm font-bold text-white">
+                {step}
+              </div>
+              <h4 className="mb-1 font-semibold text-neutral-900">{title}</h4>
+              <p className="text-sm leading-6 text-neutral-600">{text}</p>
             </div>
           ))}
         </div>
-
-        {/* Empty State */}
-        {filteredOffers.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🎯</div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">No offers available</h3>
-            <p className="text-gray-600 mb-6">Check back later for new exciting offers!</p>
-            <button
-              onClick={() => setActiveTab("all")}
-              className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-orange-600 hover:to-red-600 transition-all duration-300"
-            >
-              View All Offers
-            </button>
-          </div>
-        )}
-
-        {/* Footer Info */}
-        <div className="mt-12 text-center">
-          <div className="bg-white rounded-2xl shadow-lg p-8 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">💡 How to Use Offers</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-3">
-                  1
-                </div>
-                <h4 className="font-semibold text-gray-800 mb-2">Copy Code</h4>
-                <p className="text-gray-600 text-sm">Click the "Copy" button to copy the coupon code to your clipboard</p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-3">
-                  2
-                </div>
-                <h4 className="font-semibold text-gray-800 mb-2">Place Order</h4>
-                <p className="text-gray-600 text-sm">Browse restaurants and add items to your cart</p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-3">
-                  3
-                </div>
-                <h4 className="font-semibold text-gray-800 mb-2">Apply & Save</h4>
-                <p className="text-gray-600 text-sm">Paste the code at checkout and enjoy your discount!</p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
-    </div>
+          </div>
   );
 } 

@@ -8,9 +8,14 @@
   * {
     @apply border-neutral-200;
   }
+
+  html {
+    scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
+  }
   
   body {
-    @apply bg-neutral-50 text-neutral-900 antialiased;
+    @apply bg-[#f7f7f5] text-neutral-900 antialiased;
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
       'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -21,50 +26,43 @@
     font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
   }
 
-  /* Focus styles for accessibility */
   *:focus-visible {
     @apply outline-none ring-2 ring-primary-500 ring-offset-2 ring-offset-white;
-  }
-
-  /* Smooth scrolling */
-  html {
-    scroll-behavior: smooth;
   }
 }
 
 @layer components {
-  /* Button base styles */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg 
+    @apply inline-flex min-h-[40px] items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold
            transition-all duration-200 ease-in-out 
            focus:outline-none focus:ring-2 focus:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none
-           active:scale-[0.98];
+           active:scale-[0.99];
   }
 
   .btn-primary {
-    @apply bg-primary-500 text-white shadow-md hover:bg-primary-600 
+    @apply bg-primary-600 text-white shadow-sm hover:bg-primary-700 
            focus:ring-primary-500 active:bg-primary-700;
   }
 
   .btn-secondary {
-    @apply bg-white text-primary-600 border-2 border-primary-500 shadow-sm
-           hover:bg-primary-50 focus:ring-primary-500 active:bg-primary-100;
+    @apply border border-neutral-300 bg-white text-neutral-900 shadow-sm
+           hover:border-neutral-400 hover:bg-neutral-50 focus:ring-primary-500 active:bg-neutral-100;
   }
 
   .btn-tertiary {
-    @apply bg-neutral-100 text-neutral-700 border border-neutral-300
+    @apply border border-neutral-300 bg-neutral-100 text-neutral-800
            hover:bg-neutral-200 focus:ring-neutral-500 active:bg-neutral-300;
   }
 
   .btn-success {
-    @apply bg-accent-500 text-white shadow-md hover:bg-accent-600
+    @apply bg-accent-600 text-white shadow-sm hover:bg-accent-700
            focus:ring-accent-500 active:bg-accent-700;
   }
 
   .btn-danger {
-    @apply bg-red-500 text-white shadow-md hover:bg-red-600
-           focus:ring-red-500 active:bg-red-700;
+    @apply bg-red-600 text-white shadow-sm hover:bg-red-700
+           focus:ring-red-500 active:bg-red-800;
   }
 
   .btn-ghost {
@@ -72,27 +70,51 @@
            focus:ring-neutral-500 active:bg-neutral-200;
   }
 
-  /* Input styles */
   .input {
-    @apply w-full px-4 py-3 text-base border border-neutral-300 rounded-lg
-           bg-white text-neutral-900 placeholder-neutral-400
+    @apply w-full rounded-md border border-neutral-300 bg-white px-4 py-3 text-base text-neutral-900 placeholder-neutral-400 shadow-sm
            focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
            transition-all duration-200
            disabled:bg-neutral-100 disabled:cursor-not-allowed;
   }
 
-  /* Card styles */
   .card {
-    @apply bg-white rounded-2xl shadow-soft border border-neutral-100 p-6;
+    @apply rounded-lg border border-neutral-200 bg-white p-5 shadow-sm md:p-6;
   }
 
   .card-hover {
-    @apply card transition-all duration-200 hover:shadow-medium hover:-translate-y-0.5;
+    @apply card transition-all duration-200 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md;
+  }
+
+  .app-page {
+    @apply mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 md:py-7 lg:px-8;
+  }
+
+  .app-page-narrow {
+    @apply mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 md:py-7 lg:px-8;
+  }
+
+  .surface-panel {
+    @apply rounded-lg border border-neutral-200 bg-white p-5 shadow-sm md:p-6;
+  }
+
+  .section-title {
+    @apply text-xl font-bold tracking-normal text-neutral-950 md:text-2xl;
+  }
+
+  .section-subtitle {
+    @apply mt-1 text-sm leading-6 text-neutral-600;
+  }
+
+  .icon-tile {
+    @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-white text-primary-600 shadow-sm;
+  }
+
+  .status-pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold;
   }
 }
 
 @layer utilities {
-  /* Custom scrollbar */
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -106,8 +128,11 @@
     @apply bg-neutral-300 rounded-full hover:bg-neutral-400;
   }
 
-  /* Text gradient */
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-500 to-accent-500;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-red-600;
+  }
+
+  .foodly-focus-card {
+    box-shadow: 0 18px 60px -38px rgba(23, 23, 23, 0.55);
   }
 }

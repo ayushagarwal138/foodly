@@ -40,7 +40,7 @@ export default function WishlistPage() {
   if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
+    <div className="app-page-narrow surface-panel">
       <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Wishlist / Favorites</h2>
       {wishlist.length === 0 ? (
         <div className="text-gray-500">Your wishlist is empty.</div>

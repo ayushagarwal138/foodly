@@ -59,16 +59,16 @@ export default function ReviewModal({ isOpen, onClose, orderId, restaurantId, it
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <h2 className="text-2xl font-bold mb-4 text-[#16213e]">Rate Your Order</h2>
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600">
             {error}
           </div>
         )}
         <div className="space-y-6">
           {normalizedItems.map((item) => (
-            <div key={item.menu_item_id} className="bg-gray-50 rounded-xl p-4">
+            <div key={item.menu_item_id} className="bg-gray-50 rounded-md p-4">
               <h3 className="font-semibold mb-2">{item.name}</h3>
               <div className="flex items-center gap-2 mb-2">
                 {[1,2,3,4,5].map(star => (
@@ -83,7 +83,7 @@ export default function ReviewModal({ isOpen, onClose, orderId, restaurantId, it
                 ))}
               </div>
               <textarea
-                className="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200"
+                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200"
                 placeholder="Write your review..."
                 value={reviews[item.menu_item_id]?.text || ""}
                 onChange={(e) => setReviews(prev => ({

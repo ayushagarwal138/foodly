@@ -55,83 +55,79 @@ export default function AdminDashboard() {
   if (loading) return <div className="p-10 text-center">Loading...</div>;
   if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
 
+  const statCards = [
+    ["Total Users", stats.users, "text-primary-600", "bg-primary-50"],
+    ["Restaurants", stats.restaurants, "text-accent-700", "bg-accent-50"],
+    ["Total Orders", stats.orders, "text-yellow-700", "bg-yellow-50"],
+    ["Reviews", stats.reviews, "text-neutral-950", "bg-neutral-50"],
+    ["Active Offers", stats.offers, "text-primary-700", "bg-primary-50"]
+  ];
+
   return (
-    <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
-      <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Admin Dashboard</h2>
-      <p className="text-gray-600 mb-8">Welcome to the Foodly platform management dashboard</p>
+    <div className="app-page">
+      <div className="mb-6">
+        <h2 className="section-title">Admin Dashboard</h2>
+        <p className="section-subtitle">Welcome to the Foodly platform management dashboard.</p>
+      </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-        <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
-          <div className="text-2xl font-bold text-blue-600">{stats.users}</div>
-          <div className="text-sm text-gray-600">Total Users</div>
-        </div>
-        <div className="bg-green-50 rounded-xl p-6 border border-green-200">
-          <div className="text-2xl font-bold text-green-600">{stats.restaurants}</div>
-          <div className="text-sm text-gray-600">Restaurants</div>
-        </div>
-        <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-200">
-          <div className="text-2xl font-bold text-yellow-600">{stats.orders}</div>
-          <div className="text-sm text-gray-600">Total Orders</div>
-        </div>
-        <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
-          <div className="text-2xl font-bold text-purple-600">{stats.reviews}</div>
-          <div className="text-sm text-gray-600">Reviews</div>
-        </div>
-        <div className="bg-orange-50 rounded-xl p-6 border border-orange-200">
-          <div className="text-2xl font-bold text-orange-600">{stats.offers}</div>
-          <div className="text-sm text-gray-600">Active Offers</div>
-        </div>
+      <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+        {statCards.map(([label, value, textClass, bgClass]) => (
+          <div key={label} className={`rounded-lg border border-neutral-200 p-5 shadow-sm ${bgClass}`}>
+            <div className={`text-2xl font-bold ${textClass}`}>{value}</div>
+            <div className="text-sm text-neutral-600">{label}</div>
+          </div>
+        ))}
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-[#16213e] mb-4">Quick Actions</h3>
+      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="surface-panel">
+          <h3 className="mb-4 text-lg font-semibold text-neutral-950">Quick Actions</h3>
           <div className="space-y-3">
-            <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-              + Create New Offer
+            <button className="btn btn-primary w-full">
+              Create New Offer
             </button>
-            <button className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+            <button className="btn btn-secondary w-full">
               View Analytics
             </button>
-            <button className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+            <button className="btn btn-secondary w-full">
               Manage Users
             </button>
           </div>
         </div>
 
-        <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-[#16213e] mb-4">Recent Activity</h3>
+        <div className="surface-panel">
+          <h3 className="mb-4 text-lg font-semibold text-neutral-950">Recent Activity</h3>
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-gray-700">New restaurant registered</span>
+              <span className="text-sm text-neutral-700">New restaurant registered</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span className="text-sm text-gray-700">5 new orders received</span>
+              <span className="text-sm text-neutral-700">5 new orders received</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-              <span className="text-sm text-gray-700">System maintenance scheduled</span>
+              <span className="text-sm text-neutral-700">System maintenance scheduled</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-[#16213e] mb-4">System Status</h3>
+        <div className="surface-panel">
+          <h3 className="mb-4 text-lg font-semibold text-neutral-950">System Status</h3>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">API Status:</span>
+              <span className="text-sm text-neutral-600">API Status:</span>
               <span className="text-sm font-semibold text-green-600">Online</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Database:</span>
+              <span className="text-sm text-neutral-600">Database:</span>
               <span className="text-sm font-semibold text-green-600">Connected</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Uptime:</span>
+              <span className="text-sm text-neutral-600">Uptime:</span>
               <span className="text-sm font-semibold text-green-600">99.9%</span>
             </div>
           </div>

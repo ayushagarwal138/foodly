@@ -100,24 +100,24 @@ export default function AdminSidebar({ sidebarOpen, setSidebarOpen }) {
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          className="fixed inset-0 z-40 bg-neutral-950/40 backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed md:absolute z-50 top-0 left-0 h-screen w-72 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
+      <aside className={`fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-neutral-200 bg-white shadow-xl transition-transform duration-300 ease-in-out lg:absolute lg:shadow-none ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         {/* Header */}
-        <div className="flex items-center gap-3 p-6 border-b border-gray-700">
-          <img src="/logo.jpeg" alt="Foodly Logo" className="w-12 h-12 rounded-full shadow border border-gray-600" />
+        <div className="flex items-center gap-3 border-b border-neutral-200 p-5">
+          <img src="/logo.jpeg" alt="Foodly Logo" className="h-11 w-11 rounded-md border border-neutral-200 object-cover" />
           <div>
-            <h2 className="text-xl font-bold text-white">Admin Panel</h2>
-            <p className="text-sm text-gray-400">Platform Management</p>
+            <h2 className="text-lg font-bold text-neutral-950">Foodly Admin</h2>
+            <p className="text-xs font-medium text-neutral-500">Platform operations</p>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
           {sidebarLinks.map(link => {
             const isActive = current === link.label;
             return (
@@ -125,25 +125,25 @@ export default function AdminSidebar({ sidebarOpen, setSidebarOpen }) {
                 key={link.label}
                 to={link.path}
                 onClick={() => setSidebarOpen(false)}
-                className={`group flex items-center gap-4 p-4 rounded-xl transition-all duration-200 hover:bg-gray-700/50 ${
+                className={`group flex items-center gap-3 rounded-md px-3 py-3 transition-all duration-200 ${
                   isActive 
-                    ? "bg-blue-600 text-white shadow-lg" 
-                    : "text-gray-300 hover:text-white"
+                    ? "bg-primary-50 text-primary-700 shadow-sm ring-1 ring-primary-100" 
+                    : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-950"
                 }`}
               >
-                <div className={`flex-shrink-0 ${isActive ? "text-white" : "text-gray-400 group-hover:text-white"}`}>
+                <div className={`flex-shrink-0 ${isActive ? "text-primary-600" : "text-neutral-400 group-hover:text-neutral-700"}`}>
                   {link.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`font-semibold text-sm ${isActive ? "text-white" : "text-gray-300 group-hover:text-white"}`}>
+                  <p className={`text-sm font-semibold ${isActive ? "text-primary-800" : "text-neutral-700 group-hover:text-neutral-950"}`}>
                     {link.label}
                   </p>
-                  <p className={`text-xs mt-1 ${isActive ? "text-blue-100" : "text-gray-500 group-hover:text-gray-300"}`}>
+                  <p className={`mt-0.5 truncate text-xs ${isActive ? "text-primary-600" : "text-neutral-400 group-hover:text-neutral-500"}`}>
                     {link.description}
                   </p>
                 </div>
                 {isActive && (
-                  <div className="flex-shrink-0 w-2 h-2 bg-white rounded-full animate-pulse" />
+                  <div className="h-2 w-2 flex-shrink-0 rounded-full bg-primary-500" />
                 )}
               </Link>
             );
@@ -151,15 +151,15 @@ export default function AdminSidebar({ sidebarOpen, setSidebarOpen }) {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-700">
-          <div className="bg-gray-800 rounded-lg p-3">
+        <div className="border-t border-neutral-200 p-4">
+          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-bold">A</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-neutral-950">
+                <span className="text-sm font-bold text-white">A</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white">Admin User</p>
-                <p className="text-xs text-gray-400">System Administrator</p>
+                <p className="text-sm font-semibold text-neutral-900">Admin workspace</p>
+                <p className="text-xs text-neutral-500">Moderation and ops</p>
               </div>
             </div>
           </div>

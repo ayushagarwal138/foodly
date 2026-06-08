@@ -26,7 +26,7 @@ export default function Toast({ message, type = "info", onClose }) {
 
   return (
     <div
-      className={`fixed top-6 right-6 z-50 px-5 py-4 rounded-xl shadow-large text-white ${bg} border-2 ${border} flex items-center gap-3 animate-slide-in-right min-w-[280px] max-w-md`}
+      className={`fixed top-6 right-6 z-50 px-5 py-4 rounded-md shadow-lg text-white ${bg} border-2 ${border} flex items-center gap-3 animate-slide-in-right min-w-[280px] max-w-md`}
       role="alert"
       aria-live="assertive"
     >

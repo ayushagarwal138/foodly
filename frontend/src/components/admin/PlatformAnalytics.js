@@ -92,7 +92,7 @@ export default function PlatformAnalytics() {
   ).length;
 
   return (
-    <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
+    <div className="app-page surface-panel">
       <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Platform Analytics</h2>
       <p className="text-gray-600 mb-8">Comprehensive analytics and insights for the Foodly platform</p>
 

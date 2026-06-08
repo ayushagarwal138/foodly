@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { FiArrowLeft, FiCheckCircle, FiCreditCard, FiDollarSign, FiGlobe, FiMapPin, FiShoppingBag, FiSmartphone, FiTrash2 } from "react-icons/fi";
 import { useCart } from "./CartContext";
 import { api, API_ENDPOINTS } from "../../config/api";
 
 const PAYMENT_METHODS = [
-  { value: "Cash on Delivery", label: "Cash on Delivery", icon: "💵" },
-  { value: "UPI", label: "UPI", icon: "📱" },
-  { value: "Credit/Debit Card", label: "Credit/Debit Card", icon: "💳" },
-  { value: "Net Banking", label: "Net Banking", icon: "🏦" }
+  { value: "Cash on Delivery", label: "Cash on Delivery", icon: FiDollarSign },
+  { value: "UPI", label: "UPI", icon: FiSmartphone },
+  { value: "Credit/Debit Card", label: "Credit/Debit Card", icon: FiCreditCard },
+  { value: "Net Banking", label: "Net Banking", icon: FiGlobe }
 ];
 
 export default function CartPage() {
@@ -194,10 +195,10 @@ export default function CartPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
+      <div className="app-page-narrow surface-panel">
         <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-          <span className="ml-3 text-gray-600">Loading your cart...</span>
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary-500"></div>
+          <span className="ml-3 text-neutral-600">Loading your cart...</span>
         </div>
       </div>
     );
@@ -205,22 +206,24 @@ export default function CartPage() {
 
   if (orderPlaced) {
     return (
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100 text-center">
-        <div className="text-6xl mb-4">🎉</div>
-        <h2 className="text-3xl font-bold mb-4 text-[#16213e]">Order Placed Successfully!</h2>
-        <div className="text-gray-600 mb-6 text-lg">
+      <div className="app-page-narrow surface-panel text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-md bg-accent-50 text-accent-700 ring-1 ring-accent-100">
+          <FiCheckCircle className="h-7 w-7" />
+        </div>
+        <h2 className="mb-4 text-3xl font-bold text-neutral-950">Order placed successfully</h2>
+        <div className="mb-6 text-lg text-neutral-600">
           Thank you for your order. You can track it in the Orders section.
         </div>
-        <div className="flex gap-4 justify-center">
+        <div className="flex flex-col justify-center gap-3 sm:flex-row">
           <button 
             onClick={() => navigate('/customer/orders')}
-            className="bg-orange-500 text-white px-6 py-3 rounded-xl font-bold shadow hover:bg-orange-600 transition"
+            className="btn btn-primary"
           >
             View Orders
           </button>
           <button 
             onClick={() => navigate('/customer')}
-            className="bg-gray-500 text-white px-6 py-3 rounded-xl font-bold shadow hover:bg-gray-600 transition"
+            className="btn btn-secondary"
           >
             Continue Shopping
           </button>
@@ -231,11 +234,11 @@ export default function CartPage() {
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100 text-center">
-        <div className="text-red-500 text-lg mb-4">{error}</div>
+      <div className="app-page-narrow surface-panel text-center">
+        <div className="mb-4 text-lg text-red-600">{error}</div>
         <button 
           onClick={() => window.location.reload()}
-          className="bg-orange-500 text-white px-6 py-3 rounded-xl font-bold shadow hover:bg-orange-600 transition"
+          className="btn btn-primary"
         >
           Try Again
         </button>
@@ -244,25 +247,31 @@ export default function CartPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-3xl font-bold text-[#16213e]">Your Cart</h2>
+    <div className="app-page">
+      <div className="mb-6 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+        <div>
+          <h2 className="section-title">Your Cart</h2>
+          <p className="section-subtitle">Review items, delivery details, and payment before placing your order.</p>
+        </div>
         <button 
           onClick={() => navigate('/customer')}
-          className="text-orange-500 hover:text-orange-600 font-medium"
+          className="btn btn-ghost w-full md:w-auto"
         >
-          ← Continue Shopping
+          <FiArrowLeft className="h-4 w-4" />
+          Continue Shopping
         </button>
       </div>
 
       {(cart.items || []).length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">🛒</div>
-          <h3 className="text-xl font-semibold text-gray-600 mb-2">Your cart is empty</h3>
-          <p className="text-gray-500 mb-6">Add some delicious items to get started!</p>
+        <div className="surface-panel py-14 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-md bg-neutral-100 text-neutral-500">
+            <FiShoppingBag className="h-7 w-7" />
+          </div>
+          <h3 className="mb-2 text-xl font-semibold text-neutral-800">Your cart is empty</h3>
+          <p className="mb-6 text-neutral-500">Add items from nearby restaurants to get started.</p>
           <button 
             onClick={() => navigate('/customer/restaurants')}
-            className="bg-orange-500 text-white px-8 py-3 rounded-xl font-bold shadow hover:bg-orange-600 transition"
+            className="btn btn-primary"
           >
             Browse Restaurants
           </button>
@@ -271,46 +280,47 @@ export default function CartPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2">
-            <div className="bg-gray-50 rounded-xl p-6 mb-6">
-              <h3 className="text-lg font-semibold text-[#16213e] mb-4">Cart Items</h3>
+            <div className="surface-panel mb-6">
+              <h3 className="mb-4 text-lg font-semibold text-neutral-950">Cart Items</h3>
               <div className="space-y-4">
                 {cart.items.map((item, idx) => (
-                  <div key={item.menu_item_id || item.name + '-' + idx} className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm">
+                  <div key={item.menu_item_id || item.name + '-' + idx} className="flex flex-col gap-4 rounded-md border border-neutral-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[#16213e]">{item.name}</h4>
-                      <p className="text-gray-600 text-sm">₹{item.price.toFixed(2)} each</p>
+                      <h4 className="font-semibold text-neutral-950">{item.name}</h4>
+                      <p className="text-sm text-neutral-600">₹{item.price.toFixed(2)} each</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center bg-gray-100 rounded-lg">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center rounded-md border border-neutral-200 bg-neutral-50">
                         <button 
-                          className="px-3 py-1 hover:bg-gray-200 rounded-l-lg transition"
+                          className="px-3 py-1.5 transition hover:bg-neutral-100"
                           onClick={() => updateQty(item, item.qty - 1)}
                         >
                           -
                         </button>
-                        <span className="px-3 py-1 font-semibold">{item.qty}</span>
+                        <span className="px-3 py-1.5 font-semibold">{item.qty}</span>
                         <button 
-                          className="px-3 py-1 hover:bg-gray-200 rounded-r-lg transition"
+                          className="px-3 py-1.5 transition hover:bg-neutral-100"
                           onClick={() => updateQty(item, item.qty + 1)}
                         >
                           +
                         </button>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold text-[#16213e]">₹{(item.price * item.qty).toFixed(2)}</div>
+                        <div className="font-semibold text-neutral-950">₹{(item.price * item.qty).toFixed(2)}</div>
                       </div>
                       <button 
-                        className="text-red-500 hover:text-red-700 transition"
+                        className="rounded-md p-2 text-red-600 transition hover:bg-red-50 hover:text-red-700"
                         onClick={() => removeFromCart(item)}
+                        aria-label={`Remove ${item.name}`}
                       >
-                        🗑️
+                        <FiTrash2 className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
               <button 
-                className="w-full mt-4 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition"
+                className="btn btn-secondary mt-4 w-full"
                 onClick={clearCart}
               >
                 Clear Cart
@@ -318,10 +328,13 @@ export default function CartPage() {
             </div>
 
             {/* Delivery Address */}
-            <div className="bg-gray-50 rounded-xl p-6 mb-6">
-              <h3 className="text-lg font-semibold text-[#16213e] mb-4">Delivery Address</h3>
+            <div className="surface-panel mb-6">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-neutral-950">
+                <FiMapPin className="h-5 w-5 text-primary-600" />
+                Delivery Address
+              </h3>
               <textarea
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+                className="input resize-none"
                 rows="3"
                 placeholder="Enter your complete delivery address..."
                 value={address}
@@ -330,71 +343,76 @@ export default function CartPage() {
             </div>
 
             {/* Payment Method */}
-            <div className="bg-gray-50 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-[#16213e] mb-4">Payment Method</h3>
+            <div className="surface-panel">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-neutral-950">
+                <FiCreditCard className="h-5 w-5 text-primary-600" />
+                Payment Method
+              </h3>
               <div className="grid grid-cols-2 gap-3">
-                {PAYMENT_METHODS.map(method => (
+                {PAYMENT_METHODS.map(method => {
+                  const Icon = method.icon;
+                  return (
                   <button
                     key={method.value}
-                    className={`p-4 rounded-lg border-2 transition ${
+                    className={`rounded-md border p-4 text-left transition ${
                       payment === method.value
-                        ? 'border-orange-500 bg-orange-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-primary-500 bg-primary-50 text-primary-800'
+                        : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300'
                     }`}
                     onClick={() => setPayment(method.value)}
                   >
-                    <div className="text-2xl mb-2">{method.icon}</div>
-                    <div className="text-sm font-medium">{method.label}</div>
+                    <Icon className="mb-2 h-5 w-5" />
+                    <div className="text-sm font-semibold">{method.label}</div>
                   </button>
-                ))}
+                )})}
               </div>
             </div>
           </div>
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-gray-50 rounded-xl p-6 sticky top-4">
-              <h3 className="text-lg font-semibold text-[#16213e] mb-4">Order Summary</h3>
+            <div className="surface-panel sticky top-24">
+              <h3 className="mb-4 text-lg font-semibold text-neutral-950">Order Summary</h3>
               
               {/* Coupon Section */}
               <div className="mb-4">
                 <div className="flex gap-2">
                   <input
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm"
+                    className="input flex-1 py-2 text-sm"
                     placeholder="Coupon code"
                     value={coupon}
                     onChange={e => setCoupon(e.target.value)}
                   />
                   <button 
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-600 transition text-sm"
+                    className="btn btn-secondary min-h-[40px] px-4 py-2 text-sm"
                     onClick={applyCoupon}
                   >
                     Apply
                   </button>
                 </div>
                 {couponApplied && (
-                  <div className="text-green-600 text-sm mt-2">✓ Coupon applied!</div>
+                  <div className="mt-2 text-sm text-accent-700">Coupon applied</div>
                 )}
               </div>
 
               {/* Price Breakdown */}
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
+                  <span className="text-neutral-600">Subtotal</span>
                   <span className="font-medium">₹{subtotal.toFixed(2)}</span>
                 </div>
                 {discount > 0 && (
-                  <div className="flex justify-between text-green-600">
+                  <div className="flex justify-between text-accent-700">
                     <span>Discount</span>
                     <span>-₹{discount.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Delivery Fee</span>
+                  <span className="text-neutral-600">Delivery Fee</span>
                   <span className="font-medium">₹{deliveryFee.toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-3">
-                  <div className="flex justify-between text-lg font-bold text-[#16213e]">
+                  <div className="flex justify-between text-lg font-bold text-neutral-950">
                     <span>Total</span>
                     <span>₹{total.toFixed(2)}</span>
                   </div>
@@ -403,17 +421,17 @@ export default function CartPage() {
 
               {/* Place Order Button */}
               <button 
-                className={`w-full py-4 rounded-xl font-bold shadow transition ${
+                className={`btn w-full py-4 ${
                   !address || (cart.items || []).length === 0 || placingOrder
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-orange-500 text-white hover:bg-orange-600'
+                    ? 'bg-neutral-200 text-neutral-500'
+                    : 'btn-primary'
                 }`}
                 disabled={!address || (cart.items || []).length === 0 || placingOrder}
                 onClick={placeOrder}
               >
                 {placingOrder ? (
                   <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    <div className="mr-2 h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
                     Placing Order...
                   </div>
                 ) : (
@@ -422,7 +440,7 @@ export default function CartPage() {
               </button>
 
               {!address && (
-                <div className="text-red-500 text-sm mt-2 text-center">
+                <div className="mt-2 text-center text-sm text-red-600">
                   Please enter your delivery address
                 </div>
               )}

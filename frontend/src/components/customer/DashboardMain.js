@@ -80,80 +80,79 @@ export default function DashboardMain() {
   const recentOrders = orders.slice(0, 5);
 
   return (
-    <div className="flex flex-col gap-8 p-4 md:p-6 lg:p-8 animate-fade-in">
+    <div className="app-page animate-fade-in">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-primary-50 via-white to-accent-50 rounded-3xl shadow-large p-6 md:p-10 lg:p-14 flex flex-col md:flex-row items-center gap-8 border border-neutral-100">
-        <div className="flex-1 flex flex-col items-center md:items-start w-full">
-          <div className="flex items-center gap-4 mb-6">
-            <img
-              src="/logo.jpeg"
-              alt="Foodly Logo"
-              className="w-16 h-16 md:w-20 md:h-20 rounded-full shadow-md border-2 border-white"
-            />
-            <div>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-dark-primary mb-2 text-center md:text-left">
-                What are you craving today?
-              </h1>
-              <p className="text-base md:text-lg text-neutral-600 text-center md:text-left">
-                Order from your favorite restaurants and get it delivered fast!
-              </p>
+      <section className="relative overflow-hidden rounded-lg border border-neutral-200 bg-neutral-950 shadow-sm">
+        <img
+          src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=80"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-45"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-neutral-950 via-neutral-950/85 to-neutral-950/35" />
+        <div className="relative grid gap-8 p-5 md:grid-cols-[1.15fr_0.85fr] md:p-8 lg:p-10">
+          <div className="flex min-h-[340px] flex-col justify-center">
+            <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-md border border-white/15 bg-white/10 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur">
+              <FiClock className="h-4 w-4 text-primary-300" />
+              Delivery from trusted kitchens near you
             </div>
-          </div>
+            <h1 className="max-w-2xl text-3xl font-extrabold leading-tight text-white md:text-4xl lg:text-5xl">
+              Fresh meals, fast delivery, zero confusion.
+            </h1>
+            <p className="mt-4 max-w-xl text-base leading-7 text-white/78">
+              Explore restaurants, compare offers, and place your next order with a cleaner Foodly experience.
+            </p>
           
-          <form
-            className="w-full max-w-xl mb-6"
-            onSubmit={e => {
-              e.preventDefault();
-            }}
-          >
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                <FiSearch className="w-5 h-5 text-neutral-400" />
+            <form
+              className="mt-7 w-full max-w-xl"
+              onSubmit={e => {
+                e.preventDefault();
+              }}
+            >
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                  <FiSearch className="h-5 w-5 text-neutral-400" />
+                </div>
+                <input
+                  className="h-12 w-full rounded-md border border-white/20 bg-white pl-12 pr-4 text-base text-neutral-950 shadow-sm outline-none transition-all placeholder:text-neutral-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20"
+                  placeholder="Search biryani, pizza, thali, restaurants..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  aria-label="Search"
+                />
               </div>
-              <input
-                className="w-full pl-14 pr-5 py-3.5 rounded-full border-2 border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base bg-white shadow-sm transition-all"
-                placeholder="Search for food, restaurants, or cuisines..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                aria-label="Search"
-              />
+            </form>
+
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => navigate('/customer/restaurants')}
+                className="sm:w-auto"
+              >
+                Order Now
+              </Button>
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => navigate('/customer/orders')}
+                className="border-white/30 bg-white/95 text-neutral-950 hover:bg-white sm:w-auto"
+              >
+                View Orders
+              </Button>
+              <Button
+                variant="ghost"
+                size="lg"
+                onClick={() => navigate('/customer/offers')}
+                leftIcon={<FiTag className="h-4 w-4" />}
+                className="text-white hover:bg-white/10 hover:text-white sm:w-auto"
+              >
+                Offers
+              </Button>
             </div>
-          </form>
-
-          {/* Quick Actions */}
-          <div className="flex flex-wrap gap-3 w-full max-w-xl">
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => navigate('/customer/restaurants')}
-              className="flex-1 min-w-[140px]"
-            >
-              Order Now
-            </Button>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => navigate('/customer/orders')}
-              className="flex-1 min-w-[140px]"
-            >
-              View Orders
-            </Button>
-            <Button
-              variant="success"
-              size="lg"
-              onClick={() => navigate('/customer/offers')}
-              leftIcon={<FiTag className="w-4 h-4" />}
-              className="flex-1 min-w-[140px]"
-            >
-              See Offers
-            </Button>
           </div>
-        </div>
 
-        {/* Offer Carousel */}
-        <div className="flex-1 flex flex-col items-center md:items-end w-full">
-          <div className="w-full max-w-md">
-            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin">
+          <div className="flex items-end">
+            <div className="grid w-full gap-3 sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3">
               {[
                 {
                   image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80",
@@ -176,23 +175,25 @@ export default function DashboardMain() {
               ].map((offer, idx) => (
                 <div
                   key={idx}
-                  className="min-w-[240px] card-hover p-6 flex flex-col items-center border-2 border-neutral-100"
+                  className="overflow-hidden rounded-md border border-white/15 bg-white/95 shadow-sm backdrop-blur"
                 >
                   <img
                     src={offer.image}
                     alt={offer.title}
-                    className="w-28 h-28 rounded-xl object-cover mb-4 shadow-md"
+                    className="h-28 w-full object-cover"
                   />
-                  <div className={`font-bold text-${offer.color}-600 text-xl mb-2`}>
-                    {offer.title}
+                  <div className="p-3">
+                    <div className={offer.color === "accent" ? "text-lg font-bold text-accent-700" : "text-lg font-bold text-primary-700"}>
+                      {offer.title}
+                    </div>
+                    <div className="mt-1 text-sm text-neutral-600">{offer.description}</div>
                   </div>
-                  <div className="text-neutral-600 text-sm text-center">{offer.description}</div>
                 </div>
               ))}
             </div>
           </div>
         </div>
-      </div>
+      </section>
       {/* Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {stats.map((stat, idx) => {
@@ -200,7 +201,7 @@ export default function DashboardMain() {
           return (
             <StatCard
               key={stat.label}
-              icon={<Icon className={`w-6 h-6 text-${stat.color}-600`} />}
+              icon={<Icon className="h-6 w-6" />}
               label={stat.label}
               value={stat.value}
               sublabel={stat.sublabel}

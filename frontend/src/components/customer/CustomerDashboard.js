@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Sidebar from './Sidebar';
 import Header from './Header';
@@ -33,16 +33,23 @@ const pathToLabel = [
 
 export default function CustomerDashboard() {
   const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    function handleOpenSidebar() { setSidebarOpen(true); }
+    window.addEventListener("openCustomerSidebar", handleOpenSidebar);
+    return () => window.removeEventListener("openCustomerSidebar", handleOpenSidebar);
+  }, []);
   
   // Find the current label based on the path (longest match wins)
   const current =
     pathToLabel.find(({ path }) => location.pathname.startsWith(path))?.label || "Dashboard";
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen bg-[#f7f7f5] flex flex-col">
       <div className="flex-1 flex">
-        <Sidebar current={current} />
-        <div className="flex-1 flex flex-col ml-0 md:ml-72">
+        <Sidebar current={current} open={sidebarOpen} setOpen={setSidebarOpen} />
+        <div className="flex-1 flex flex-col ml-0 lg:ml-72">
           <Header setCurrent={() => {}} />
           <main className="flex-1">
             <Routes>

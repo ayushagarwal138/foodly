@@ -60,7 +60,7 @@ export default function ReviewsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
+    <div className="app-page-narrow surface-panel">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-[#16213e]">Restaurant Reviews</h2>
         <div className="text-right">

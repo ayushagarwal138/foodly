@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiHome,
@@ -25,8 +25,7 @@ const sidebarLinks = [
   { label: "Support", icon: FiHelpCircle, path: "/customer/support" },
 ];
 
-export default function Sidebar({ current }) {
-  const [open, setOpen] = useState(false);
+export default function Sidebar({ current, open, setOpen }) {
   const navigate = useNavigate();
 
   const handleNavClick = (path) => {
@@ -38,51 +37,58 @@ export default function Sidebar({ current }) {
     <>
       {isMobile && (
         <button
-          className="absolute top-4 right-4 p-2 rounded-xl bg-white hover:bg-neutral-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="absolute top-4 right-4 rounded-md p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
           onClick={() => setOpen(false)}
           aria-label="Close sidebar"
         >
-          <FiX className="w-6 h-6 text-dark-primary" />
+          <FiX className="h-5 w-5" />
         </button>
       )}
-      <div className="flex items-center gap-3 mb-8 px-4">
+      <div className="flex items-center gap-3 px-5 pb-6">
         <img
           src="/logo.jpeg"
           alt="Foodly Logo"
-          className="w-14 h-14 md:w-16 md:h-16 rounded-full shadow-lg border-2 border-white/20"
+          className="h-11 w-11 rounded-md object-cover ring-1 ring-neutral-200"
         />
-        <span className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
-          Foodly
-        </span>
+        <div>
+          <span className="block text-xl font-extrabold tracking-normal text-neutral-950">Foodly</span>
+          <span className="text-xs font-medium text-neutral-500">Customer</span>
+        </div>
       </div>
-      <nav className="flex flex-col gap-2 w-full px-4" aria-label="Main navigation">
+      <nav className="flex w-full flex-col gap-1 px-3" aria-label="Main navigation">
         {sidebarLinks.map((link) => {
           const Icon = link.icon;
           const isActive = current === link.label;
           return (
             <button
               key={link.label}
-              className={`group flex items-center gap-4 w-full px-4 py-3.5 rounded-xl text-base font-semibold transition-all duration-200 relative ${
+              className={`group relative flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-all duration-200 ${
                 isActive
-                  ? "bg-white text-dark-primary shadow-lg scale-[1.02]"
-                  : "text-white/90 hover:bg-white/10 hover:text-white hover:scale-[1.01]"
+                  ? "bg-primary-50 text-primary-700"
+                  : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"
               }`}
               onClick={() => handleNavClick(link.path)}
               aria-current={isActive ? "page" : undefined}
             >
               <Icon
-                className={`w-5 h-5 transition-transform group-hover:scale-110 ${
-                  isActive ? "text-primary-600" : ""
+                className={`h-5 w-5 shrink-0 transition-colors ${
+                  isActive ? "text-primary-700" : "text-neutral-500 group-hover:text-neutral-800"
                 }`}
               />
               <span className="flex-1 text-left">{link.label}</span>
               {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-10 bg-primary-500 rounded-r-full" />
+                <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary-600" />
               )}
             </button>
           );
         })}
       </nav>
+      <div className="mt-auto px-5 pt-6">
+        <div className="rounded-md border border-primary-100 bg-primary-50 p-4">
+          <p className="text-sm font-bold text-primary-900">Hungry?</p>
+          <p className="mt-1 text-xs leading-5 text-primary-800">Browse restaurants and reorder your favorites quickly.</p>
+        </div>
+      </div>
     </>
   );
 
@@ -96,14 +102,14 @@ export default function Sidebar({ current }) {
             onClick={() => setOpen(false)}
             aria-hidden="true"
           />
-          <aside className="absolute left-0 top-0 h-full w-72 bg-gradient-to-b from-dark-primary via-dark-secondary to-dark-primary shadow-2xl flex flex-col py-8 animate-slide-in-left">
+          <aside className="absolute left-0 top-0 flex h-full w-72 flex-col border-r border-neutral-200 bg-white py-5 shadow-xl animate-slide-in-left">
             <SidebarContent isMobile />
           </aside>
         </div>
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-72 bg-gradient-to-b from-dark-primary via-dark-secondary to-dark-primary shadow-2xl flex-col py-8 z-10">
+      <aside className="fixed left-0 top-0 z-10 hidden h-screen w-72 flex-col border-r border-neutral-200 bg-white py-5 lg:flex">
         <SidebarContent />
       </aside>
     </>

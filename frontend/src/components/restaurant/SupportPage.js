@@ -102,7 +102,7 @@ export default function SupportPage() {
   if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
+    <div className="app-page-narrow surface-panel">
       <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Customer Support</h2>
       
       <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200">

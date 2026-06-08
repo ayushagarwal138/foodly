@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { FiPackage, FiDollarSign, FiClock, FiCheckCircle, FiArrowRight, FiCoffee, FiMenu, FiStar, FiSettings, FiAlertCircle } from "react-icons/fi";
+import { FiPackage, FiDollarSign, FiClock, FiCheckCircle, FiArrowRight, FiCoffee, FiMenu, FiAlertCircle } from "react-icons/fi";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import OrdersPage from "./OrdersPage";
@@ -271,7 +271,6 @@ function DashboardContent() {
 
 export default function RestaurantLayout() {
   const location = useLocation();
-  const navigate = useNavigate();
   const restaurantId = localStorage.getItem("restaurantId");
 
   // Find the current label based on the path (longest match wins)
@@ -310,9 +309,9 @@ export default function RestaurantLayout() {
   }, [restaurantId, userRole]);
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex">
+    <div className="min-h-screen bg-[#f7f7f5] flex">
       <Sidebar current={current} open={sidebarOpen} setOpen={setSidebarOpen} />
-      <div className="flex-1 flex flex-col ml-0 md:ml-72">
+      <div className="flex-1 flex flex-col ml-0 lg:ml-72">
         <Header setCurrent={() => {}} />
         <main className="flex-1">
           <Routes>

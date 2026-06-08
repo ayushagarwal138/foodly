@@ -35,7 +35,7 @@ export default function AnalyticsPage() {
 
   if (!analytics) {
     return (
-      <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
+      <div className="app-page surface-panel">
         <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Restaurant Analytics</h2>
         <div className="text-center py-8">
           <div className="text-gray-500 mb-4">No analytics data available yet.</div>
@@ -46,7 +46,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
+    <div className="app-page surface-panel">
       <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Restaurant Analytics</h2>
       
       {/* Overview Cards */}

@@ -78,27 +78,27 @@ export default function Header({ setCurrent }) {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-white shadow-soft border-b border-neutral-200 px-4 md:px-8 lg:px-12 py-3 flex items-center justify-between w-full backdrop-blur-sm bg-white/95">
+    <header className="sticky top-0 z-30 flex w-full items-center justify-between border-b border-neutral-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur md:px-6 lg:px-8">
       {/* Logo and Hamburger */}
       <div className="flex items-center gap-3 md:gap-4">
         <button
-          className="md:hidden p-2 rounded-xl hover:bg-neutral-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
-          onClick={() => setMobileMenu(v => !v)}
-          aria-label="Toggle mobile menu"
+          className="rounded-md p-2 transition-colors hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500 lg:hidden"
+          onClick={() => window.dispatchEvent(new CustomEvent("openCustomerSidebar"))}
+          aria-label="Open navigation"
         >
-          <FiMenu className="w-6 h-6 text-dark-primary" />
+          <FiMenu className="h-5 w-5 text-neutral-900" />
         </button>
         <button
           onClick={() => navigate('/customer')}
-          className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-xl p-1"
+          className="flex items-center gap-2 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
           aria-label="Go to dashboard"
         >
           <img
             src="/logo.jpeg"
             alt="Foodly Logo"
-            className="w-10 h-10 md:w-12 md:h-12 rounded-full shadow-md border-2 border-neutral-200 transition-transform hover:scale-105"
+            className="h-9 w-9 rounded-md object-cover ring-1 ring-neutral-200 md:h-10 md:w-10"
           />
-          <span className="hidden sm:block text-xl font-bold text-dark-primary">Foodly</span>
+          <span className="hidden text-lg font-extrabold tracking-normal text-neutral-950 sm:block">Foodly</span>
         </button>
       </div>
 
@@ -114,7 +114,7 @@ export default function Header({ setCurrent }) {
             <FiSearch className="w-5 h-5 text-neutral-400" />
           </div>
           <input
-            className="w-full pl-12 pr-4 py-2.5 rounded-full border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base bg-neutral-50 shadow-sm transition-all"
+            className="w-full rounded-md border border-neutral-300 bg-neutral-50 py-2.5 pl-11 pr-4 text-sm shadow-sm transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="Search for food, restaurants, or cuisines..."
             aria-label="Search"
           />
@@ -123,16 +123,23 @@ export default function Header({ setCurrent }) {
 
       {/* Actions */}
       <div className="flex items-center gap-3 md:gap-4">
+        <button
+          className="rounded-md p-2.5 text-neutral-700 transition-colors hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500 md:hidden"
+          onClick={() => setMobileMenu(true)}
+          aria-label="Open search"
+        >
+          <FiSearch className="h-5 w-5" />
+        </button>
         {/* Cart Icon */}
         <button
-          className="relative p-2.5 rounded-xl bg-neutral-100 hover:bg-primary-100 text-dark-primary transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 group"
+          className="group relative rounded-md bg-neutral-100 p-2.5 text-neutral-900 transition-all duration-200 hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
           onClick={() => navigate('/customer/cart')}
           title="Go to Cart"
           aria-label={`Cart with ${cartCount} items`}
         >
           <FiShoppingCart className="w-6 h-6 group-hover:scale-110 transition-transform" />
           {cartCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-primary-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md animate-bounce-subtle">
+            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white shadow-sm">
               {cartCount}
             </span>
           )}
@@ -141,7 +148,7 @@ export default function Header({ setCurrent }) {
         {/* User Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
-            className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-dark-primary flex items-center justify-center text-white font-bold text-lg shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 hover:scale-105"
+            className="flex h-10 w-10 items-center justify-center rounded-md bg-neutral-950 text-base font-bold text-white shadow-sm transition-all duration-200 hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 md:h-11 md:w-11"
             onClick={() => setOpen((v) => !v)}
             aria-label="User menu"
             aria-expanded={open}
@@ -153,7 +160,7 @@ export default function Header({ setCurrent }) {
             )}
           </button>
           {open && (
-            <div className="absolute right-0 mt-2 w-48 bg-white border-2 border-neutral-200 rounded-xl shadow-large z-50 animate-scale-in overflow-hidden">
+            <div className="absolute right-0 z-50 mt-2 w-48 animate-scale-in overflow-hidden rounded-md border border-neutral-200 bg-white shadow-lg">
               <button
                 className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-neutral-50 text-neutral-700 font-medium transition-colors focus:outline-none focus:bg-neutral-50"
                 onClick={() => {
@@ -180,11 +187,11 @@ export default function Header({ setCurrent }) {
       {/* Mobile Search Bar */}
       {mobileMenu && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex flex-col animate-fade-in">
-          <div className="bg-white shadow-large p-4 flex items-center gap-3">
+          <div className="flex items-center gap-3 bg-white p-4 shadow-lg">
             <img
               src="/logo.jpeg"
               alt="Foodly Logo"
-              className="w-10 h-10 rounded-full shadow-md border-2 border-neutral-200"
+              className="h-10 w-10 rounded-md object-cover ring-1 ring-neutral-200"
             />
             <form
               className="flex-1"
@@ -198,14 +205,14 @@ export default function Header({ setCurrent }) {
                   <FiSearch className="w-5 h-5 text-neutral-400" />
                 </div>
                 <input
-                  className="w-full pl-10 pr-4 py-2.5 rounded-full border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-base bg-neutral-50"
+                  className="w-full rounded-md border border-neutral-300 bg-neutral-50 py-2.5 pl-10 pr-4 text-base focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="Search for food, restaurants..."
                   aria-label="Search"
                 />
               </div>
             </form>
             <button
-              className="ml-2 p-2 rounded-xl hover:bg-neutral-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="ml-2 rounded-md p-2 transition-colors hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
               onClick={() => setMobileMenu(false)}
               aria-label="Close menu"
             >

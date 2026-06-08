@@ -1,15 +1,31 @@
 import React from "react";
 
 export default function StatCard({ icon, label, value, sublabel, color = "primary" }) {
+  const styles = {
+    primary: {
+      tile: "bg-primary-50 text-primary-600 ring-primary-100",
+      label: "text-primary-600"
+    },
+    secondary: {
+      tile: "bg-secondary-50 text-secondary-600 ring-secondary-100",
+      label: "text-secondary-600"
+    },
+    accent: {
+      tile: "bg-accent-50 text-accent-600 ring-accent-100",
+      label: "text-accent-600"
+    }
+  };
+  const active = styles[color] || styles.primary;
+
   return (
-    <div className="card-hover flex flex-col items-center justify-center p-6 md:p-8 text-center group">
-      <div className={`mb-4 p-3 rounded-xl bg-${color}-50 border-2 border-${color}-100 group-hover:scale-110 transition-transform duration-200`}>
+    <div className="card-hover group flex flex-col justify-center p-5 md:p-6">
+      <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-md ring-1 transition-transform duration-200 group-hover:scale-105 ${active.tile}`}>
         {icon}
       </div>
-      <div className="text-3xl md:text-4xl font-extrabold text-dark-primary mb-2">{value}</div>
-      <div className={`text-${color}-600 text-sm font-semibold mb-1`}>{label}</div>
+      <div className="mb-1 text-2xl font-extrabold text-neutral-950 md:text-3xl">{value}</div>
+      <div className={`mb-1 text-sm font-semibold ${active.label}`}>{label}</div>
       {sublabel && (
-        <div className="text-xs text-neutral-500 mt-1">{sublabel}</div>
+        <div className="mt-1 text-xs text-neutral-500">{sublabel}</div>
       )}
     </div>
   );

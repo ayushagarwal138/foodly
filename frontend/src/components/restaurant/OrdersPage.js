@@ -263,7 +263,7 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
+    <div className="app-page surface-panel">
       <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Restaurant Orders</h2>
       
       {/* Debug Information */}

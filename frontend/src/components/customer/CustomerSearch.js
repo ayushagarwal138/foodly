@@ -114,12 +114,12 @@ export default function CustomerSearch({ restaurants, query: parentQuery, setQue
     .filter(Boolean);
 
   return (
-    <div className="card mb-10">
-      <div className="mb-6 flex flex-col lg:flex-row lg:items-center gap-4">
+    <section className="surface-panel">
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center">
         {typeof setParentQuery !== 'function' && (
           <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <FiSearch className="w-5 h-5 text-neutral-400" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+              <FiSearch className="h-5 w-5 text-neutral-400" />
             </div>
             <input
               className="input pl-12 pr-4"
@@ -130,13 +130,13 @@ export default function CustomerSearch({ restaurants, query: parentQuery, setQue
             />
           </div>
         )}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FiFilter className="w-4 h-4 text-neutral-400" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <FiFilter className="h-4 w-4 text-neutral-400" />
             </div>
             <select
-              className="input appearance-none pl-10 pr-8 text-sm cursor-pointer"
+              className="input cursor-pointer appearance-none pl-10 pr-8 text-sm"
               value={cuisine}
               onChange={e => setCuisine(e.target.value)}
               aria-label="Filter by cuisine"
@@ -145,7 +145,7 @@ export default function CustomerSearch({ restaurants, query: parentQuery, setQue
             </select>
           </div>
           <select
-            className="input appearance-none pr-8 text-sm cursor-pointer"
+            className="input cursor-pointer appearance-none pr-8 text-sm"
             value={rating}
             onChange={e => setRating(e.target.value)}
             aria-label="Filter by rating"
@@ -153,7 +153,7 @@ export default function CustomerSearch({ restaurants, query: parentQuery, setQue
             {RATINGS.map(r => <option key={r} value={r}>{r === "All" ? "All Ratings" : `${r}★ & up`}</option>)}
           </select>
           <select
-            className="input appearance-none pr-8 text-sm cursor-pointer"
+            className="input cursor-pointer appearance-none pr-8 text-sm"
             value={price}
             onChange={e => setPrice(e.target.value)}
             aria-label="Filter by price"
@@ -161,7 +161,7 @@ export default function CustomerSearch({ restaurants, query: parentQuery, setQue
             {PRICES.map(p => <option key={p} value={p}>{p === "All" ? "All Prices" : p}</option>)}
           </select>
           <select
-            className="input appearance-none pr-8 text-sm cursor-pointer"
+            className="input cursor-pointer appearance-none pr-8 text-sm"
             value={veg}
             onChange={e => setVeg(e.target.value)}
             aria-label="Filter by veg/non-veg"
@@ -170,144 +170,142 @@ export default function CustomerSearch({ restaurants, query: parentQuery, setQue
           </select>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.length === 0 ? (
-          <div className="col-span-full text-center py-12">
-            <FiCoffee className="w-16 h-16 mx-auto mb-4 text-neutral-300" />
+          <div className="col-span-full py-12 text-center">
+            <FiCoffee className="mx-auto mb-4 h-14 w-14 text-neutral-300" />
             <p className="text-neutral-600 font-medium">No restaurants or dishes available.</p>
           </div>
         ) : (
           filtered.map(r => (
             <div
               key={r.name}
-              className="card-hover flex flex-col cursor-pointer group relative overflow-hidden"
+              className="card-hover group relative flex cursor-pointer flex-col overflow-hidden p-0"
               onClick={() => navigate(`/customer/restaurant/${slugify(r.name)}`)}
               title={`View ${r.name}`}
             >
-              <div className="relative w-full flex justify-center mb-4">
-                <div className="w-32 h-32 rounded-2xl border-2 border-neutral-200 bg-gradient-to-br from-primary-100 to-accent-100 shadow-md group-hover:scale-105 transition-transform duration-200 flex items-center justify-center">
-                  {r.img ? (
-                    <img
-                      src={r.img}
-                      alt={r.name}
-                      className="w-full h-full rounded-2xl object-cover"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                  ) : null}
-                  <div className="flex flex-col items-center justify-center text-primary-600 font-bold text-lg" style={{ display: r.img ? 'none' : 'flex' }}>
-                    <FiCoffee className="w-12 h-12 mb-2" />
-                    <span className="text-xs text-center px-2">{r.name}</span>
-                  </div>
+              <div className="relative flex h-44 w-full items-center justify-center overflow-hidden bg-neutral-100">
+                {r.img ? (
+                  <img
+                    src={r.img}
+                    alt={r.name}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div className="flex flex-col items-center justify-center px-4 text-center text-lg font-bold text-primary-600" style={{ display: r.img ? 'none' : 'flex' }}>
+                  <FiCoffee className="mb-2 h-12 w-12" />
+                  <span className="text-xs">{r.name}</span>
                 </div>
                 {r.cuisine && (
-                  <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-primary-700 text-xs font-bold rounded-full px-3 py-1 shadow border-2 border-primary-200">
+                  <span className="absolute left-3 top-3 rounded-md border border-white/40 bg-white/95 px-2.5 py-1 text-xs font-bold text-primary-700 backdrop-blur-sm">
                     {r.cuisine}
                   </span>
                 )}
                 {r.rating && (
-                  <span className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-yellow-600 text-xs font-bold rounded-full px-3 py-1 shadow border-2 border-yellow-200 flex items-center gap-1">
-                    <FiStar className="w-3 h-3 fill-current" />
+                  <span className="absolute right-3 top-3 flex items-center gap-1 rounded-md border border-white/40 bg-white/95 px-2.5 py-1 text-xs font-bold text-yellow-600 backdrop-blur-sm">
+                    <FiStar className="h-3 w-3 fill-current" />
                     {r.rating}
                   </span>
                 )}
               </div>
-              <div className="font-extrabold text-dark-primary text-xl mb-2 text-center">{r.name}</div>
-              <div className="flex justify-center gap-2 text-sm text-neutral-600 mb-4">
-                {r.price && <span>{r.price}</span>}
-                {r.price && r.veg && <span>·</span>}
-                {r.veg && <span>{r.veg}</span>}
-                {r.veg && r.eta && <span>·</span>}
-                {r.eta && (
-                  <div className="flex items-center gap-1">
-                    <FiClock className="w-3.5 h-3.5" />
-                    <span>{r.eta} min</span>
+              <div className="flex flex-1 flex-col p-4">
+                <div className="mb-2 text-lg font-extrabold text-neutral-950">{r.name}</div>
+                <div className="mb-4 flex flex-wrap gap-2 text-sm text-neutral-600">
+                  {r.price && <span>{r.price}</span>}
+                  {r.veg && <span>{r.veg}</span>}
+                  {r.eta && (
+                    <span className="flex items-center gap-1">
+                      <FiClock className="h-3.5 w-3.5" />
+                      {r.eta} min
+                    </span>
+                  )}
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  fullWidth
+                  onClick={e => {
+                    e.stopPropagation();
+                    handleFavoriteRestaurant(r);
+                  }}
+                  disabled={favLoading === r.name}
+                  leftIcon={
+                    favLoading === r.name ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-current"></div>
+                    ) : favSuccess === r.name ? (
+                      <FiHeart className="h-4 w-4 fill-current" />
+                    ) : (
+                      <FiHeart className="h-4 w-4" />
+                    )
+                  }
+                  className="mb-3"
+                >
+                  {favLoading === r.name ? "Adding..." : favSuccess === r.name ? "Added!" : "Favorite"}
+                </Button>
+                {favError && (
+                  <div className="mb-2 flex items-center justify-center gap-1 text-center text-xs text-red-600">
+                    <FiAlertCircle className="h-3 w-3" />
+                    {favError}
                   </div>
                 )}
+                {r.dishes && r.dishes.length > 0 && (
+                  <ul className="mt-2 space-y-2">
+                    {r.dishes.slice(0, 3).map(d => (
+                      <li
+                        key={d.name}
+                        className="flex flex-col justify-between gap-2 rounded-md border border-neutral-200 bg-neutral-50 p-3 sm:flex-row sm:items-center"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <div className="flex-1">
+                          <span className="text-sm font-medium text-neutral-700">{d.name}</span>
+                          <span className="ml-2 text-sm font-semibold text-primary-600">₹{d.price?.toFixed ? d.price.toFixed(2) : d.price}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={e => {
+                              e.stopPropagation();
+                              navigate(`/customer/restaurant/${slugify(r.name)}`);
+                            }}
+                            leftIcon={<FiShoppingCart className="h-3 w-3" />}
+                          >
+                            Order
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={e => {
+                              e.stopPropagation();
+                              handleFavoriteDish(r, d);
+                            }}
+                            disabled={favLoading === d.name + r.name}
+                            leftIcon={
+                              favLoading === d.name + r.name ? (
+                                <div className="h-3 w-3 animate-spin rounded-full border-b-2 border-current"></div>
+                              ) : favSuccess === d.name + r.name ? (
+                                <FiHeart className="h-3 w-3 fill-current" />
+                              ) : (
+                                <FiHeart className="h-3 w-3" />
+                              )
+                            }
+                          >
+                            {favLoading === d.name + r.name ? "" : favSuccess === d.name + r.name ? "Added!" : ""}
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                fullWidth
-                onClick={e => {
-                  e.stopPropagation();
-                  handleFavoriteRestaurant(r);
-                }}
-                disabled={favLoading === r.name}
-                leftIcon={
-                  favLoading === r.name ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                  ) : favSuccess === r.name ? (
-                    <FiHeart className="w-4 h-4 fill-current" />
-                  ) : (
-                    <FiHeart className="w-4 h-4" />
-                  )
-                }
-                className="mb-3"
-              >
-                {favLoading === r.name ? "Adding..." : favSuccess === r.name ? "Added!" : "Favorite"}
-              </Button>
-              {favError && (
-                <div className="text-xs text-red-600 mb-2 text-center flex items-center justify-center gap-1">
-                  <FiAlertCircle className="w-3 h-3" />
-                  {favError}
-                </div>
-              )}
-              {r.dishes && r.dishes.length > 0 && (
-                <ul className="space-y-2 mt-2">
-                  {r.dishes.map(d => (
-                    <li
-                      key={d.name}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-neutral-50 rounded-xl border border-neutral-200 gap-2"
-                      onClick={e => e.stopPropagation()}
-                    >
-                      <div className="flex-1">
-                        <span className="text-neutral-700 font-medium text-sm">{d.name}</span>
-                        <span className="ml-2 text-primary-600 font-semibold text-sm">₹{d.price?.toFixed ? d.price.toFixed(2) : d.price}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={e => {
-                            e.stopPropagation();
-                            navigate(`/customer/restaurant/${slugify(r.name)}`);
-                          }}
-                          leftIcon={<FiShoppingCart className="w-3 h-3" />}
-                        >
-                          Order
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={e => {
-                            e.stopPropagation();
-                            handleFavoriteDish(r, d);
-                          }}
-                          disabled={favLoading === d.name + r.name}
-                          leftIcon={
-                            favLoading === d.name + r.name ? (
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
-                            ) : favSuccess === d.name + r.name ? (
-                              <FiHeart className="w-3 h-3 fill-current" />
-                            ) : (
-                              <FiHeart className="w-3 h-3" />
-                            )
-                          }
-                        >
-                          {favLoading === d.name + r.name ? "" : favSuccess === d.name + r.name ? "Added!" : ""}
-                        </Button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
             </div>
           ))
         )}
       </div>
-    </div>
+    </section>
   );
 } 

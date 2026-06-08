@@ -82,7 +82,7 @@ export default function RestaurantsPage() {
   if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
+    <div className="app-page surface-panel">
       <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Restaurant Management</h2>
       <p className="text-gray-600 mb-8">Manage restaurant registrations, approvals, and status</p>
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { FiCheckCircle, FiClock, FiMapPin, FiMessageCircle, FiPackage, FiRefreshCw, FiStar, FiTruck, FiXCircle } from "react-icons/fi";
 import { api, API_ENDPOINTS } from "../../config/api";
 
 export default function OrderHistoryPage() {
@@ -46,109 +47,121 @@ export default function OrderHistoryPage() {
   const getStatusIcon = (status) => {
     const normalizedStatus = status?.toLowerCase();
     switch (normalizedStatus) {
-      case "new": return "🆕";
-      case "accepted": return "✅";
-      case "preparing": return "👨‍🍳";
-      case "out for delivery": return "🚚";
-      case "delivered": return "🎉";
+      case "new": return FiPackage;
+      case "accepted": return FiCheckCircle;
+      case "preparing": return FiClock;
+      case "out for delivery": return FiTruck;
+      case "delivered": return FiCheckCircle;
       case "cancelled":
-      case "canceled": return "❌";
-      default: return "📋";
+      case "canceled": return FiXCircle;
+      default: return FiPackage;
     }
   };
 
-  if (loading) return <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100 text-center">Loading...</div>;
-  if (error) return <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100 text-center text-red-600">{error}</div>;
+  if (loading) return <div className="app-page-narrow surface-panel text-center">Loading...</div>;
+  if (error) return <div className="app-page-narrow surface-panel text-center text-red-600">{error}</div>;
 
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-[#16213e]">Order History</h2>
+    <div className="app-page-narrow">
+      <div className="mb-6 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+        <div>
+          <h2 className="section-title">Order History</h2>
+          <p className="section-subtitle">Track recent orders, open support, or review delivered meals.</p>
+        </div>
         <button 
           onClick={fetchOrders}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+          className="btn btn-secondary w-full md:w-auto"
         >
-          🔄 Refresh
+          <FiRefreshCw className="h-4 w-4" />
+          Refresh
         </button>
       </div>
       
       {orders.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          <div className="text-4xl mb-4">📋</div>
-          <p>No orders found.</p>
-          <p className="text-sm mt-2">Start ordering from your favorite restaurants!</p>
+        <div className="surface-panel py-12 text-center text-neutral-500">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-md bg-neutral-100 text-neutral-500">
+            <FiPackage className="h-7 w-7" />
+          </div>
+          <p className="font-semibold text-neutral-800">No orders found.</p>
+          <p className="mt-2 text-sm">Start ordering from your favorite restaurants.</p>
         </div>
       ) : (
         <div className="space-y-4">
           {orders.map(o => {
             const restId = o.restaurantId || o.restaurant_id;
+            const StatusIcon = getStatusIcon(o.status);
             return (
-              <div key={o.id} className="bg-gray-50 rounded-xl p-6 border border-gray-200 hover:shadow-md transition-shadow">
-                <div className="flex justify-between items-start mb-4">
+              <div key={o.id} className="surface-panel transition-shadow hover:shadow-md">
+                <div className="mb-4 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{getStatusIcon(o.status)}</span>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary-50 text-primary-700 ring-1 ring-primary-100">
+                      <StatusIcon className="h-5 w-5" />
+                    </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-[#16213e]">Order #{o.id}</h3>
-                      <p className="text-gray-600 text-sm">
+                      <h3 className="text-lg font-semibold text-neutral-950">Order #{o.id}</h3>
+                      <p className="text-sm text-neutral-600">
                         {new Date(o.date || o.createdAt).toLocaleString()}
                       </p>
-                      <p className="text-gray-600 text-sm">Restaurant: {o.restaurant || "Unknown"}</p>
+                      <p className="text-sm text-neutral-600">Restaurant: {o.restaurant || "Unknown"}</p>
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(o.status)}`}>
+                  <span className={`status-pill ${getStatusColor(o.status)}`}>
                     {o.status}
                   </span>
                 </div>
 
                 <div className="mb-4">
-                  <h4 className="font-medium text-[#16213e] mb-2">Items:</h4>
+                  <h4 className="mb-2 font-medium text-neutral-950">Items</h4>
                   <ul className="space-y-1">
                     {o.items && Array.isArray(o.items) ? o.items.map((item, index) => (
-                      <li key={index} className="text-sm text-gray-600">
+                      <li key={index} className="text-sm text-neutral-600">
                         {item.quantity}x {item.name} - ₹{item.price}
                       </li>
                     )) : (
-                      <li className="text-sm text-gray-600">Items not available</li>
+                      <li className="text-sm text-neutral-600">Items not available</li>
                     )}
                   </ul>
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <div className="text-lg font-semibold text-[#16213e]">
+                <div className="flex flex-col justify-between gap-3 border-t border-neutral-200 pt-4 sm:flex-row sm:items-center">
+                  <div className="text-lg font-semibold text-neutral-950">
                     Total: ₹{o.total?.toFixed ? o.total.toFixed(2) : o.total || 0}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button 
-                      className="text-blue-600 hover:underline text-xs font-semibold" 
+                      className="btn btn-secondary min-h-[34px] px-3 py-1.5 text-xs" 
                       onClick={() => navigate(`/customer/track?id=${o.id}`)}
                     >
-                      📍 Track
+                      <FiMapPin className="h-3.5 w-3.5" />
+                      Track
                     </button>
                     
                     {/* Chat with Restaurant Button */}
                     {o.id && restId && o.status !== "Delivered" && o.status !== "Cancelled" && o.status !== "Canceled" && (
                       <button
-                        className="text-green-600 hover:underline text-xs font-semibold"
+                        className="btn btn-secondary min-h-[34px] px-3 py-1.5 text-xs"
                         onClick={() => {
                           localStorage.setItem("currentOrderId", o.id);
                           localStorage.setItem("currentRestaurantId", restId);
                           navigate("/customer/support");
                         }}
                       >
-                        💬 Chat
+                        <FiMessageCircle className="h-3.5 w-3.5" />
+                        Chat
                       </button>
                     )}
                     
                     {/* Review Button for Delivered Orders */}
                     {o.status === "Delivered" && (
                       <button
-                        className="text-orange-600 hover:underline text-xs font-semibold"
+                        className="btn btn-primary min-h-[34px] px-3 py-1.5 text-xs"
                         onClick={() => {
                           localStorage.setItem("reviewOrderId", o.id);
                           navigate("/customer/reviews");
                         }}
                       >
-                        ⭐ Review
+                        <FiStar className="h-3.5 w-3.5" />
+                        Review
                       </button>
                     )}
                   </div>

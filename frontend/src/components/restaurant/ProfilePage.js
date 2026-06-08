@@ -63,7 +63,7 @@ export default function ProfilePage() {
   if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
+    <div className="app-page-narrow surface-panel">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-[#16213e]">Restaurant Profile</h2>
         <button

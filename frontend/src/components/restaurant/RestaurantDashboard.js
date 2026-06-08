@@ -59,59 +59,59 @@ export default function RestaurantDashboard() {
     .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
     .slice(0, 5);
 
+  const statCards = [
+    ["Total Orders", totalOrders, "text-primary-600", "bg-primary-50"],
+    ["Pending Orders", pendingOrders, "text-yellow-700", "bg-yellow-50"],
+    ["Completed Orders", completedOrders, "text-accent-700", "bg-accent-50"],
+    ["Total Revenue", `₹${totalRevenue.toFixed(2)}`, "text-neutral-950", "bg-neutral-50"]
+  ];
+
   return (
-    <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-lg p-10 mt-12 border border-gray-100">
-      <h2 className="text-2xl font-bold mb-6 text-[#16213e]">Restaurant Dashboard</h2>
+    <div className="app-page">
+      <div className="mb-6">
+        <h2 className="section-title">Restaurant Dashboard</h2>
+        <p className="section-subtitle">Monitor order volume, revenue, and recent activity.</p>
+      </div>
       
       {restaurant && (
-        <div className="mb-8 p-6 bg-blue-50 rounded-xl border border-blue-200">
-          <h3 className="text-xl font-semibold text-[#16213e] mb-2">{restaurant.name}</h3>
-          <p className="text-gray-600">{restaurant.cuisineType || restaurant.cuisine}</p>
-          <p className="text-gray-600">{restaurant.address}</p>
+        <div className="surface-panel mb-6 bg-primary-50">
+          <h3 className="mb-2 text-xl font-semibold text-neutral-950">{restaurant.name}</h3>
+          <p className="text-neutral-600">{restaurant.cuisineType || restaurant.cuisine}</p>
+          <p className="text-neutral-600">{restaurant.address}</p>
         </div>
       )}
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
-          <div className="text-2xl font-bold text-blue-600">{totalOrders}</div>
-          <div className="text-sm text-gray-600">Total Orders</div>
-        </div>
-        <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-200">
-          <div className="text-2xl font-bold text-yellow-600">{pendingOrders}</div>
-          <div className="text-sm text-gray-600">Pending Orders</div>
-        </div>
-        <div className="bg-green-50 rounded-xl p-6 border border-green-200">
-          <div className="text-2xl font-bold text-green-600">{completedOrders}</div>
-          <div className="text-sm text-gray-600">Completed Orders</div>
-        </div>
-        <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
-          <div className="text-2xl font-bold text-purple-600">₹{totalRevenue.toFixed(2)}</div>
-          <div className="text-sm text-gray-600">Total Revenue</div>
-        </div>
+      <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {statCards.map(([label, value, textClass, bgClass]) => (
+          <div key={label} className={`rounded-lg border border-neutral-200 p-5 shadow-sm ${bgClass}`}>
+            <div className={`text-2xl font-bold ${textClass}`}>{value}</div>
+            <div className="text-sm text-neutral-600">{label}</div>
+          </div>
+        ))}
       </div>
 
       {/* Recent Orders */}
       <div>
-        <h3 className="text-xl font-semibold text-[#16213e] mb-4">Recent Orders</h3>
+        <h3 className="mb-4 text-xl font-semibold text-neutral-950">Recent Orders</h3>
         {recentOrders.length === 0 ? (
-          <div className="text-gray-500 text-center py-8">No orders yet.</div>
+          <div className="surface-panel py-8 text-center text-neutral-500">No orders yet.</div>
         ) : (
           <div className="space-y-4">
             {recentOrders.map((order) => (
-              <div key={order.id} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                <div className="flex justify-between items-center">
+              <div key={order.id} className="surface-panel">
+                <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                   <div>
-                    <div className="font-semibold text-[#16213e]">Order #{order.id}</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="font-semibold text-neutral-950">Order #{order.id}</div>
+                    <div className="text-sm text-neutral-600">
                       {new Date(order.date || order.createdAt).toLocaleString()}
                     </div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-neutral-600">
                       Customer: {order.customerName || "Unknown"}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-[#16213e]">₹{order.total || 0}</div>
+                  <div className="text-left sm:text-right">
+                    <div className="font-semibold text-neutral-950">₹{order.total || 0}</div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       order.status === "New" ? "bg-blue-100 text-blue-800" :
                       order.status === "Accepted" ? "bg-yellow-100 text-yellow-800" :

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FiShoppingCart, FiCoffee, FiSettings, FiUser, FiEye, FiEyeOff, FiAlertCircle } from "react-icons/fi";
+import { FiShoppingCart, FiCoffee, FiSettings, FiUser, FiEye, FiEyeOff, FiAlertCircle, FiMapPin, FiClock } from "react-icons/fi";
 import Toast from "./Toast";
 import Button from "./ui/Button";
 import { api, API_ENDPOINTS } from "../config/api";
@@ -117,14 +117,85 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
   const roleConfig = getRoleConfig();
   const RoleIcon = roleConfig.icon;
 
+  const roleStyle = (value, isActive) => {
+    if (!isActive) {
+      return "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50";
+    }
+    if (value === "Restaurant") return "border-accent-600 bg-accent-600 text-white shadow-sm";
+    if (value === "Admin") return "border-neutral-900 bg-neutral-900 text-white shadow-sm";
+    return "border-primary-600 bg-primary-600 text-white shadow-sm";
+  };
+
   return (
     <>
       <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: "", type: "info" })} />
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center p-4 py-12">
-        <div className="max-w-md w-full animate-fade-in">
-          <div className="bg-white rounded-3xl shadow-large border border-neutral-100 p-8 md:p-10">
-            {/* Role Switcher */}
-            <div className="flex justify-center gap-2 mb-8 flex-wrap">
+      <div className="min-h-screen bg-[#f7f7f5] px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto grid min-h-[calc(100vh-2rem)] max-w-6xl overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm lg:grid-cols-[1.05fr_0.95fr]">
+          <section className="relative hidden min-h-full overflow-hidden bg-neutral-950 lg:block">
+            <img
+              src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1400&q=85"
+              alt="Fresh restaurant food spread"
+              className="absolute inset-0 h-full w-full object-cover opacity-80"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/45 to-neutral-950/15" />
+            <div className="relative flex h-full flex-col justify-between p-10 text-white">
+              <div className="flex items-center gap-3">
+                <img src="/logo.jpeg" alt="Foodly" className="h-11 w-11 rounded-md object-cover ring-1 ring-white/30" />
+                <div>
+                  <p className="text-xl font-bold">Foodly</p>
+                  <p className="text-sm text-white/70">Fresh meals, faster decisions</p>
+                </div>
+              </div>
+
+              <div className="max-w-lg">
+                <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-white/90 backdrop-blur">
+                  <FiMapPin className="h-4 w-4" />
+                  Local restaurants near you
+                </p>
+                <h1 className="text-5xl font-extrabold leading-tight tracking-normal">
+                  Your next meal should feel effortless.
+                </h1>
+                <p className="mt-5 max-w-md text-base leading-7 text-white/78">
+                  Sign in to discover restaurants, track orders, manage menus, and keep Foodly moving smoothly.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                {["Live orders", "Fast checkout", "Secure login"].map((item) => (
+                  <div key={item} className="rounded-md border border-white/15 bg-white/10 p-3 backdrop-blur">
+                    <p className="text-sm font-semibold">{item}</p>
+                    <p className="mt-1 text-xs text-white/65">Production ready</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <main className="flex items-center justify-center px-4 py-8 sm:px-8 lg:px-12">
+            <div className="w-full max-w-md animate-fade-in">
+              <div className="mb-8 flex items-center justify-between lg:hidden">
+                <div className="flex items-center gap-3">
+                  <img src="/logo.jpeg" alt="Foodly" className="h-10 w-10 rounded-md object-cover" />
+                  <div>
+                    <p className="text-lg font-bold text-neutral-950">Foodly</p>
+                    <p className="text-xs text-neutral-500">Food delivery platform</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-7">
+                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-md bg-primary-50 text-primary-700 ring-1 ring-primary-100">
+                  <RoleIcon className="h-5 w-5" />
+                </div>
+                <h1 className="text-3xl font-extrabold tracking-normal text-neutral-950 md:text-4xl">
+                  Welcome back
+                </h1>
+                <p className="mt-2 text-sm leading-6 text-neutral-600">
+                  Sign in as {role.toLowerCase()} and continue where you left off.
+                </p>
+              </div>
+
+              <div className="mb-6 grid grid-cols-3 gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-1">
               {ROLES.map(r => {
                 const Icon = r.icon;
                 const isActive = role === r.value;
@@ -132,34 +203,17 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
                   <button
                     key={r.value}
                     type="button"
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 transition-all duration-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                      isActive
-                        ? `bg-${r.color}-500 text-white border-${r.color}-500 shadow-md scale-105`
-                        : "bg-white text-neutral-700 border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50"
-                    }`}
+                    className={`flex min-h-[42px] items-center justify-center gap-2 rounded-md border px-2 text-xs font-semibold transition-all duration-200 sm:text-sm ${roleStyle(r.value, isActive)}`}
                     onClick={() => setRole(r.value)}
                     aria-pressed={isActive}
                     aria-label={`Switch to ${r.label} login`}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className="h-4 w-4" />
                     <span>{r.label}</span>
                   </button>
                 );
               })}
-            </div>
-
-            {/* Header */}
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-100 to-secondary-100 mb-6 animate-scale-in">
-                <RoleIcon className="w-10 h-10 text-primary-600" />
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-3">
-                Welcome Back
-              </h1>
-              <p className="text-neutral-600 text-base">
-                Sign in to your {role.toLowerCase()} account
-              </p>
-            </div>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -223,7 +277,7 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
 
               {/* Error Message */}
               {error && (
-                <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 animate-slide-in" role="alert">
+                <div className="animate-slide-in rounded-md border border-red-200 bg-red-50 p-4" role="alert">
                   <div className="flex items-start gap-3">
                     <FiAlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                     <p className="text-sm font-medium text-red-800">{error}</p>
@@ -255,8 +309,13 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
               </Button>
             </form>
 
+              <div className="mt-6 flex items-center gap-3 rounded-md border border-neutral-200 bg-neutral-50 p-3 text-xs text-neutral-600">
+                <FiClock className="h-4 w-4 text-primary-600" />
+                <span>Secure cookie login. No browser token storage for your session.</span>
+              </div>
+
             {/* Footer */}
-            <div className="mt-8 text-center pt-6 border-t border-neutral-200">
+            <div className="mt-7 text-center">
               <p className="text-sm text-neutral-600">
                 Don't have an account?{" "}
                 <Link 
@@ -268,6 +327,7 @@ export default function LoginForm({ role: initialRole = "Customer" }) {
               </p>
             </div>
           </div>
+          </main>
         </div>
       </div>
     </>

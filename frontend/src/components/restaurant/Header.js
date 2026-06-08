@@ -71,45 +71,45 @@ export default function Header({ setCurrent }) {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between px-4 md:px-8 lg:px-12 py-4 bg-white shadow-soft border-b border-neutral-200 backdrop-blur-sm bg-white/95">
+    <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-neutral-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur md:px-6 lg:px-8">
       {/* Brand + Hamburger */}
       <div className="flex items-center gap-3 md:gap-4">
         <button
-          className="md:hidden p-2 rounded-xl hover:bg-neutral-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded-md p-2 transition-colors hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500 lg:hidden"
           onClick={handleSidebarToggle}
           aria-label="Open sidebar"
         >
-          <FiMenu className="w-6 h-6 text-dark-primary" />
+          <FiMenu className="h-5 w-5 text-neutral-800" />
         </button>
         <button
           onClick={() => navigate('/restaurant')}
-          className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-xl p-1"
+          className="flex items-center gap-2 rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
           aria-label="Go to dashboard"
         >
           <img
             src="/logo.jpeg"
             alt="Foodly Logo"
-            className="w-10 h-10 md:w-12 md:h-12 rounded-full shadow-md border-2 border-neutral-200 transition-transform hover:scale-105"
+            className="h-9 w-9 rounded-md border border-neutral-200 object-cover"
           />
-          <span className="hidden sm:block text-xl font-bold text-dark-primary">Foodly</span>
+          <span className="hidden text-lg font-bold text-neutral-950 sm:block">Foodly</span>
         </button>
       </div>
 
       {/* Restaurant Name Centered */}
-      <div className="hidden md:flex flex-1 items-center justify-center">
+      <div className="hidden min-w-0 flex-1 items-center justify-center md:flex">
         {restaurantName && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-accent-50 rounded-xl border-2 border-accent-200">
-            <FiCoffee className="w-5 h-5 text-accent-600" />
-            <span className="text-lg font-semibold text-accent-700">{restaurantName}</span>
+          <div className="flex max-w-md items-center gap-2 rounded-md border border-accent-200 bg-accent-50 px-3 py-1.5">
+            <FiCoffee className="h-4 w-4 flex-shrink-0 text-accent-600" />
+            <span className="truncate text-sm font-semibold text-accent-800">{restaurantName}</span>
           </div>
         )}
       </div>
 
       {/* User Dropdown */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         <div className="relative" ref={dropdownRef}>
           <button
-            className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-dark-primary flex items-center justify-center text-white font-bold text-lg shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 hover:scale-105"
+            className="flex h-10 w-10 items-center justify-center rounded-md bg-neutral-950 text-base font-bold text-white transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             onClick={() => setOpen((v) => !v)}
             aria-label="User menu"
             aria-expanded={open}
@@ -117,11 +117,11 @@ export default function Header({ setCurrent }) {
             {initial ? (
               <span className="text-lg">{initial}</span>
             ) : (
-              <FiUser className="w-6 h-6" />
+              <FiUser className="h-5 w-5" />
             )}
           </button>
           {open && (
-            <div className="absolute right-0 mt-2 w-48 bg-white border-2 border-neutral-200 rounded-xl shadow-large z-50 animate-scale-in overflow-hidden">
+            <div className="animate-scale-in absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-md border border-neutral-200 bg-white shadow-lg">
               <button
                 className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-neutral-50 text-neutral-700 font-medium transition-colors focus:outline-none focus:bg-neutral-50"
                 onClick={() => {
