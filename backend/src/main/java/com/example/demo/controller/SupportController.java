@@ -30,6 +30,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/support")
 public class SupportController {
+    private static final String ORDER_STATUS_NOTIFICATION_PREFIX = "Order status update:";
+
     @Autowired
     private ChatMessageRepository chatRepo;
     @Autowired
@@ -154,8 +156,11 @@ public class SupportController {
             notification.put("customerName", customerUser != null ? customerUser.getUsername() : "Customer");
             notification.put("orderStatus", order != null ? order.getStatus() : null);
             notification.put("orderTotal", order != null ? order.getTotal() : null);
+            boolean orderStatusNotification = message.getMessage() != null
+                && message.getMessage().startsWith(ORDER_STATUS_NOTIFICATION_PREFIX);
+            notification.put("type", orderStatusNotification ? "ORDER_STATUS" : "SUPPORT_MESSAGE");
             notification.put("targetPath", customer
-                ? "/customer/support?orderId=" + message.getOrderId() + "&restaurantId=" + message.getRestaurantId()
+                ? customerNotificationTarget(message, orderStatusNotification)
                 : "/restaurant/orders?orderId=" + message.getOrderId()
             );
             notifications.add(notification);
@@ -278,6 +283,13 @@ public class SupportController {
         return restaurantRepository.findByOwner_Id(user.getId())
             .map(Restaurant::getId)
             .orElseThrow(() -> new AccessDeniedException("Restaurant not found for this user"));
+    }
+
+    private String customerNotificationTarget(ChatMessage message, boolean orderStatusNotification) {
+        if (orderStatusNotification) {
+            return "/customer/orders?orderId=" + message.getOrderId();
+        }
+        return "/customer/support?orderId=" + message.getOrderId() + "&restaurantId=" + message.getRestaurantId();
     }
 
     private boolean isRestaurantRole(User user) {

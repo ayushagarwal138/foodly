@@ -262,6 +262,38 @@ class DatabaseSecurityHardeningTests {
     }
 
     @Test
+    void restaurantStatusUpdatesCreateCustomerOrderNotifications() {
+        User owner = saveUser("status_notify_owner", "status-notify-owner@example.com", "RESTAURANT");
+        User buyer = saveUser("status_notify_buyer", "status-notify-buyer@example.com", "CUSTOMER");
+        Restaurant restaurant = saveRestaurant(owner, "Status Notify Cafe");
+        MenuItem item = saveMenuItem(restaurant, "Pasta", 10.00, true, 10);
+        Order order = placePersistedOrder(buyer, item, 1);
+
+        orderController.updateOrderStatus(order.getId(), Map.of("status", "Accepted"), principal(owner));
+
+        Map<String, Object> notificationResponse = supportController.getUnreadNotifications(principal(buyer));
+        assertThat(notificationResponse).containsEntry("unreadCount", 1);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> notifications = (List<Map<String, Object>>) notificationResponse.get("notifications");
+        assertThat(notifications.get(0))
+            .containsEntry("type", "ORDER_STATUS")
+            .containsEntry("restaurantName", "Status Notify Cafe")
+            .containsEntry("orderId", order.getId())
+            .containsEntry("orderStatus", "Accepted");
+        assertThat((String) notifications.get(0).get("message")).contains("is now Accepted");
+        assertThat((String) notifications.get(0).get("targetPath"))
+            .isEqualTo("/customer/orders?orderId=" + order.getId());
+
+        orderController.updateOrderStatus(order.getId(), Map.of("status", "Accepted"), principal(owner));
+        assertThat(supportController.getUnreadNotifications(principal(buyer))).containsEntry("unreadCount", 1);
+
+        for (String status : List.of("Preparing", "Out for Delivery", "Delivered", "Cancelled", "Refunded", "New")) {
+            orderController.updateOrderStatus(order.getId(), Map.of("status", status), principal(owner));
+        }
+        assertThat(supportController.getUnreadNotifications(principal(buyer))).containsEntry("unreadCount", 7);
+    }
+
+    @Test
     void supportHistoryLoadsForClosedOrdersButNewMessagesAreBlocked() {
         User owner = saveUser("closed_owner", "closed-owner@example.com", "RESTAURANT");
         User buyer = saveUser("closed_buyer", "closed-buyer@example.com", "CUSTOMER");

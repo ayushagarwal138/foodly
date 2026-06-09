@@ -1,11 +1,13 @@
 package com.example.demo.controller;
 
 import com.example.demo.exception.ApiException;
+import com.example.demo.model.ChatMessage;
 import com.example.demo.model.MenuItem;
 import com.example.demo.model.Order;
 import com.example.demo.model.OrderItem;
 import com.example.demo.model.Restaurant;
 import com.example.demo.model.User;
+import com.example.demo.repository.ChatMessageRepository;
 import com.example.demo.repository.CustomerRepository;
 import com.example.demo.repository.MenuItemRepository;
 import com.example.demo.repository.OrderRepository;
@@ -37,6 +39,8 @@ public class OrderController {
     private MenuItemRepository menuItemRepository;
     @Autowired
     private RestaurantRepository restaurantRepository;
+    @Autowired
+    private ChatMessageRepository chatMessageRepository;
 
     @GetMapping
     public List<Map<String, Object>> getAllOrders(@AuthenticationPrincipal UserDetails userDetails) {
@@ -145,13 +149,17 @@ public class OrderController {
     }
 
     @PutMapping("/{id}")
+    @Transactional
     public Map<String, Object> updateOrder(@PathVariable Long id, @RequestBody Order orderDetails,
                                            @AuthenticationPrincipal UserDetails userDetails) {
         User user = authenticatedUser(userDetails);
         Order order = orderRepository.findById(id).orElseThrow();
         requireRestaurantOwner(user, order.getRestaurantId());
         if (orderDetails.getStatus() != null) {
-            order.setStatus(validatedStatus(orderDetails.getStatus()));
+            String previousStatus = order.getStatus();
+            String newStatus = validatedStatus(orderDetails.getStatus());
+            order.setStatus(newStatus);
+            notifyCustomerWhenStatusChanges(order, previousStatus, newStatus);
         }
         return toOrderDto(orderRepository.save(order));
     }
@@ -162,6 +170,7 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}/status")
+    @Transactional
     public Map<String, Object> updateOrderStatus(@PathVariable Long orderId, @RequestBody Map<String, Object> request,
                                                  @AuthenticationPrincipal UserDetails userDetails) {
         User user = authenticatedUser(userDetails);
@@ -172,8 +181,27 @@ public class OrderController {
         if (newStatus == null || newStatus.isBlank()) {
             throw new IllegalArgumentException("Status is required");
         }
-        order.setStatus(validatedStatus(newStatus.trim()));
+        String previousStatus = order.getStatus();
+        String validatedStatus = validatedStatus(newStatus.trim());
+        order.setStatus(validatedStatus);
+        notifyCustomerWhenStatusChanges(order, previousStatus, validatedStatus);
         return toOrderDto(orderRepository.save(order));
+    }
+
+    private void notifyCustomerWhenStatusChanges(Order order, String previousStatus, String newStatus) {
+        if (newStatus == null || newStatus.equals(previousStatus)) {
+            return;
+        }
+
+        ChatMessage notification = new ChatMessage();
+        notification.setOrderId(order.getId());
+        notification.setCustomerId(order.getUserId());
+        notification.setRestaurantId(order.getRestaurantId());
+        notification.setSender("restaurant");
+        notification.setMessage("Order status update: Order #" + order.getId() + " is now " + newStatus + ".");
+        notification.setTimestamp(new java.util.Date());
+        notification.setIsRead(false);
+        chatMessageRepository.save(notification);
     }
 
     private void requireOrderAccess(User user, Order order) {

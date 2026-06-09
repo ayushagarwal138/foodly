@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FiPackage, FiCalendar, FiCheckCircle, FiXCircle, FiClock, FiTruck, FiMessageCircle, FiStar, FiEye, FiDollarSign, FiAlertCircle } from "react-icons/fi";
 import { FaUtensils } from "react-icons/fa";
 import ReviewModal from "./ReviewModal";
@@ -12,6 +12,9 @@ export default function CustomerOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reviewOrder, setReviewOrder] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const focusedOrderId = new URLSearchParams(location.search).get("orderId");
 
   const fetchOrders = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setError("");
@@ -62,8 +65,6 @@ export default function CustomerOrders() {
     }
   }, [orders]);
 
-  const navigate = useNavigate();
-
   const handleReviewClose = async (orderId) => {
     localStorage.setItem(`reviewed_order_${orderId}`, 'true');
     setReviewOrder(null);
@@ -82,6 +83,35 @@ export default function CustomerOrders() {
     };
     return configs[status] || configs["New"];
   };
+
+  // Sort orders by date (newest first) and status
+  const sortedOrders = [...orders].sort((a, b) => {
+    // First sort by status priority
+    const statusPriority = {
+      "New": 0,
+      "Accepted": 1,
+      "Preparing": 2,
+      "Out for Delivery": 3,
+      "Delivered": 4,
+      "Cancelled": 5,
+      "Refunded": 6
+    };
+    const statusDiff = statusPriority[a.status] - statusPriority[b.status];
+    if (statusDiff !== 0) return statusDiff;
+
+    // Then sort by date (newest first)
+    const dateA = new Date(a.date || a.createdAt);
+    const dateB = new Date(b.date || b.createdAt);
+    return dateB - dateA;
+  });
+
+  useEffect(() => {
+    if (!focusedOrderId || loading || sortedOrders.length === 0) return;
+    const target = document.getElementById(`customer-order-${focusedOrderId}`);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [focusedOrderId, loading, sortedOrders.length]);
 
   if (loading) {
     return (
@@ -108,26 +138,6 @@ export default function CustomerOrders() {
       </div>
     );
   }
-
-  // Sort orders by date (newest first) and status
-  const sortedOrders = [...orders].sort((a, b) => {
-    // First sort by status priority
-    const statusPriority = {
-      "New": 0,
-      "Accepted": 1,
-      "Preparing": 2,
-      "Out for Delivery": 3,
-      "Delivered": 4,
-      "Cancelled": 5
-    };
-    const statusDiff = statusPriority[a.status] - statusPriority[b.status];
-    if (statusDiff !== 0) return statusDiff;
-    
-    // Then sort by date (newest first)
-    const dateA = new Date(a.date || a.createdAt);
-    const dateB = new Date(b.date || b.createdAt);
-    return dateB - dateA;
-  });
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8 animate-fade-in">
@@ -161,11 +171,17 @@ export default function CustomerOrders() {
               const restId = o.restaurantId || o.restaurant_id;
               const statusConfig = getStatusConfig(o.status);
               const StatusIcon = statusConfig.icon;
+              const isFocusedOrder = focusedOrderId && Number(focusedOrderId) === Number(o.id);
               
               return (
                 <div
                   key={o.id}
-                  className="p-5 bg-neutral-50 rounded-xl border-2 border-neutral-200 hover:border-primary-200 hover:shadow-md transition-all"
+                  id={`customer-order-${o.id}`}
+                  className={`p-5 rounded-xl border-2 transition-all ${
+                    isFocusedOrder
+                      ? "border-primary-400 bg-primary-50 shadow-md ring-4 ring-primary-100"
+                      : "border-neutral-200 bg-neutral-50 hover:border-primary-200 hover:shadow-md"
+                  }`}
                 >
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     {/* Order Info */}

@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiPackage, FiClock, FiHeart, FiDollarSign, FiSearch, FiArrowRight, FiTag } from "react-icons/fi";
 import StatCard from "./StatCard";
 import CustomerSearch from "./CustomerSearch";
 import Button from "../ui/Button";
 import { api, API_ENDPOINTS } from "../../config/api";
+import { keepPreviousIfSame } from "../../utils/state";
+
+const ACTIVE_ORDER_STATUSES = new Set(["New", "Accepted", "Preparing", "Out for Delivery"]);
 
 export default function DashboardMain() {
   const navigate = useNavigate();
@@ -16,32 +19,52 @@ export default function DashboardMain() {
   const [searchQuery, setSearchQuery] = useState("");
   const userId = localStorage.getItem("userId");
 
-  useEffect(() => {
-    async function fetchData() {
+  const fetchDashboardData = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
       setLoading(true);
       setError("");
-      try {
-        // Fetch orders
-        const ordersData = await api.get(API_ENDPOINTS.MY_ORDERS);
-        setOrders(ordersData);
-        // Fetch favorites
-        const favData = await api.get(API_ENDPOINTS.CUSTOMER_FAVORITES(userId));
-        setFavorites(favData);
-        // Fetch restaurants
-        const restData = await api.get(API_ENDPOINTS.RESTAURANTS);
-        setRestaurants(restData);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
     }
-    if (userId) fetchData();
+    try {
+      const [ordersData, favData, restData] = await Promise.all([
+        api.get(API_ENDPOINTS.MY_ORDERS),
+        api.get(API_ENDPOINTS.CUSTOMER_FAVORITES(userId)),
+        api.get(API_ENDPOINTS.RESTAURANTS)
+      ]);
+      setOrders(previous => keepPreviousIfSame(previous, Array.isArray(ordersData) ? ordersData : []));
+      setFavorites(favData || { restaurants: [], dishes: [] });
+      setRestaurants(previous => keepPreviousIfSame(previous, Array.isArray(restData) ? restData : []));
+      if (!silent) setError("");
+    } catch (err) {
+      if (!silent) setError(err.message);
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    fetchDashboardData();
+  }, [fetchDashboardData, userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const interval = setInterval(() => {
+      fetchDashboardData({ silent: true });
+    }, 10000);
+    const refresh = () => fetchDashboardData({ silent: true });
+    window.addEventListener("foodlyNotificationsChanged", refresh);
+    window.addEventListener("foodlyOrdersChanged", refresh);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("foodlyNotificationsChanged", refresh);
+      window.removeEventListener("foodlyOrdersChanged", refresh);
+    };
+  }, [fetchDashboardData, userId]);
 
   // Calculate stats
   const totalOrders = orders.length;
-  const activeOrders = orders.filter(o => o.status && o.status.toLowerCase().includes("progress")).length;
+  const activeOrders = orders.filter(o => ACTIVE_ORDER_STATUSES.has(o.status)).length;
   const totalSpent = orders.reduce((sum, o) => sum + (o.total || 0), 0);
   const favoritesCount = (favorites.restaurants?.length || 0) + (favorites.dishes?.length || 0);
 
