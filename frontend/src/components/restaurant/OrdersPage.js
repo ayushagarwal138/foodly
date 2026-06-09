@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FiCheckCircle, FiClock, FiMessageCircle, FiPackage, FiSend, FiTruck, FiX, FiXCircle } from "react-icons/fi";
 import { api, API_ENDPOINTS } from "../../config/api";
 import { keepPreviousIfSame } from "../../utils/state";
@@ -15,6 +16,8 @@ export default function OrdersPage() {
   const [showChatModal, setShowChatModal] = useState(false);
   const [restaurantId, setRestaurantId] = useState(null);
   const userId = localStorage.getItem("userId");
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const fetchRestaurantId = useCallback(async () => {
     try {
@@ -95,7 +98,7 @@ export default function OrdersPage() {
     }
   };
 
-  const fetchChatMessages = async (orderId) => {
+  const fetchChatMessages = useCallback(async (orderId) => {
     try {
       const data = await api.get(`${API_ENDPOINTS.SUPPORT_MESSAGES}?orderId=${orderId}&restaurantId=${restaurantId}`);
       const nextMessages = Array.isArray(data) ? data : [];
@@ -104,7 +107,7 @@ export default function OrdersPage() {
       console.error("Error fetching chat messages:", err);
       setChatMessages(previous => previous.length === 0 ? previous : []);
     }
-  };
+  }, [restaurantId]);
 
   const sendChatMessage = async () => {
     if (!newMessage.trim() || !selectedOrder) return;
@@ -130,7 +133,7 @@ export default function OrdersPage() {
     }
   };
 
-  const openChatModal = async (order) => {
+  const openChatModal = useCallback(async (order) => {
     setSelectedOrder(order);
     setShowChatModal(true);
     await fetchChatMessages(order.id);
@@ -146,13 +149,17 @@ export default function OrdersPage() {
     } catch (err) {
       console.error('Error marking messages as read:', err);
     }
-  };
+    window.dispatchEvent(new CustomEvent("foodlyNotificationsChanged"));
+  }, [fetchChatMessages, restaurantId]);
 
   const closeChatModal = () => {
     setShowChatModal(false);
     setSelectedOrder(null);
     setChatMessages([]);
     setNewMessage("");
+    if (new URLSearchParams(location.search).has("orderId")) {
+      navigate("/restaurant/orders", { replace: true });
+    }
   };
 
   // Initial fetch
@@ -174,6 +181,21 @@ export default function OrdersPage() {
     }
   }, [restaurantId, fetchOrders]);
 
+  useEffect(() => {
+    const orderIdParam = new URLSearchParams(location.search).get("orderId");
+    if (!orderIdParam || !restaurantId || orders.length === 0) return;
+
+    const targetOrderId = Number(orderIdParam);
+    if (!Number.isFinite(targetOrderId)) return;
+    if (showChatModal && Number(selectedOrder?.id) === targetOrderId) return;
+
+    const targetOrder = orders.find(order => Number(order.id) === targetOrderId);
+    if (targetOrder) {
+      setSelectedStatus("all");
+      openChatModal(targetOrder);
+    }
+  }, [location.search, openChatModal, orders, restaurantId, selectedOrder, showChatModal]);
+
   // Polling for new orders
   useEffect(() => {
     if (!restaurantId) return;
@@ -194,7 +216,7 @@ export default function OrdersPage() {
     }, 3000); // Poll every 3 seconds
 
     return () => clearInterval(chatPollInterval);
-  }, [showChatModal, selectedOrder]);
+  }, [fetchChatMessages, showChatModal, selectedOrder]);
 
   if (loading) return <div className="p-10 text-center">Loading...</div>;
   if (error) return <div className="p-10 text-center text-red-600">{error}</div>;

@@ -221,6 +221,47 @@ class DatabaseSecurityHardeningTests {
     }
 
     @Test
+    void restaurantNotificationsIncludeCustomerContextAndDisappearAfterRead() {
+        User owner = saveUser("restaurant_notify_owner", "restaurant-notify-owner@example.com", "RESTAURANT");
+        User otherOwner = saveUser("restaurant_notify_other", "restaurant-notify-other@example.com", "RESTAURANT");
+        User buyer = saveUser("restaurant_notify_buyer", "restaurant-notify-buyer@example.com", "CUSTOMER");
+        Restaurant restaurant = saveRestaurant(owner, "Restaurant Notify Cafe");
+        saveRestaurant(otherOwner, "Other Notify Cafe");
+        MenuItem item = saveMenuItem(restaurant, "Soup", 8.00, true, 10);
+        Order order = placePersistedOrder(buyer, item, 1);
+
+        ChatMessage message = new ChatMessage();
+        message.setOrderId(order.getId());
+        message.setCustomerId(buyer.getId());
+        message.setRestaurantId(restaurant.getId());
+        message.setSender("customer");
+        message.setMessage("Please make it less spicy");
+        message.setIsRead(false);
+        ChatMessage saved = chatMessageRepository.save(message);
+
+        Map<String, Object> notificationResponse = supportController.getUnreadNotifications(principal(owner));
+
+        assertThat(notificationResponse).containsEntry("unreadCount", 1);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> notifications = (List<Map<String, Object>>) notificationResponse.get("notifications");
+        assertThat(notifications).hasSize(1);
+        assertThat(notifications.get(0))
+            .containsEntry("messageId", saved.getId())
+            .containsEntry("customerName", buyer.getUsername())
+            .containsEntry("restaurantName", "Restaurant Notify Cafe")
+            .containsEntry("orderId", order.getId())
+            .containsEntry("restaurantId", restaurant.getId());
+        assertThat((String) notifications.get(0).get("targetPath"))
+            .contains("/restaurant/orders")
+            .contains("orderId=" + order.getId());
+
+        assertThat(supportController.getUnreadNotifications(principal(otherOwner))).containsEntry("unreadCount", 0);
+
+        supportController.markMessageAsRead(saved.getId(), principal(owner));
+        assertThat(supportController.getUnreadNotifications(principal(owner))).containsEntry("unreadCount", 0);
+    }
+
+    @Test
     void supportHistoryLoadsForClosedOrdersButNewMessagesAreBlocked() {
         User owner = saveUser("closed_owner", "closed-owner@example.com", "RESTAURANT");
         User buyer = saveUser("closed_buyer", "closed-buyer@example.com", "CUSTOMER");

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiMenu, FiUser, FiLogOut, FiSettings } from "react-icons/fi";
 import { FaUtensils } from "react-icons/fa";
 import { api, API_ENDPOINTS, clearAuth } from "../../config/api";
+import NotificationBell from "../NotificationBell";
 
 export default function Header({ setCurrent }) {
   const [username, setUsername] = useState(localStorage.getItem("username") || "");
@@ -107,6 +108,7 @@ export default function Header({ setCurrent }) {
 
       {/* User Dropdown */}
       <div className="flex items-center gap-2">
+        <NotificationBell audience="restaurant" />
         <div className="relative" ref={dropdownRef}>
           <button
             className="flex h-10 w-10 items-center justify-center rounded-md bg-neutral-950 text-base font-bold text-white transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"

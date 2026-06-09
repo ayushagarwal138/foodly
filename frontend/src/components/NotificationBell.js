@@ -20,7 +20,7 @@ function truncateMessage(message) {
   return message.length > 86 ? `${message.slice(0, 83)}...` : message;
 }
 
-export default function NotificationBell() {
+export default function NotificationBell({ audience = "customer" }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -29,6 +29,7 @@ export default function NotificationBell() {
   const navigate = useNavigate();
 
   const unreadCount = notifications.length;
+  const isRestaurantAudience = audience === "restaurant";
 
   const fetchNotifications = useCallback(async ({ silent = false } = {}) => {
     if (!silent) {
@@ -101,8 +102,11 @@ export default function NotificationBell() {
       return;
     }
 
-    if (notification.orderId && notification.restaurantId) {
-      navigate(`/customer/support?orderId=${notification.orderId}&restaurantId=${notification.restaurantId}`);
+    if (notification.orderId) {
+      navigate(isRestaurantAudience
+        ? `/restaurant/orders?orderId=${notification.orderId}`
+        : `/customer/support?orderId=${notification.orderId}&restaurantId=${notification.restaurantId}`
+      );
     }
   };
 
@@ -176,7 +180,9 @@ export default function NotificationBell() {
               <div className="px-4 py-8 text-center">
                 <FiBell className="mx-auto mb-3 h-8 w-8 text-neutral-300" />
                 <p className="text-sm font-medium text-neutral-700">All caught up</p>
-                <p className="mt-1 text-xs text-neutral-500">New restaurant replies will appear here.</p>
+                <p className="mt-1 text-xs text-neutral-500">
+                  {isRestaurantAudience ? "New customer messages will appear here." : "New restaurant replies will appear here."}
+                </p>
               </div>
             ) : (
               notifications.map(notification => (
@@ -192,7 +198,9 @@ export default function NotificationBell() {
                   <span className="min-w-0 flex-1">
                     <span className="flex items-start justify-between gap-3">
                       <span className="truncate text-sm font-semibold text-neutral-950">
-                        {notification.restaurantName || "Restaurant"}
+                        {isRestaurantAudience
+                          ? notification.customerName || "Customer"
+                          : notification.restaurantName || "Restaurant"}
                       </span>
                       <span className="flex-shrink-0 text-[11px] text-neutral-500">
                         {formatNotificationTime(notification.timestamp)}
