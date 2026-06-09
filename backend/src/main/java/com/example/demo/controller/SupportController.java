@@ -47,7 +47,7 @@ public class SupportController {
         @AuthenticationPrincipal UserDetails userDetails
     ) {
         User user = authenticatedUser(userDetails);
-        Order order = activeChatOrder(orderId);
+        Order order = chatOrder(orderId);
         requireOrderChatAccess(user, order);
         requireOptionalScopeMatchesOrder(customerId, restaurantId, order);
         return chatRepo.findByOrderIdAndCustomerIdAndRestaurantIdOrderByTimestamp(
@@ -219,11 +219,16 @@ public class SupportController {
     }
 
     private Order activeChatOrder(Long orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+        Order order = chatOrder(orderId);
         if ("Delivered".equalsIgnoreCase(order.getStatus()) || "Cancelled".equalsIgnoreCase(order.getStatus())) {
-            throw new RuntimeException("Chat is disabled for delivered or cancelled orders.");
+            throw new ApiException("CHAT_CLOSED", "Chat is disabled for delivered or cancelled orders.", HttpStatus.CONFLICT);
         }
         return order;
+    }
+
+    private Order chatOrder(Long orderId) {
+        return orderRepository.findById(orderId)
+            .orElseThrow(() -> new ApiException("ORDER_NOT_FOUND", "Order not found", HttpStatus.NOT_FOUND));
     }
 
     private void requireOrderChatAccess(User user, Order order) {

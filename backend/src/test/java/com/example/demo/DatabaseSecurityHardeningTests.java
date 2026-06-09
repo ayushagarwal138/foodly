@@ -28,6 +28,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -220,6 +221,41 @@ class DatabaseSecurityHardeningTests {
     }
 
     @Test
+    void supportHistoryLoadsForClosedOrdersButNewMessagesAreBlocked() {
+        User owner = saveUser("closed_owner", "closed-owner@example.com", "RESTAURANT");
+        User buyer = saveUser("closed_buyer", "closed-buyer@example.com", "CUSTOMER");
+        Restaurant restaurant = saveRestaurant(owner, "Closed Order Cafe");
+        MenuItem item = saveMenuItem(restaurant, "Coffee", 5.00, true, 10);
+        Order order = placePersistedOrder(buyer, item, 1);
+        order.setStatus("Delivered");
+        orderRepository.save(order);
+
+        ChatMessage message = new ChatMessage();
+        message.setOrderId(order.getId());
+        message.setCustomerId(buyer.getId());
+        message.setRestaurantId(restaurant.getId());
+        message.setSender("restaurant");
+        message.setMessage("Thanks for ordering");
+        message.setIsRead(false);
+        chatMessageRepository.save(message);
+
+        List<ChatMessage> messages = supportController.getMessages(
+            order.getId(), buyer.getId(), restaurant.getId(), principal(buyer)
+        );
+
+        assertThat(messages).hasSize(1);
+        assertThat(messages.get(0).getMessage()).isEqualTo("Thanks for ordering");
+
+        ChatMessage reply = new ChatMessage();
+        reply.setOrderId(order.getId());
+        reply.setMessage("Can I still reply?");
+
+        assertThatThrownBy(() -> supportController.addMessage(reply, principal(buyer)))
+            .isInstanceOf(ApiException.class)
+            .hasMessageContaining("Chat is disabled");
+    }
+
+    @Test
     void restaurantOwnersCannotReadOtherRestaurantsOrders() {
         User buyer = saveUser("restaurant_buyer", "restaurant-buyer@example.com", "CUSTOMER");
         Restaurant mine = saveRestaurant("mine_owner", "mine-owner@example.com", "Mine");
@@ -324,7 +360,7 @@ class DatabaseSecurityHardeningTests {
         orderItem.setName(item.getName());
         orderItem.setPrice(item.getPrice());
         orderItem.setQuantity(quantity);
-        order.setItems(List.of(orderItem));
+        order.setItems(new ArrayList<>(List.of(orderItem)));
         return orderRepository.save(order);
     }
 

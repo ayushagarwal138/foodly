@@ -8,21 +8,31 @@ export default function SupportChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [refreshError, setRefreshError] = useState("");
   const userId = localStorage.getItem("userId");
   const messagesEndRef = useRef(null);
   const params = new URLSearchParams(window.location.search);
   const orderId = params.get("orderId");
   const restaurantId = params.get("restaurantId");
 
-  const fetchMessages = useCallback(async () => {
-    setError("");
+  const fetchMessages = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
+      setError("");
+      setRefreshError("");
+    }
+
     try {
       const data = await api.get(`${API_ENDPOINTS.SUPPORT_MESSAGES}?orderId=${orderId}&customerId=${userId}&restaurantId=${restaurantId}`);
       const nextMessages = Array.isArray(data) ? data : [];
       setMessages(previous => keepPreviousIfSame(previous, nextMessages));
+      setRefreshError("");
     } catch (err) {
       console.error("Error fetching messages:", err);
-      setError(err.message);
+      if (silent) {
+        setRefreshError("Could not refresh messages. Retrying in the background.");
+      } else {
+        setRefreshError(err.message || "Unable to load messages. Retrying in the background.");
+      }
     }
   }, [orderId, restaurantId, userId]);
 
@@ -55,7 +65,7 @@ export default function SupportChatPage() {
   // Polling for new messages
   useEffect(() => {
     if (!userId || !orderId || !restaurantId) return;
-    const interval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
+    const interval = setInterval(() => fetchMessages({ silent: true }), 5000);
     return () => clearInterval(interval); // Cleanup on component unmount
   }, [userId, orderId, restaurantId, fetchMessages]);
 
@@ -87,8 +97,11 @@ export default function SupportChatPage() {
     }
   }, [messages]);
 
+  if (!orderId || !restaurantId) {
+    return <div className="app-page-narrow surface-panel text-center text-red-600">Open support from an order or notification.</div>;
+  }
+
   if (loading) return <div className="app-page-narrow surface-panel text-center">Loading...</div>;
-  if (error) return <div className="app-page-narrow surface-panel text-center text-red-600">{error}</div>;
 
   return (
     <div className="app-page-narrow">
@@ -103,6 +116,11 @@ export default function SupportChatPage() {
               <p className="text-sm text-neutral-600">Order #{orderId}</p>
             </div>
           </div>
+          {(refreshError || error) && (
+            <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error || refreshError}
+            </div>
+          )}
         </div>
       <div className="flex-1 overflow-y-auto bg-neutral-50 p-5">
         {messages.length === 0 ? (
