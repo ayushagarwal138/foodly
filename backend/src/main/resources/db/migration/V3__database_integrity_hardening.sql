@@ -22,6 +22,35 @@ BEGIN
     END IF;
 END $$;
 
+DELETE FROM wishlist w
+USING (
+    SELECT id,
+           ROW_NUMBER() OVER (
+               PARTITION BY customer_id, restaurant_id
+               ORDER BY id
+           ) AS duplicate_rank
+    FROM wishlist
+    WHERE type = 'RESTAURANT'
+      AND restaurant_id IS NOT NULL
+) ranked
+WHERE w.id = ranked.id
+  AND ranked.duplicate_rank > 1;
+
+DELETE FROM wishlist w
+USING (
+    SELECT id,
+           ROW_NUMBER() OVER (
+               PARTITION BY customer_id, restaurant_id, menu_item_id
+               ORDER BY id
+           ) AS duplicate_rank
+    FROM wishlist
+    WHERE type = 'DISH'
+      AND restaurant_id IS NOT NULL
+      AND menu_item_id IS NOT NULL
+) ranked
+WHERE w.id = ranked.id
+  AND ranked.duplicate_rank > 1;
+
 CREATE UNIQUE INDEX IF NOT EXISTS uq_wishlist_customer_restaurant
     ON wishlist (customer_id, restaurant_id)
     WHERE type = 'RESTAURANT' AND restaurant_id IS NOT NULL;
