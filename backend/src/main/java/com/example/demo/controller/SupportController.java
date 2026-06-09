@@ -17,9 +17,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/support")
@@ -97,6 +103,76 @@ public class SupportController {
         }
         result.put("restaurantUnread", chatRepo.countByRestaurantIdAndSenderAndIsReadFalse(ownedRestaurantId, "customer"));
         return result;
+    }
+
+    @GetMapping("/messages/notifications")
+    public Map<String, Object> getUnreadNotifications(@AuthenticationPrincipal UserDetails userDetails) {
+        User user = authenticatedUser(userDetails);
+        boolean customer = "CUSTOMER".equals(user.getRole());
+        List<ChatMessage> unreadMessages = customer
+            ? chatRepo.findByCustomerIdAndSenderAndIsReadFalseOrderByTimestampDesc(user.getId(), "restaurant")
+            : chatRepo.findByRestaurantIdAndSenderAndIsReadFalseOrderByTimestampDesc(ownedRestaurantId(user), "customer");
+
+        Set<Long> restaurantIds = unreadMessages.stream()
+            .map(ChatMessage::getRestaurantId)
+            .filter(id -> id != null)
+            .collect(Collectors.toSet());
+        Set<Long> orderIds = unreadMessages.stream()
+            .map(ChatMessage::getOrderId)
+            .filter(id -> id != null)
+            .collect(Collectors.toSet());
+        Set<Long> customerIds = unreadMessages.stream()
+            .map(ChatMessage::getCustomerId)
+            .filter(id -> id != null)
+            .collect(Collectors.toSet());
+
+        Map<Long, Restaurant> restaurantsById = restaurantRepository.findAllById(restaurantIds).stream()
+            .collect(Collectors.toMap(Restaurant::getId, Function.identity()));
+        Map<Long, Order> ordersById = orderRepository.findAllById(orderIds).stream()
+            .collect(Collectors.toMap(Order::getId, Function.identity()));
+        Map<Long, User> customersById = customerRepository.findAllById(customerIds).stream()
+            .collect(Collectors.toMap(User::getId, Function.identity()));
+
+        List<Map<String, Object>> notifications = new ArrayList<>();
+        for (ChatMessage message : unreadMessages) {
+            Restaurant restaurant = restaurantsById.get(message.getRestaurantId());
+            Order order = ordersById.get(message.getOrderId());
+            User customerUser = customersById.get(message.getCustomerId());
+
+            Map<String, Object> notification = new HashMap<>();
+            notification.put("id", message.getId());
+            notification.put("messageId", message.getId());
+            notification.put("orderId", message.getOrderId());
+            notification.put("restaurantId", message.getRestaurantId());
+            notification.put("customerId", message.getCustomerId());
+            notification.put("sender", message.getSender());
+            notification.put("message", message.getMessage());
+            notification.put("timestamp", message.getTimestamp());
+            notification.put("isRead", Boolean.TRUE.equals(message.getIsRead()));
+            notification.put("restaurantName", restaurant != null ? restaurant.getName() : "Restaurant");
+            notification.put("restaurantSlug", restaurant != null ? restaurant.getSlug() : null);
+            notification.put("customerName", customerUser != null ? customerUser.getUsername() : "Customer");
+            notification.put("orderStatus", order != null ? order.getStatus() : null);
+            notification.put("orderTotal", order != null ? order.getTotal() : null);
+            notification.put("targetPath", customer
+                ? "/customer/support?orderId=" + message.getOrderId() + "&restaurantId=" + message.getRestaurantId()
+                : "/restaurant/orders?orderId=" + message.getOrderId()
+            );
+            notifications.add(notification);
+        }
+
+        notifications.sort(Comparator.comparing(
+            notification -> Optional.ofNullable(notification.get("timestamp"))
+                .filter(java.util.Date.class::isInstance)
+                .map(java.util.Date.class::cast)
+                .orElse(new java.util.Date(0)),
+            Comparator.reverseOrder()
+        ));
+
+        return Map.of(
+            "unreadCount", notifications.size(),
+            "notifications", notifications
+        );
     }
 
     @PutMapping("/messages/{messageId}/mark-read")

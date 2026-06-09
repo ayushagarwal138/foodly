@@ -15,6 +15,7 @@ import com.example.demo.model.OrderItem;
 import com.example.demo.model.Restaurant;
 import com.example.demo.model.User;
 import com.example.demo.repository.CustomerRepository;
+import com.example.demo.repository.ChatMessageRepository;
 import com.example.demo.repository.MenuItemRepository;
 import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.RestaurantRepository;
@@ -52,6 +53,8 @@ class DatabaseSecurityHardeningTests {
     private CustomerRepository customerRepository;
     @Autowired
     private RestaurantRepository restaurantRepository;
+    @Autowired
+    private ChatMessageRepository chatMessageRepository;
     @Autowired
     private MenuItemRepository menuItemRepository;
     @Autowired
@@ -174,6 +177,46 @@ class DatabaseSecurityHardeningTests {
         assertThat(saved.getCustomerId()).isEqualTo(buyer.getId());
         assertThat(saved.getRestaurantId()).isEqualTo(restaurant.getId());
         assertThat(saved.getSender()).isEqualTo("customer");
+    }
+
+    @Test
+    void customerNotificationsIncludeContextAndDisappearAfterRead() {
+        User owner = saveUser("notify_owner", "notify-owner@example.com", "RESTAURANT");
+        User buyer = saveUser("notify_buyer", "notify-buyer@example.com", "CUSTOMER");
+        User stranger = saveUser("notify_stranger", "notify-stranger@example.com", "CUSTOMER");
+        Restaurant restaurant = saveRestaurant(owner, "Notification Cafe");
+        MenuItem item = saveMenuItem(restaurant, "Tea", 3.00, true, 10);
+        Order order = placePersistedOrder(buyer, item, 1);
+
+        ChatMessage message = new ChatMessage();
+        message.setOrderId(order.getId());
+        message.setCustomerId(buyer.getId());
+        message.setRestaurantId(restaurant.getId());
+        message.setSender("restaurant");
+        message.setMessage("Your order is almost ready");
+        message.setIsRead(false);
+        ChatMessage saved = chatMessageRepository.save(message);
+
+        Map<String, Object> notificationResponse = supportController.getUnreadNotifications(principal(buyer));
+
+        assertThat(notificationResponse).containsEntry("unreadCount", 1);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> notifications = (List<Map<String, Object>>) notificationResponse.get("notifications");
+        assertThat(notifications).hasSize(1);
+        assertThat(notifications.get(0))
+            .containsEntry("messageId", saved.getId())
+            .containsEntry("restaurantName", "Notification Cafe")
+            .containsEntry("orderId", order.getId())
+            .containsEntry("restaurantId", restaurant.getId());
+        assertThat((String) notifications.get(0).get("targetPath"))
+            .contains("/customer/support")
+            .contains("orderId=" + order.getId())
+            .contains("restaurantId=" + restaurant.getId());
+
+        assertThat(supportController.getUnreadNotifications(principal(stranger))).containsEntry("unreadCount", 0);
+
+        supportController.markMessageAsRead(saved.getId(), principal(buyer));
+        assertThat(supportController.getUnreadNotifications(principal(buyer))).containsEntry("unreadCount", 0);
     }
 
     @Test

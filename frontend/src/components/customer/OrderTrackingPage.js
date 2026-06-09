@@ -115,12 +115,11 @@ export default function OrderTrackingPage() {
     
     // Mark all messages as read when opening chat
     try {
-      await api.put(API_ENDPOINTS.SUPPORT_MARK_ALL_READ, null, {
-        params: {
-          customerId: userId,
-          orderId: orderId
-        }
-      });
+      await api.put(
+        `${API_ENDPOINTS.SUPPORT_MARK_ALL_READ}?orderId=${orderId}&customerId=${userId}&restaurantId=${order.restaurantId}`,
+        {}
+      );
+      window.dispatchEvent(new CustomEvent("foodlyNotificationsChanged"));
     } catch (err) {
       console.error('Error marking messages as read:', err);
     }

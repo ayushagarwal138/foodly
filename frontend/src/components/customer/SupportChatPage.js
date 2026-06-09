@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import { FiMessageCircle, FiSend } from "react-icons/fi";
 import { api, API_ENDPOINTS } from "../../config/api";
 import { keepPreviousIfSame } from "../../utils/state";
@@ -14,7 +14,7 @@ export default function SupportChatPage() {
   const orderId = params.get("orderId");
   const restaurantId = params.get("restaurantId");
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     setError("");
     try {
       const data = await api.get(`${API_ENDPOINTS.SUPPORT_MESSAGES}?orderId=${orderId}&customerId=${userId}&restaurantId=${restaurantId}`);
@@ -24,25 +24,40 @@ export default function SupportChatPage() {
       console.error("Error fetching messages:", err);
       setError(err.message);
     }
-  };
+  }, [orderId, restaurantId, userId]);
+
+  const markRestaurantMessagesRead = useCallback(async () => {
+    if (!userId || !orderId || !restaurantId) return;
+
+    try {
+      await api.put(
+        `${API_ENDPOINTS.SUPPORT_MARK_ALL_READ}?orderId=${orderId}&customerId=${userId}&restaurantId=${restaurantId}`,
+        {}
+      );
+      window.dispatchEvent(new CustomEvent("foodlyNotificationsChanged"));
+    } catch (err) {
+      console.error("Error marking support messages as read:", err);
+    }
+  }, [orderId, restaurantId, userId]);
 
   useEffect(() => {
     async function initialFetch() {
       setLoading(true);
       await fetchMessages();
+      await markRestaurantMessagesRead();
       setLoading(false);
     }
     if (userId && orderId && restaurantId) {
       initialFetch();
     }
-  }, [userId, orderId, restaurantId]);
+  }, [userId, orderId, restaurantId, fetchMessages, markRestaurantMessagesRead]);
 
   // Polling for new messages
   useEffect(() => {
     if (!userId || !orderId || !restaurantId) return;
     const interval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
     return () => clearInterval(interval); // Cleanup on component unmount
-  }, [userId, orderId, restaurantId]);
+  }, [userId, orderId, restaurantId, fetchMessages]);
 
   async function sendMessage(e) {
     e.preventDefault();

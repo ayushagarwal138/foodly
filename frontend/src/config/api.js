@@ -71,6 +71,7 @@ export const API_ENDPOINTS = {
   SUPPORT_MESSAGES_BY_ORDER: (orderId, customerId, restaurantId) => 
     `${API_PREFIX}/support/messages?orderId=${orderId}&customerId=${customerId}&restaurantId=${restaurantId}`,
   SUPPORT_UNREAD_COUNT: `${API_PREFIX}/support/messages/unread-count`,
+  SUPPORT_NOTIFICATIONS: `${API_PREFIX}/support/messages/notifications`,
   SUPPORT_MARK_READ: (messageId) => `${API_PREFIX}/support/messages/${messageId}/mark-read`,
   SUPPORT_MARK_ALL_READ: `${API_PREFIX}/support/messages/mark-all-read`,
   

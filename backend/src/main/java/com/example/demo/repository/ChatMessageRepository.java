@@ -15,6 +15,8 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     // Unread message methods
     long countByCustomerIdAndSenderAndIsReadFalse(Long customerId, String sender);
     long countByRestaurantIdAndSenderAndIsReadFalse(Long restaurantId, String sender);
+    List<ChatMessage> findByCustomerIdAndSenderAndIsReadFalseOrderByTimestampDesc(Long customerId, String sender);
+    List<ChatMessage> findByRestaurantIdAndSenderAndIsReadFalseOrderByTimestampDesc(Long restaurantId, String sender);
     List<ChatMessage> findByOrderIdAndCustomerIdAndSenderAndIsReadFalse(Long orderId, Long customerId, String sender);
     List<ChatMessage> findByOrderIdAndRestaurantIdAndSenderAndIsReadFalse(Long orderId, Long restaurantId, String sender);
     List<ChatMessage> findByOrderIdAndCustomerIdAndRestaurantIdAndSenderAndIsReadFalse(

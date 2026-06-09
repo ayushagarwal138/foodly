@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiMenu, FiSearch, FiShoppingCart, FiUser, FiX, FiLogOut,  } from "react-icons/fi";
 import { useCart } from "./CartContext";
 import { api, API_ENDPOINTS, clearAuth } from "../../config/api";
+import NotificationBell from "../NotificationBell";
 
 export default function Header({ setCurrent }) {
   const [username, setUsername] = useState(localStorage.getItem("username") || "");
@@ -129,6 +130,7 @@ export default function Header({ setCurrent }) {
         >
           <FiSearch className="h-5 w-5" />
         </button>
+        <NotificationBell />
         {/* Cart Icon */}
         <button
           className="group relative rounded-md bg-neutral-100 p-2.5 text-neutral-900 transition-all duration-200 hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
