@@ -65,7 +65,7 @@ export default function DashboardMain() {
   // Calculate stats
   const totalOrders = orders.length;
   const activeOrders = orders.filter(o => ACTIVE_ORDER_STATUSES.has(o.status)).length;
-  const totalSpent = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+  const totalSpent = orders.reduce((sum, o) => sum + Number(o.total || 0), 0);
   const favoritesCount = (favorites.restaurants?.length || 0) + (favorites.dishes?.length || 0);
 
   const stats = [
@@ -74,28 +74,36 @@ export default function DashboardMain() {
       label: "Orders",
       value: totalOrders,
       sublabel: "Total orders placed",
-      color: "primary"
+      color: "primary",
+      target: "/customer/orders",
+      actionLabel: "View all orders"
     },
     {
       icon: FiClock,
       label: "Active Orders",
       value: activeOrders,
       sublabel: "Currently in progress",
-      color: "secondary"
+      color: "secondary",
+      target: "/customer/orders?filter=active",
+      actionLabel: "View active orders"
     },
     {
       icon: FiHeart,
       label: "Favorites",
       value: favoritesCount,
       sublabel: "Favorite restaurants & dishes",
-      color: "accent"
+      color: "accent",
+      target: "/customer/favorites",
+      actionLabel: "View favorites"
     },
     {
       icon: FiDollarSign,
       label: "Total Spent",
       value: `₹${totalSpent.toFixed(2)}`,
       sublabel: "All time",
-      color: "primary"
+      color: "primary",
+      target: "/customer/spending",
+      actionLabel: "View spending summary"
     }
   ];
 
@@ -229,6 +237,8 @@ export default function DashboardMain() {
               value={stat.value}
               sublabel={stat.sublabel}
               color={stat.color}
+              onClick={() => navigate(stat.target)}
+              actionLabel={stat.actionLabel}
             />
           );
         })}

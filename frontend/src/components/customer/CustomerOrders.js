@@ -8,6 +8,7 @@ import { api, API_ENDPOINTS } from "../../config/api";
 import { keepPreviousIfSame } from "../../utils/state";
 
 const ACTIVE_STATUSES = new Set(["New", "Accepted", "Preparing", "Out for Delivery"]);
+const VALID_FILTERS = new Set(["all", "active", "delivered"]);
 
 const STATUS_PRIORITY = {
   "New": 0,
@@ -58,10 +59,12 @@ export default function CustomerOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reviewOrder, setReviewOrder] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("all");
   const location = useLocation();
   const navigate = useNavigate();
-  const focusedOrderId = new URLSearchParams(location.search).get("orderId");
+  const searchParams = new URLSearchParams(location.search);
+  const focusedOrderId = searchParams.get("orderId");
+  const requestedFilter = searchParams.get("filter");
+  const [statusFilter, setStatusFilter] = useState(VALID_FILTERS.has(requestedFilter) ? requestedFilter : "all");
 
   const fetchOrders = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setError("");
@@ -118,6 +121,23 @@ export default function CustomerOrders() {
     // Refresh orders to get latest status
     await fetchOrders();
   };
+
+  const handleFilterChange = (nextFilter) => {
+    setStatusFilter(nextFilter);
+    const params = new URLSearchParams(location.search);
+    if (nextFilter === "all") {
+      params.delete("filter");
+    } else {
+      params.set("filter", nextFilter);
+    }
+    const query = params.toString();
+    navigate(query ? `/customer/orders?${query}` : "/customer/orders", { replace: true });
+  };
+
+  useEffect(() => {
+    const nextFilter = VALID_FILTERS.has(requestedFilter) ? requestedFilter : "all";
+    setStatusFilter(nextFilter);
+  }, [requestedFilter]);
 
   const orderStats = useMemo(() => {
     const active = orders.filter(order => ACTIVE_STATUSES.has(order.status)).length;
@@ -225,7 +245,7 @@ export default function CustomerOrders() {
           <button
             key={filter.value}
             type="button"
-            onClick={() => setStatusFilter(filter.value)}
+            onClick={() => handleFilterChange(filter.value)}
             className={`inline-flex h-10 items-center gap-2 rounded-md border px-4 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
               statusFilter === filter.value
                 ? "border-primary-600 bg-primary-600 text-white shadow-sm"
