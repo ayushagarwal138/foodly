@@ -3,6 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { FaUtensils } from "react-icons/fa";
 import { api, API_ENDPOINTS } from "../../config/api";
 
+const offerImageByType = {
+  "free-delivery": "/offers/free-delivery.png",
+  cashback: "/offers/cashback.png"
+};
+
+function getOfferImage(offer) {
+  return offerImageByType[offer.type] || offer.image || offer.imageUrl;
+}
+
 // Sample offers data - in a real app, this would come from an API
 const sampleOffers = [
   {
@@ -32,7 +41,7 @@ const sampleOffers = [
     minOrder: "₹150",
     category: "delivery",
     restaurant: "All Restaurants",
-    image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop",
+    image: "/offers/free-delivery.png",
     color: "bg-gradient-to-r from-green-500 to-teal-500"
   },
   {
@@ -47,7 +56,7 @@ const sampleOffers = [
     minOrder: "₹300",
     category: "cashback",
     restaurant: "All Restaurants",
-    image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop",
+    image: "/offers/cashback.png",
     color: "bg-gradient-to-r from-orange-500 to-red-500"
   },
   {
@@ -213,7 +222,7 @@ export default function OffersPage() {
           <article key={offer.id} className="card-hover overflow-hidden p-0">
             <div className="relative h-48 overflow-hidden bg-neutral-100">
               <img
-                src={offer.image}
+                src={getOfferImage(offer)}
                 alt={offer.title}
                 className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
               />

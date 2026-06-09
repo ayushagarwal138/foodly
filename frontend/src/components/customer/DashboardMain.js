@@ -161,13 +161,13 @@ export default function DashboardMain() {
                   color: "primary"
                 },
                 {
-                  image: "https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&w=400&q=80",
+                  image: "/offers/free-delivery.png",
                   title: "Free Delivery",
                   description: "On all orders above ₹199",
                   color: "accent"
                 },
                 {
-                  image: "https://images.unsplash.com/photo-1464306076886-debca5e8a6b0?auto=format&fit=crop&w=400&q=80",
+                  image: "/offers/cashback.png",
                   title: "20% Cashback",
                   description: "With Foodly Wallet",
                   color: "primary"
